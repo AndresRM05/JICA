@@ -153,7 +153,7 @@ Cada componente reutilizable seguirá una arquitectura modular separando lógica
 
 ## 2.4 Convenciones de nomenclatura
 
-Para mantener el código del frontend consistente, legible y fácil de generar tanto por desarrolladores como por agentes de IA, se deben seguir las siguientes convenciones de nomenclatura en todo el proyecto.
+Para mantener el código del frontend consistente, legible se deben seguir las siguientes convenciones de nomenclatura en todo el proyecto.
 
 ### Componentes
 
@@ -522,7 +522,7 @@ dashboardContainer
 ---
 ## 2.5 Lineamientos de CSS y estilos
 
-Esta sección define las reglas visuales que debe seguir el frontend del sistema. Su objetivo es garantizar que la interfaz sea consistente, profesional, mantenible y fácil de implementar por cualquier desarrollador o agente de IA.
+Esta sección define las reglas visuales que debe seguir el frontend del sistema. 
 
 El frontend debe utilizar **Tailwind CSS** como herramienta principal de estilos. Se deben evitar estilos CSS aislados o inconsistentes, salvo cuando sea estrictamente necesario.
 
@@ -530,7 +530,7 @@ El frontend debe utilizar **Tailwind CSS** como herramienta principal de estilos
 
 ## Paleta de colores
 
-La paleta de colores debe transmitir confianza, seguridad financiera, claridad y modernidad. Al tratarse de una plataforma relacionada con inversión y financiamiento, se debe evitar el uso excesivo de colores agresivos o informales.
+La paleta de colores debe transmitir confianza, seguridad financiera, claridad y modernidad. 
 
 ### Colores principales
 
@@ -566,9 +566,7 @@ No se deben usar colores arbitrarios directamente en los componentes si ya exist
 
 ## Tipografías
 
-El sistema debe utilizar una tipografía moderna, legible y adecuada para interfaces financieras.
-
-Tipografía recomendada:
+Tipografía que se va a utilizar:
 
 ```txt
 Inter
@@ -614,10 +612,9 @@ El atributo `alt` siempre debe estar presente para accesibilidad.
 
 ## Iconografía
 
-La iconografía debe ser simple, clara y consistente. Se recomienda utilizar una sola librería de iconos en todo el proyecto.
+La iconografía debe ser simple, clara y consistente. 
 
-Librería recomendada:
-
+Librería que se va a utilizar :
 ```txt
 lucide-react
 ```
