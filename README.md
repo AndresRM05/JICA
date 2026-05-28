@@ -79,3 +79,22 @@ El objetivo de esta organización es facilitar el mantenimiento, la escalabilida
 ├── tsconfig.json
 ├── eslint.config.js
 └── README.md
+```
+
+| Carpeta            | Responsabilidad                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------ |
+| `/public`          | Archivos estáticos públicos como favicon, logos o imágenes que no requieren procesamiento. |
+| `/src/assets`      | Imágenes, íconos, ilustraciones y recursos visuales usados por la interfaz.                |
+| `/src/components`  | Componentes reutilizables y genéricos como botones, cards, inputs, modales y tablas.       |
+| `/src/features`    | Módulos funcionales del sistema, agrupados por dominio.                                    |
+| `/src/hooks`       | Custom hooks reutilizables para lógica de frontend.                                        |
+| `/src/layouts`     | Estructuras visuales generales como layout autenticado, layout público o dashboard layout. |
+| `/src/pages`       | Pantallas principales asociadas a rutas.                                                   |
+| `/src/routes`      | Configuración centralizada de rutas públicas, privadas y protegidas.                       |
+| `/src/services`    | Comunicación con APIs del backend y servicios externos.                                    |
+| `/src/store`       | Estado global manejado con Zustand.                                                        |
+| `/src/types`       | Tipos e interfaces TypeScript compartidas.                                                 |
+| `/src/validations` | Esquemas de validación con Zod.                                                            |
+| `/src/utils`       | Funciones utilitarias reutilizables.                                                       |
+| `/tests/unit`      | Pruebas unitarias con Vitest.                                                              |
+| `/tests/e2e`       | Pruebas end-to-end con Playwright.                                                         |
