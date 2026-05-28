@@ -41,3 +41,41 @@ Vitest y Playwright permitirán validar tanto componentes individuales como fluj
 ESLint, Prettier y Husky serán obligatorios para mantener calidad, consistencia y validaciones automáticas antes de integrar cambios al repositorio.
 
 Azure Static Web Apps será utilizado para publicar el frontend de forma segura y separada por ambientes. GitHub Actions automatizará el proceso de integración y despliegue continuo.
+
+
+## 2.2 Estructura general del frontend
+
+El frontend de JICA estará ubicado dentro de la carpeta `/frontend` del repositorio. La aplicación debe mantener una estructura modular, separando responsabilidades entre páginas, componentes reutilizables, servicios, hooks, validaciones, tipos y configuración.
+
+El objetivo de esta organización es facilitar el mantenimiento, la escalabilidad y la navegación del código por parte del equipo de desarrollo.
+
+```txt
+/frontend
+│
+├── public/
+│
+├── src/
+│   ├── assets/
+│   ├── components/
+│   ├── features/
+│   ├── hooks/
+│   ├── layouts/
+│   ├── pages/
+│   ├── routes/
+│   ├── services/
+│   ├── store/
+│   ├── types/
+│   ├── validations/
+│   ├── utils/
+│   ├── App.tsx
+│   └── main.tsx
+│
+├── tests/
+│   ├── unit/
+│   └── e2e/
+│
+├── package.json
+├── vite.config.ts
+├── tsconfig.json
+├── eslint.config.js
+└── README.md
