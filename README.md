@@ -98,3 +98,91 @@ El frontend de JICA estará ubicado dentro de la carpeta `/frontend` del reposit
 | `/src/utils`       | Funciones utilitarias reutilizables.                                                       |
 | `/tests/unit`      | Pruebas unitarias con Vitest.                                                              |
 | `/tests/e2e`       | Pruebas end-to-end con Playwright.                                                         |
+
+## 2.3 Desarrollo de componentes visuales
+
+Los componentes visuales del frontend de JICA deben desarrollarse bajo un enfoque modular, reutilizable y mantenible. Cada componente debe tener una única responsabilidad visual o funcional, evitando mezclar lógica de negocio, llamadas a API o validaciones complejas dentro del JSX.
+
+El objetivo es que cualquier programador pueda identificar rápidamente qué componente debe modificar, reutilizar o extender.
+
+### Principios generales
+
+- Cada componente debe tener una responsabilidad clara.
+- Los componentes deben ser reutilizables siempre que sea posible.
+- La lógica de negocio no debe colocarse directamente dentro de componentes visuales.
+- Los estilos deben implementarse con Tailwind CSS.
+- Las props deben estar tipadas con TypeScript.
+- Los componentes deben ser pequeños, legibles y fáciles de probar.
+- Los componentes compartidos deben ubicarse en `/src/components`.
+- Los componentes específicos de una funcionalidad deben ubicarse dentro de `/src/features`.
+
+---
+
+### Estructura recomendada de un componente
+
+Cada componente reutilizable debe seguir esta estructura:
+
+```txt
+/src/components/ui/Button/
+├── Button.tsx
+├── Button.types.ts
+└── index.ts
+```
+
+
+// /src/components/ui/Button/Button.types.ts
+
+export type ButtonVariant = "primary" | "secondary" | "danger";
+
+export interface ButtonProps {
+  label: string;
+  variant?: ButtonVariant;
+  disabled?: boolean;
+  onClick?: () => void;
+}
+
+
+// /src/components/ui/Button/Button.tsx
+
+import type { ButtonProps } from "./Button.types";
+
+export function Button({
+  label,
+  variant = "primary",
+  disabled = false,
+  onClick,
+}: ButtonProps) {
+  const baseStyles =
+    "rounded-xl px-4 py-2 font-medium transition disabled:opacity-50";
+
+  const variants = {
+    primary: "bg-emerald-600 text-white hover:bg-emerald-700",
+    secondary: "bg-gray-100 text-gray-800 hover:bg-gray-200",
+    danger: "bg-red-600 text-white hover:bg-red-700",
+  };
+
+  return (
+    <button
+      type="button"
+      className={`${baseStyles} ${variants[variant]}`}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      {label}
+    </button>
+  );
+}
+
+// /src/components/ui/Button/index.ts
+
+export { Button } from "./Button";
+export type { ButtonProps } from "./Button.types";
+
+| Tipo de componente                 | Ubicación                                      | Ejemplos                                 |
+| ---------------------------------- | ---------------------------------------------- | ---------------------------------------- |
+| Componentes UI genéricos           | `/src/components/ui`                           | Button, Input, Card, Badge, Modal        |
+| Componentes de layout              | `/src/layouts`                                 | DashboardLayout, AuthLayout              |
+| Componentes específicos de negocio | `/src/features`                                | InvestmentCard, RiskBadge, ROIChart      |
+| Páginas                            | `/src/pages` o `/src/features/{feature}/pages` | DashboardPage, LoginPage, SimulationPage |
+
+
