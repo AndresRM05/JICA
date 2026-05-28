@@ -130,54 +130,6 @@ Cada componente reutilizable debe seguir esta estructura:
 ```
 
 
-// /src/components/ui/Button/Button.types.ts
-
-export type ButtonVariant = "primary" | "secondary" | "danger";
-
-export interface ButtonProps {
-  label: string;
-  variant?: ButtonVariant;
-  disabled?: boolean;
-  onClick?: () => void;
-}
-
-
-// /src/components/ui/Button/Button.tsx
-
-import type { ButtonProps } from "./Button.types";
-
-export function Button({
-  label,
-  variant = "primary",
-  disabled = false,
-  onClick,
-}: ButtonProps) {
-  const baseStyles =
-    "rounded-xl px-4 py-2 font-medium transition disabled:opacity-50";
-
-  const variants = {
-    primary: "bg-emerald-600 text-white hover:bg-emerald-700",
-    secondary: "bg-gray-100 text-gray-800 hover:bg-gray-200",
-    danger: "bg-red-600 text-white hover:bg-red-700",
-  };
-
-  return (
-    <button
-      type="button"
-      className={`${baseStyles} ${variants[variant]}`}
-      disabled={disabled}
-      onClick={onClick}
-    >
-      {label}
-    </button>
-  );
-}
-
-// /src/components/ui/Button/index.ts
-
-export { Button } from "./Button";
-export type { ButtonProps } from "./Button.types";
-
 | Tipo de componente                 | Ubicación                                      | Ejemplos                                 |
 | ---------------------------------- | ---------------------------------------------- | ---------------------------------------- |
 | Componentes UI genéricos           | `/src/components/ui`                           | Button, Input, Card, Badge, Modal        |
