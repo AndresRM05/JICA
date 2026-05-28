@@ -144,4 +144,9 @@ Cada componente reutilizable seguirá una arquitectura modular separando lógica
 | Componentes específicos de negocio | `/src/features`                                | InvestmentCard, RiskBadge, ROIChart      |
 | Páginas                            | `/src/pages` o `/src/features/{feature}/pages` | DashboardPage, LoginPage, SimulationPage |
 
+### Ejemplos reales implementados
+/src/features/investments/components/InvestmentCard
+#### Componentes específicos de negocio
 
+- [InvestmentCard.tsx](./frontend/src/features/investments/components/InvestmentCard/InvestmentCard.tsx)
+- [InvestmentCard.types.ts](./frontend/src/features/investments/components/InvestmentCard/InvestmentCard.types.ts)
