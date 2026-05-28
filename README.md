@@ -4,7 +4,7 @@
 
 El frontend de JICA será desarrollado como una aplicación web de tipo **Client Side Rendering**, orientada a inversionistas que necesitan explorar oportunidades de inversión, revisar información financiera de pymes gastronómicas y simular inversiones dentro de una interfaz clara, moderna y segura.
 
-El stack seleccionado busca mantener una arquitectura frontend escalable, mantenible y fácil de trabajar para el equipo de desarrollo. Cada tecnología tiene una responsabilidad definida para evitar improvisaciones durante la implementación.
+
 
 | Categoría | Tecnología | Versión compatible | Uso dentro de JICA |
 |---|---|---:|---|
@@ -118,16 +118,23 @@ El objetivo es que cualquier programador pueda identificar rápidamente qué com
 
 ---
 
-### Estructura recomendada de un componente
 
-Cada componente reutilizable debe seguir esta estructura:
+## Estructura recomendada de un componente
 
-```txt
+Cada componente reutilizable seguirá una arquitectura modular separando lógica, tipos y exportaciones.
+
+### Ejemplo implementado
+
 /src/components/ui/Button/
-├── Button.tsx
-├── Button.types.ts
-└── index.ts
-```
+
+- [Button.tsx](./frontend/src/components/ui/Button/Button.tsx)
+  - Contiene la lógica visual y renderizado del componente.
+
+- [Button.types.ts](./frontend/src/components/ui/Button/Button.types.ts)
+  - Define interfaces y tipos TypeScript utilizados por el componente.
+
+- [index.ts](./frontend/src/components/ui/Button/index.ts)
+  - Centraliza las exportaciones del componente.
 
 
 | Tipo de componente                 | Ubicación                                      | Ejemplos                                 |
