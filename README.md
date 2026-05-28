@@ -47,7 +47,7 @@ Azure Static Web Apps será utilizado para publicar el frontend de forma segura 
 
 El frontend de JICA estará ubicado dentro de la carpeta `/frontend` del repositorio. La aplicación debe mantener una estructura modular, separando responsabilidades entre páginas, componentes reutilizables, servicios, hooks, validaciones, tipos y configuración.
 
-El objetivo de esta organización es facilitar el mantenimiento, la escalabilidad y la navegación del código por parte del equipo de desarrollo.
+
 
 ```txt
 /frontend
