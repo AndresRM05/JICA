@@ -837,3 +837,176 @@ JICA utiliza **Firebase Authentication** con método de **email y contraseña**.
 8. Si el usuario cierra sesión o el token es revocado → sesión destruida
 ```
 
+### Inicialización de Firebase
+ 
+La configuración de Firebase debe ubicarse en `/src/services/firebase.ts`. Las credenciales deben provenir exclusivamente de variables de entorno.
+Ejemplo en [firebase.ts](./frontend/src/services/firebase.ts)
+ 
+Variables de entorno requeridas en todos los ambientes:
+ 
+```
+VITE_FIREBASE_API_KEY
+VITE_FIREBASE_AUTH_DOMAIN
+VITE_FIREBASE_PROJECT_ID
+```
+
+### Servicio de autenticación
+ 
+Todas las operaciones de autenticación deben centralizarse en `/src/services/authService.ts`. Ningún componente o página debe llamar al SDK de Firebase directamente.
+
+ Ejemplo en [authService.ts](./frontend/src/services/authService.ts)
+
+
+ ### Store de autenticación
+El store de Zustand debe sincronizarse con Firebase `onAuthStateChanged`. El ID Token no se almacena en el store; se obtiene fresco desde el SDK cuando se necesita.
+ Ejemplo en [authStore.ts](./frontend/src/store/authStore.ts)
+
+ ### Escucha del estado de autenticación
+ 
+La sincronización entre Firebase y el store debe iniciarse una sola vez al montar la app en un hook dedicado `/src/hooks/useAuthListener.ts`.
+
+Ejemplo en  [useAuthListener.ts](./frontend/src/hooks/useAuthListener.ts)
+ 
+## Roles y autorización
+ 
+JICA maneja tres roles de usuario. El rol es asignado por el backend como **Custom Claim** dentro del Firebase ID Token, después del registro.
+ 
+| Rol | Valor en claim | Acceso principal |
+|---|---|---|
+| Inversionista | `investor` | Dashboard, exploración de pymes, simulación, registro de interés |
+| Empresa (Pyme) | `business` | Panel de negocio, carga de métricas, publicación de oportunidades |
+| Administrador | `admin` | Panel de administración, gestión de usuarios, aprobación de pymes |
+ 
+### Lectura del rol desde el token
+ 
+El rol viene en el Custom Claims del ID Token decodificado. El frontend lo lee así:
+ Ejemplo [authService.ts](./frontend/src/services/authService.ts)
+
+ El tipo de roles debe definirse en `/src/types/auth.types.ts`:
+ Ejemplo [auth.types.ts](./frontend/src/types/auth.types.ts) 
+
+ ### Rutas protegidas
+ 
+Las rutas deben clasificarse en tres categorías en `/src/routes/`:
+ 
+```
+Rutas públicas (sin autenticación):
+  /login
+  /register
+  /forgot-password
+  / (landing)
+ 
+Rutas privadas (cualquier rol autenticado):
+  /dashboard
+  /profile
+ 
+Rutas por rol:
+  investor:  /investments, /investments/:id, /simulate, /portfolio
+  business:  /my-business, /financials, /publish-opportunity
+  admin:     /admin/users, /admin/approvals, /admin/businesses
+ 
+```
+
+El componente `ProtectedRoute` debe ubicarse en `/src/routes/ProtectedRoute.tsx`:
+Ejemplo [ProtectedRoute.tsx](./frontend/src/routes/ProtectedRoute.tsx) 
+
+### Visibilidad de UI por rol
+ 
+Los elementos de UI condicionados por rol deben usar el componente `RoleGuard` en `/src/components/auth/RoleGuard.tsx`. No se deben usar condicionales inline `if (user.role === 'investor')` dispersos en los componentes.
+Ejemplo [ProtectedRoute.tsx](./frontend/src/components/auth/RoleGuard.tsx) 
+
+## Interceptor HTTP
+ 
+Todo cliente HTTP debe adjuntar el ID Token de Firebase en cada request al backend. El token debe obtenerse fresco desde el SDK (no desde el store) para garantizar que siempre esté vigente.
+ 
+El interceptor se ubica en  `/src/services/httpClient.ts`:
+Ejemplo [httpClient.ts](./frontend/src/services/httpClient.ts) 
+
+## Manejo seguro de sesiones
+ 
+### Persistencia de sesión
+ 
+Firebase SDK persiste la sesión en `IndexedDB` del navegador de forma automática. No se debe configurar `browserSessionPersistence` salvo requerimiento explícito, ya que eliminaría la sesión al cerrar el tab.
+ 
+La persistencia por defecto de Firebase (`LOCAL`) es la correcta para JICA, ya que el usuario espera seguir autenticado al regresar al sitio.
+ 
+### Logout automático por inactividad
+ 
+El frontend debe cerrar sesión automáticamente si el usuario lleva 30 minutos sin interacción. El hook debe ubicarse en `/src/hooks/useInactivityLogout.ts`.
+
+
+```ts
+// /src/hooks/useInactivityLogout.ts
+const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutos
+ 
+// Eventos a escuchar: mousemove, keydown, click, scroll, touchstart
+// Al cumplir el tiempo: logoutUser() + clearSession() + redirect '/login'
+// Al desmontar: limpiar todos los listeners y el timer
+```
+ 
+### Logout manual
+ 
+```ts
+// Flujo correcto de logout:
+// 1. Llamar logoutUser() de authService (signOut de Firebase)
+// 2. clearSession() en el store
+// 3. redirect '/login'
+```
+ 
+### Verificación de email
+ 
+Los usuarios recién registrados deben tener `emailVerified: false`. El frontend debe:
+ 
+- Mostrar un banner de advertencia en el dashboard mientras `emailVerified` sea `false`.
+- No bloquear el acceso por este motivo en el MVP, pero sí advertir visualmente.
+- Ofrecer un botón para reenviar el email de verificación usando `sendEmailVerification`.
+---
+
+## Privacidad de datos y masking
+ 
+Los datos sensibles no deben mostrarse completos en la UI. Las funciones de masking deben ubicarse en `/src/utils/maskData.ts`.
+ 
+| Dato | Masking aplicado | Ejemplo visible |
+|---|---|---|
+| Número de cédula | Solo últimos 4 dígitos | `***-****-1234` |
+| Número de cuenta bancaria | Solo últimos 4 dígitos | `**** **** **** 5678` |
+| Email en listados admin | Dominio visible, local parcial | `ju***@gmail.com` |
+| Monto de inversión de terceros | No visible para otros roles | — |
+| Datos financieros internos de pyme | Solo visibles si están marcados como públicos | — |
+ 
+ Ejemplo en  [httpClient.ts](./frontend/src/utils/maskData.ts)  
+
+ 
+### Reglas de visibilidad por rol
+ 
+- `investor`: no puede ver datos financieros internos de una pyme que no estén marcados como públicos por el negocio.
+- `business`: no puede ver la identidad ni montos de otros inversionistas interesados en su proyecto.
+- `admin`: puede ver datos sin masking únicamente dentro de rutas `/admin/*`.
+Esta regla se valida en el backend . El frontend la aplica para no renderizar lo que no corresponde mostrar.
+ 
+---
+ 
+## Cifrado y transmisión de datos
+ 
+- Toda comunicación con el backend debe realizarse exclusivamente por **HTTPS**. No se permiten requests HTTP en `stage` ni `production`.
+- `VITE_API_BASE_URL` debe comenzar con `https://` en ambientes distintos a `development`.
+- No se deben transmitir tokens, contraseñas ni datos sensibles como query parameters en la URL.
+- Los formularios con datos sensibles deben enviarse siempre por `POST` o `PUT`, nunca por `GET`.
+### Variables de entorno
+**development**
+ 
+Se usa un archivo `.env.development` 
+ 
+**stage y production**
+ 
+ Las variables se configuran exclusivamente en **GitHub Actions Secrets** y se inyectan durante el `vite build` en el pipeline de CI/CD.
+ 
+## Reglas generales de seguridad
+ 
+- Nunca llamar al SDK de Firebase directamente desde componentes o páginas. Usar exclusivamente `authService.ts`.
+- Nunca almacenar el ID Token en `localStorage`, `sessionStorage` ni Zustand. Siempre obtenerlo con `user.getIdToken()`.
+- Nunca exponer el rol del usuario en la URL. El rol viene del store.
+- Nunca renderizar rutas o componentes de un rol sin pasar por `ProtectedRoute` o `RoleGuard`.
+- Nunca mostrar mensajes de error de Firebase directamente al usuario. Traducirlos a mensajes genéricos en UI.
+- Nunca loguear ID Tokens, contraseñas ni datos financieros con `console.log` en `stage` o `production`.
+- Los formularios de login y registro deben manejar los códigos de error de Firebase (`auth/user-not-found`, `auth/wrong-password`, `auth/email-already-in-use`) y mostrar mensajes claros sin revelar si el email existe o no en el sistema.
