@@ -1,4 +1,5 @@
 # JICA
+# Frontend
 
 ## 2.1 Stack de tecnologías del frontend
 
@@ -974,7 +975,7 @@ Los datos sensibles no deben mostrarse completos en la UI. Las funciones de mask
 | Monto de inversión de terceros | No visible para otros roles | — |
 | Datos financieros internos de pyme | Solo visibles si están marcados como públicos | — |
  
- Ejemplo en  [httpClient.ts](./frontend/src/utils/maskData.ts)  
+ Ejemplo en  [maskData.ts](./frontend/src/utils/maskData.ts)  
 
  
 ### Reglas de visibilidad por rol
@@ -1010,3 +1011,130 @@ Se usa un archivo `.env.development`
 - Nunca mostrar mensajes de error de Firebase directamente al usuario. Traducirlos a mensajes genéricos en UI.
 - Nunca loguear ID Tokens, contraseñas ni datos financieros con `console.log` en `stage` o `production`.
 - Los formularios de login y registro deben manejar los códigos de error de Firebase (`auth/user-not-found`, `auth/wrong-password`, `auth/email-already-in-use`) y mostrar mensajes claros sin revelar si el email existe o no en el sistema.
+
+## 2.7 Estándares de seguridad OWASP aplicados al frontend
+
+Esta sección define las prácticas de seguridad obligatorias del frontend de JICA basadas en el estándar **OWASP Top 10**. 
+
+---
+
+## A01 — Control de acceso roto
+
+OWASP identifica la falta de restricciones en rutas y funcionalidades como la vulnerabilidad más crítica.
+
+**Reglas obligatorias:**
+
+- Toda ruta privada debe estar envuelta en `ProtectedRoute`. Ver implementación en `/src/routes/ProtectedRoute.tsx` [ProtectedRoute.tsx](./frontend/src/routes/ProtectedRoute.tsx)  . 
+- Toda funcionalidad restringida por rol debe estar envuelta en `RoleGuard`. Ver implementación en `/src/components/auth/RoleGuard.tsx` [ProtectedRoute.tsx](./frontend/src/components/auth/RoleGuard.tsx) .
+- Nunca ocultar rutas solo con CSS o condicionales de visibilidad. Si el usuario no tiene acceso, debe ser redirigido, no solo ocultado el elemento.
+- El frontend no es la fuente de verdad del control de acceso. Toda acción crítica debe ser validada también por el backend.
+
+---
+
+## A02 — Fallas criptográficas
+
+Exposición de datos sensibles por transmisión o almacenamiento inseguro.
+
+**Reglas obligatorias:**
+
+- Toda comunicación con el backend debe ser exclusivamente por **HTTPS**. No se permiten requests HTTP en `stage` ni `production`.
+- El ID Token de Firebase nunca debe almacenarse en `localStorage` ni `sessionStorage`. Debe obtenerse siempre con `user.getIdToken()` desde el SDK.
+- Las contraseñas nunca deben almacenarse, loguearse ni transmitirse fuera del formulario de autenticación.
+- Los datos financieros sensibles (cuentas bancarias, cédulas) deben mostrarse con masking en la UI. Ver funciones en `/src/utils/maskData.ts` [maskData.ts](./frontend/src/utils/maskData.ts)   .
+
+---
+
+## A03 — Inyección (XSS)
+
+Cross-Site Scripting ocurre cuando contenido malicioso es ejecutado en el navegador del usuario.
+
+**Reglas obligatorias:**
+
+- No usar `dangerouslySetInnerHTML` en ningún componente. Si existe un caso justificado, debe sanitizarse el contenido con la librería `dompurify` antes de renderizarlo.
+- No construir HTML dinámico concatenando strings con datos del usuario o del backend.
+- No usar `eval()`, `Function()` ni equivalentes en ninguna parte del frontend.
+- Los datos provenientes del backend deben tratarse siempre como datos, nunca como markup o código ejecutable.
+- React escapa el contenido por defecto al renderizar en JSX. No se debe saltar este mecanismo bajo ninguna circunstancia.
+
+```ts
+// Incorrecto
+<div dangerouslySetInnerHTML={{ __html: userContent }} />
+
+// Correcto si es absolutamente necesario renderizar HTML externo
+import DOMPurify from 'dompurify';
+<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(userContent) }} />
+```
+
+---
+
+## A05 — Configuración de seguridad incorrecta
+
+Configuraciones por defecto inseguras o información expuesta innecesariamente.
+
+**Reglas obligatorias:**
+
+- Las variables de entorno del frontend solo deben exponer lo estrictamente necesario para el cliente. 
+- En `stage` y `production`, Vite debe compilar con `mode: 'production'` para eliminar código de desarrollo, logs y mensajes de error detallados.
+- Los mensajes de error del backend nunca deben mostrarse directamente al usuario. Deben traducirse a mensajes genéricos en la UI.
+- Sentry debe estar activo en `stage` y `production` para capturar errores sin exponerlos al usuario. Ver configuración en `/src/main.tsx`.
+- No dejar `console.log` con datos sensibles (tokens, datos de usuario, respuestas de API) en código que llegue a `stage` o `production`. ESLint debe configurarse para advertir sobre `console.log` en producción.
+
+---
+
+## A06 — Componentes vulnerables y desactualizados
+
+Uso de dependencias con vulnerabilidades conocidas.
+
+**Reglas obligatorias:**
+
+- Ejecutar `npm audit` como parte del pipeline de CI/CD. Un audit con vulnerabilidades críticas debe bloquear el deploy.
+- Las dependencias deben mantenerse actualizadas. Revisar actualizaciones al menos una vez por sprint.
+- No instalar librerías de terceros sin evaluar su mantenimiento activo y reputación en la comunidad.
+- No usar librerías que no tengan soporte para TypeScript o que no hayan tenido actividad en el repositorio en más de 12 meses.
+
+---
+
+## A07 — Fallas de identificación y autenticación
+
+Implementación incorrecta de autenticación que permite accesos no autorizados.
+
+**Reglas obligatorias:**
+
+- La autenticación se gestiona exclusivamente con **Firebase Authentication**. No se debe implementar autenticación custom. Ver implementación en `/src/services/authService.ts` [authService.ts](./frontend/src/services/authService.ts) .
+- Los errores de Firebase Auth (`auth/user-not-found`, `auth/wrong-password`) no deben exponerse directamente. Deben mostrarse como un mensaje genérico: *"Credenciales incorrectas"*, sin revelar si el email existe o no en el sistema.
+- El formulario de login debe tener un límite visual de intentos fallidos. Después de 5 intentos fallidos debe mostrarse un mensaje indicando que intente más tarde (Firebase maneja el bloqueo real en el backend).
+- La sesión debe cerrarse automáticamente tras 30 minutos de inactividad. Ver implementación en `/src/hooks/useInactivityLogout.ts` [useInactivityLogout.ts](./frontend/src/hooks/useInactivityLogout.ts) ..
+- Los usuarios con `emailVerified: false` deben ver un banner de advertencia. No se bloquea el acceso en el MVP pero sí se advierte visualmente.
+
+---
+
+## A09 — Fallas en el registro y monitoreo de seguridad
+
+Ausencia de trazabilidad ante incidentes de seguridad.
+
+**Reglas obligatorias:**
+
+- **Sentry** debe estar configurado para capturar errores no manejados en `stage` y `production`.
+- Los errores de autenticación de Firebase deben capturarse en Sentry sin incluir contraseñas ni tokens en el payload del error.
+- No se deben registrar datos sensibles (tokens, contraseñas, datos financieros) en Sentry ni en ningún sistema de logging.
+- Sentry debe inicializarse en `/src/main.tsx` antes de montar la aplicación.
+
+```ts
+// /src/main.tsx
+import * as Sentry from '@sentry/react';
+
+Sentry.init({
+  dsn: import.meta.env.VITE_SENTRY_DSN,
+  enabled: import.meta.env.MODE !== 'development',
+  environment: import.meta.env.MODE,
+});
+```
+
+---
+
+## Reglas generales OWASP para el frontend
+
+- No confiar en validaciones del lado del cliente como única barrera. Zod valida en el frontend para UX; el backend valida para seguridad.
+- No almacenar información sensible en `localStorage`, `sessionStorage`, cookies accesibles desde JS ni en el estado global más allá de lo estrictamente necesario para la sesión activa.
+- No construir URLs de API concatenando input del usuario directamente.
+- Mantener el principio de mínimo privilegio: mostrar solo la información que el rol del usuario necesita ver.
