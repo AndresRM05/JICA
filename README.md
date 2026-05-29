@@ -805,5 +805,35 @@ Riesgo alto: bg-red-100 text-red-700
 * La interfaz debe ser clara tanto para usuarios técnicos como no técnicos.
 
 ---
-
+## 2.6 Seguridad del frontend
+## Tecnologías y servicios de autenticación
+ 
+| Categoría | Tecnología / Servicio | Versión | Uso |
+|---|---|---|---|
+| Proveedor de autenticación | Firebase Authentication | SDK v10.x | Gestión de identidad, login, registro, sesión y tokens |
+| SDK cliente | `firebase` (npm) | 10.x | Integración del frontend con Firebase Auth |
+| Método de autenticación | Email y contraseña | — | Único método de login en JICA MVP |
+| Token de identidad | Firebase ID Token (JWT) | — | Token enviado al backend en cada request |
+| Renovación de token | Firebase SDK (automático) | — | El SDK renueva el ID Token cada 60 minutos sin intervención manual |
+| Estado de sesión | Zustand + Firebase `onAuthStateChanged` | — | Sincronización del estado de autenticación con el store global |
+| Rol de usuario | Custom Claims en Firebase Token | — | El backend asigna el rol (`investor`, `business`, `admin`) como claim en el token |
+ 
+---
+ 
+## Autenticación
+ 
+JICA utiliza **Firebase Authentication** con método de **email y contraseña**. El frontend no gestiona tokens manualmente; el SDK de Firebase se encarga de la emisión, almacenamiento y renovación del ID Token.
+ 
+### Cómo funciona Firebase Auth en JICA
+ 
+```
+1. Usuario ingresa email + contraseña en el formulario de login
+2. Frontend llama: signInWithEmailAndPassword(auth, email, password)
+3. Firebase autentica y devuelve un UserCredential con un ID Token (JWT, exp: 1 hora)
+4. Firebase SDK almacena la sesión de forma segura internamente (IndexedDB)
+5. Frontend obtiene el ID Token con: user.getIdToken()
+6. Cada request al backend incluye: Authorization: Bearer <idToken>
+7. El SDK renueva el ID Token automáticamente antes de que expire
+8. Si el usuario cierra sesión o el token es revocado → sesión destruida
+```
 
