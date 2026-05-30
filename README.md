@@ -1405,3 +1405,234 @@ useMutation({
 ### Reintentos en Socket.io
  
 El cliente de Socket.io debe intentar reconectarse automáticamente hasta 5 veces con un delay de 2 segundos entre intentos. Ver configuración en `/src/services/socketService.ts`. Si supera los 5 intentos, debe mostrarse un banner informando al usuario que las notificaciones en tiempo real no están disponibles, sin interrumpir el resto de la aplicación.
+
+---
+## 2.9 Estrategia de testing del frontend
+ 
+Esta sección define las reglas obligatorias de testing para el frontend de JICA. Cubre pruebas unitarias, de integración de componentes y de UI end-to-end. El backend tiene su propia estrategia de testing; lo definido aquí es exclusivo del lado del cliente.
+ 
+
+ 
+## Tecnologías de testing
+ 
+| Categoría | Tecnología | Versión | Uso |
+|---|---|---|---|
+| Unit e integration testing | Vitest | 4.x | Pruebas de funciones utilitarias, hooks, servicios y componentes |
+| Renderizado de componentes | React Testing Library | 16.x | Renderizar y consultar componentes en pruebas unitarias e integración |
+| E2E / UI testing | Playwright | 1.x | Pruebas de flujos completos desde el navegador |
+| Mocking de módulos | Vitest (`vi.mock`) | 4.x | Mock de servicios, Firebase, Socket.io y TanStack Query |
+| Cobertura | Vitest (`@vitest/coverage-v8`) | 4.x | Reporte de cobertura de código |
+ 
+---
+ 
+## Estructura de archivos de prueba
+ 
+Las pruebas unitarias y de integración de componentes se ubican en `/tests/unit/`, espejando la estructura de `/src/`. Las pruebas E2E se ubican en `/tests/e2e/`.
+ Ejemplo de estructura de carpetas 
+```txt
+/tests
+├── unit/
+│   ├── utils/
+│   │   ├── maskData.test.ts
+│   │   ├── formatCurrency.test.ts
+│   │   └── errorMessages.test.ts
+│   ├── hooks/
+│   │   ├── useInactivityLogout.test.ts
+│   │   └── useAuthListener.test.ts
+│   ├── services/
+│   │   └── authService.test.ts
+│   └── features/
+│       ├── investments/
+│       │   ├── components/
+│       │   │   └── InvestmentCard.test.tsx
+│       │   └── hooks/
+│       │       └── useInvestments.test.ts
+│       └── simulation/
+│           └── hooks/
+│               └── useSimulation.test.ts
+└── e2e/
+    ├── auth/
+    │   ├── login.spec.ts
+    │   └── register.spec.ts
+    ├── investments/
+    │   ├── explore.spec.ts
+    │   └── detail.spec.ts
+    └── simulation/
+        └── simulate.spec.ts
+```
+ 
+---
+
+## Unit Testing
+ 
+Las pruebas unitarias validan funciones, hooks y servicios de forma aislada, sin dependencias externas reales. Todas las dependencias externas deben ser mockeadas.
+ 
+### Qué debe tener pruebas unitarias obligatoriamente
+ 
+| Categoría | Qué probar |
+|---|---|
+| `/src/utils/` | Todas las funciones utilitarias: `maskData`, `formatCurrency`, `formatDate`, `calculateReturn`, `errorMessages` |
+| `/src/validations/` | Todos los esquemas Zod: casos válidos, casos inválidos y mensajes de error esperados |
+| `/src/services/` | Funciones de `authService`, `investmentService`, `documentService` con HTTP mockeado |
+| `/src/hooks/` | Custom hooks globales: `useInactivityLogout`, `useAuthListener`, `useNotifications` |
+| `/src/features/*/hooks/` | Hooks de cada feature: `useInvestments`, `useInvestmentDetail`, `useSimulation`, `useUploadFinancialDocument` |
+ 
+### Convenciones
+ 
+- Los archivos de prueba deben nombrarse igual que el archivo que prueban con el sufijo `.test.ts` o `.test.tsx`.
+- Cada `describe` debe corresponder a una función, hook o componente.
+- Cada `it` debe describir un comportamiento específico en lenguaje claro.
+```ts
+// Correcto
+describe('maskId', () => {
+  it('debe ocultar todos los dígitos excepto los últimos 4', () => { ... });
+  it('debe retornar string vacío si el input es vacío', () => { ... });
+});
+ 
+// Incorrecto
+describe('tests', () => {
+  it('funciona', () => { ... });
+});
+```
+ 
+### Ejemplo — prueba unitaria de utilidad
+
+[maskData.test.ts](./frontend/tests/unit/utils/maskData.test.ts) 
+
+ 
+### Ejemplo — prueba unitaria de esquema Zod
+
+[loginSchema.test.ts](./frontend/tests/unit/validations/loginSchema.test.ts) 
+
+
+### Mocking de Firebase Auth
+ 
+Las pruebas que involucren Firebase deben mockear el módulo completo. Nunca se debe conectar a Firebase real en pruebas.
+
+[authService.test.ts](./frontend/tests/unit/services/authService.test.ts)
+
+### Mocking del cliente HTTP
+ 
+Las pruebas de servicios que llamen al backend deben mockear `httpClient`, no interceptar requests reales.
+[useInvestments.test.ts](./frontend/tests/unit/features/investments/hooks/useInvestments.test.ts)
+
+
+---
+ 
+## Integration Testing (componentes)
+ 
+Las pruebas de integración validan que los componentes rendericen correctamente y respondan a interacciones del usuario. Se usan con React Testing Library sobre Vitest.
+ 
+### Qué debe tener pruebas de integración obligatoriamente
+ 
+| Componente / Feature | Qué probar |
+|---|---|
+| `LoginForm` | Renderizado, validación de campos, submit con credenciales correctas e incorrectas |
+| `RegisterForm` | Validación de todos los campos, submit exitoso, manejo de email ya registrado |
+| `InvestmentCard` | Renderizado con datos reales, click en "Ver detalle", badge de riesgo según nivel |
+| `RiskBadge` | Renderizado correcto para cada nivel: `low`, `medium`, `high` |
+| `ProtectedRoute` | Redirect a `/login` si no autenticado, redirect a `/unauthorized` si rol incorrecto |
+| `RoleGuard` | Muestra children si el rol coincide, muestra fallback si no coincide |
+| `SimulationForm` | Cálculo de retorno estimado al cambiar el monto, validación de monto mínimo |
+ 
+### Convenciones con React Testing Library
+ 
+- Consultar elementos por `role`, `label` o `text` visible. Nunca por `className`, `id` o selectores CSS.
+- No probar detalles de implementación interna (estado interno, nombres de variables).
+- Probar lo que el usuario ve y hace, no cómo está implementado.
+```tsx
+// Correcto: consultar por rol y texto visible
+const button = screen.getByRole('button', { name: /confirmar inversión/i });
+ 
+// Incorrecto: consultar por className o test-id arbitrario
+const button = document.querySelector('.btn-primary');
+```
+
+### Ejemplo — prueba de integración de componente
+
+[InvestmentCard.test.ts](./frontend/tests/unit/features/investments/components/InvestmentCard.test.tsx)
+
+### Ejemplo — prueba de integración de ProtectedRoute
+
+[ProtectedRoute.test.ts](./frontend/tests/unit/routes/ProtectedRoute.test.tsx)
+
+# UI Testing — End to End con Playwright
+ 
+Las pruebas E2E validan flujos completos del usuario desde el navegador real. No mockean servicios ni el backend; se ejecutan contra el ambiente `stage`.
+ 
+### Flujos obligatorios con cobertura E2E
+ 
+| Flujo | Archivo | Pasos que debe cubrir |
+|---|---|---|
+| Login | `/tests/e2e/auth/login.spec.ts` | Login exitoso, credenciales incorrectas, redirect post-login por rol |
+| Registro | `/tests/e2e/auth/register.spec.ts` | Registro exitoso, email ya registrado, validaciones de formulario |
+| Exploración de inversiones | `/tests/e2e/investments/explore.spec.ts` | Ver listado, aplicar filtros, ver detalle de una inversión |
+| Simulación de inversión | `/tests/e2e/simulation/simulate.spec.ts` | Ingresar monto, ver retorno estimado, confirmar simulación |
+| Registro de interés | `/tests/e2e/investments/detail.spec.ts` | Ver detalle completo de pyme, registrar interés de inversión |
+ 
+### Convenciones de Playwright
+ 
+- Usar `page.getByRole()`, `page.getByLabel()` y `page.getByText()` como selectores principales.
+- No usar selectores CSS ni XPath salvo casos donde no exista alternativa.
+- Cada spec debe ser independiente: no debe depender del estado dejado por otra prueba.
+- Usar `test.beforeEach` para login cuando el flujo requiere autenticación.
+- Las credenciales de prueba deben venir de variables de entorno, nunca hardcodeadas.
+```ts
+// playwright.config.ts — variables de entorno para E2E
+// PLAYWRIGHT_TEST_EMAIL
+// PLAYWRIGHT_TEST_PASSWORD
+// PLAYWRIGHT_BASE_URL
+```
+ 
+### Ejemplo — prueba E2E de login
+[login.spec.ts](./frontend/tests/e2e/auth/login.spec.ts)
+
+### Ejemplo — prueba E2E de simulación de inversión
+
+[simulate.spec.ts](./frontend/tests/e2e/simulation/simulate.spec.ts)
+
+## Cobertura mínima esperada
+ 
+La cobertura se mide con `@vitest/coverage-v8` y se reporta en cada ejecución del pipeline de CI/CD. Un build con cobertura por debajo del mínimo definido debe **bloquear el merge**.
+ 
+| Categoría | Cobertura mínima |
+|---|---|
+| `/src/utils/` | 90% |
+| `/src/validations/` | 90% |
+| `/src/services/` | 80% |
+| `/src/hooks/` | 80% |
+| `/src/features/*/hooks/` | 75% |
+| `/src/features/*/components/` | 70% |
+| `/src/routes/` | 80% |
+| **Cobertura global del proyecto** | **75%** |
+
+### Ejecución de pruebas
+ 
+```bash
+# Pruebas unitarias e integración
+npm run test
+ 
+# Pruebas con cobertura
+npm run test:coverage
+ 
+# Pruebas E2E contra ambiente stage
+npm run test:e2e
+ 
+# Pruebas E2E en modo UI (debug)
+npm run test:e2e:ui
+```
+ 
+Estos scripts deben estar definidos en `package.json`. Los nombres de los scripts no deben cambiarse; el pipeline de CI/CD los llama por estos nombres exactos.
+ 
+### Pipeline de CI/CD
+ 
+El pipeline de GitHub Actions debe ejecutar en orden:
+ 
+```
+1. npm run test:coverage   → bloquea si cobertura < mínimo definido
+2. npm run test:e2e        → bloquea si algún flujo crítico falla
+3. vite build              → solo si los dos pasos anteriores pasan
+```
+ 
+Las pruebas E2E solo se ejecutan en el pipeline de `stage`. No se ejecutan en `production`; el deploy a production depende de que el pipeline de stage haya pasado completamente.
+ 
