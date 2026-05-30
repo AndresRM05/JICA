@@ -529,7 +529,7 @@ El frontend debe utilizar **Tailwind CSS** como herramienta principal de estilos
 
 ---
 
-## Paleta de colores
+### Paleta de colores
 
 La paleta de colores debe transmitir confianza, seguridad financiera, claridad y modernidad. 
 
@@ -565,7 +565,7 @@ No se deben usar colores arbitrarios directamente en los componentes si ya exist
 
 ---
 
-## Tipografías
+### Tipografías
 
 Tipografía que se va a utilizar:
 
@@ -594,7 +594,7 @@ No se deben mezclar muchas fuentes ni tamaños sin justificación.
 
 ---
 
-## Logos
+### Logos
 
 El logo del sistema debe utilizarse de forma consistente en todas las pantallas.
 
