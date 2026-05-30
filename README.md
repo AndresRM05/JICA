@@ -1138,3 +1138,270 @@ Sentry.init({
 - No almacenar información sensible en `localStorage`, `sessionStorage`, cookies accesibles desde JS ni en el estado global más allá de lo estrictamente necesario para la sesión activa.
 - No construir URLs de API concatenando input del usuario directamente.
 - Mantener el principio de mínimo privilegio: mostrar solo la información que el rol del usuario necesita ver.
+
+## 2.8 Almacenamiento, comunicación y observabilidad
+ 
+Esta sección define las reglas obligatorias para el manejo de almacenamiento en el navegador, comunicación asíncrona, Web Sockets, procesos largos, eventos, observabilidad, monitoreo, errores, estado, caché y reintentos en el frontend de JICA.
+ 
+---
+ 
+## Tecnologías incorporadas en esta sección
+ 
+Las siguientes tecnologías se suman al stack definido en la sección 2.1:
+ 
+| Categoría | Tecnología | Versión | Uso |
+|---|---|---|---|
+| Servidor de estado y caché | TanStack Query (React Query) | 5.x | Caché de datos del servidor, estados de loading/error, reintentos automáticos |
+| Web Sockets | Socket.io client | 4.x | Notificaciones en tiempo real: inversión confirmada, proyecto financiado, aprobación de pyme |
+| Monitoreo de errores | Sentry Frontend SDK | (ver sección 2.1) | Captura de errores no manejados en stage y production |
+ 
+
+ 
+---
+ 
+## Session Storage y Local Storage
+ 
+### Regla general
+ 
+El uso de `localStorage` y `sessionStorage` está **restringido** en JICA. La mayoría del estado vive en Zustand (estado de UI) o TanStack Query (estado del servidor). El almacenamiento en el navegador solo se permite para los casos explícitamente definidos a continuación.
+ 
+### Casos permitidos
+ 
+| Dato | Mecanismo | Justificación |
+|---|---|---|
+| Preferencia de tema (claro/oscuro) | `localStorage` | Persiste entre sesiones sin necesidad del backend |
+| Filtros activos del dashboard | `sessionStorage` | Persiste durante la sesión activa, se limpia al cerrar el tab |
+| Paso activo en flujo de simulación | `sessionStorage` | Recupera el progreso si el usuario recarga accidentalmente |
+ 
+### Casos prohibidos
+ 
+- ID Token de Firebase → obtener siempre con `user.getIdToken()`. Ver sección 2.6.
+- Datos del usuario autenticado → viven en `authStore` (Zustand). Ver `/src/store/authStore.ts`.
+- Datos financieros de pymes o inversiones → viven en caché de TanStack Query.
+- Cualquier dato sensible: contraseñas, cuentas bancarias, cédulas, montos.
+### Implementación
+ 
+Las funciones de acceso a storage deben centralizarse en `/src/utils/storage.ts`. No se debe llamar a `localStorage` o `sessionStorage` directamente desde componentes. Ejemplo [storage.ts](./frontend/src/utils/storage.ts) 
+
+Todas las keys de storage deben usar el prefijo `jica:` para evitar colisiones con otras aplicaciones en el mismo dominio.
+
+## Comunicación asíncrona con el backend
+ 
+### Cliente HTTP
+ 
+Todas las llamadas HTTP al backend deben realizarse a través del cliente centralizado en `/src/services/httpClient.ts`Ejemplo [httpClient.ts](./frontend/src/services/httpClient.ts)  Ningún componente o página debe usar `fetch` o `axios` directamente.
+ 
+### TanStack Query
+ 
+TanStack Query es la capa de comunicación asíncrona con el servidor. Maneja automáticamente caché, estados de carga, errores y reintentos. Debe inicializarse en `/src/App.tsx`:
+
+
+### Estructura de queries
+ 
+Los queries de TanStack Query deben organizarse por feature dentro de `/src/features/{feature}/hooks/`. No se deben definir queries directamente en páginas o componentes. Ejemplo [useInvestments.ts](./frontend/src/features/investments/hooks/useInvestments.ts)
+
+### Query keys
+ 
+Todas las query keys deben definirse como constantes en el mismo archivo del hook usando el patrón de objetos mostrado arriba. Esto garantiza invalidación precisa del caché sin colisiones entre features.
+ 
+---
+ 
+## Web Sockets — Notificaciones en tiempo real
+ 
+JICA utiliza **Socket.io** para notificaciones en tiempo real. El uso de Web Sockets está limitado exclusivamente a eventos de notificación; la carga de datos sigue siendo responsabilidad de TanStack Query.
+ 
+### Eventos definidos
+ 
+| Evento (servidor → cliente) | Descripción | Roles que lo reciben |
+|---|---|---|
+| `investment:confirmed` | Una inversión fue confirmada por el admin | `investor` |
+| `project:funded` | Un proyecto alcanzó su meta de financiamiento | `investor`, `business` |
+| `business:approved` | Una pyme fue aprobada por el admin | `business` |
+| `business:rejected` | Una pyme fue rechazada por el admin | `business` |
+ 
+### Inicialización del cliente Socket.io
+ 
+La conexión debe gestionarse en `/src/services/socketService.ts`. La conexión solo debe iniciarse cuando el usuario está autenticado y debe cerrarse al hacer logout.Ejemplo [socketService.ts](./frontend/src/services/socketService.ts)
+
+### Hook de notificaciones
+ 
+Los componentes no deben suscribirse directamente a eventos del socket. Deben usar el hook centralizado `/src/hooks/useNotifications.ts` Ejemplo [useNotifications.ts](./frontend/src/hooks/useNotifications.ts) 
+
+### Store de notificaciones
+ 
+Las notificaciones recibidas deben almacenarse en `/src/store/notificationStore.ts`: Ejemplo [notificationStore.ts](./frontend/src/store/notificationStore.ts) 
+
+
+## Manejo de procesos largos
+ 
+Los siguientes procesos en JICA pueden tomar tiempo considerable y requieren feedback visual al usuario:
+ 
+| Proceso | Duración estimada | Estrategia |
+|---|---|---|
+| Carga de documentos financieros de pyme | 2–10 segundos | Barra de progreso + estado `uploading` |
+| Generación de reporte de simulación | 3–8 segundos | Skeleton loader + estado `generating` |
+| Aprobación de pyme por admin | Asíncrono (minutos/horas) | Estado `pending` + notificación por Socket.io al resolverse |
+ 
+### Reglas obligatorias
+ 
+- Todo proceso largo debe mostrar un indicador visual de progreso. No se debe bloquear la UI con un spinner sin información.
+- El usuario debe poder cancelar procesos largos cuando sea técnicamente posible.
+- Si un proceso falla, debe mostrarse el error con una opción de reintento visible.
+- Los procesos asíncronos que el backend resuelve en background (como aprobación de pyme) deben notificarse via Socket.io cuando se completen. El frontend no debe hacer polling para verificar el resultado.
+### Implementación con TanStack Query mutations
+Ejemplo [useUploadFinancialDocument.ts](./frontend/src/features/documents/hooks/useUploadFinancialDocument.ts) 
+---
+## Manejo de eventos del navegador
+ 
+Los eventos del navegador (`resize`, `scroll`, `visibilitychange`, etc.) deben manejarse exclusivamente a través de custom hooks. No se deben agregar `addEventListener` directamente en componentes.
+Ejemplo [useWindowSize.ts](./frontend/src/hooks/useWindowSize.ts) 
+Todo `addEventListener` dentro de un `useEffect` debe tener su correspondiente `removeEventListener` en el cleanup para evitar memory leaks.
+ 
+---
+
+ 
+## Observabilidad y monitoreo
+ 
+### Sentry
+ 
+Sentry es el único sistema de monitoreo de errores del frontend. Debe inicializarse en `/src/main.tsx` antes de montar la aplicación. Solo debe estar activo en `stage` y `production`. Ejemplo [main.tsx](./frontend/src/main.tsx) 
+
+ 
+### Qué debe capturar Sentry
+ 
+- Errores JavaScript no manejados
+- Errores en queries de TanStack Query (`onError` global)
+- Errores de conexión con Socket.io
+- Errores en carga de documentos o simulación
+### Qué nunca debe enviarse a Sentry
+ 
+- ID Tokens de Firebase
+- Contraseñas
+- Datos financieros del usuario
+- Números de cuenta o cédula
+### TanStack Query — monitoreo global de errores
+ 
+Los errores globales de queries deben capturarse en el `QueryClient` y reportarse a Sentry:
+ 
+## Manejo de errores
+ 
+### Clasificación de errores
+ 
+| Tipo | Origen | Manejo |
+|---|---|---|
+| Error de red | Request fallido sin respuesta del servidor | Mostrar mensaje genérico + opción de reintento |
+| Error 400 | Validación fallida en el backend | Mostrar mensaje del campo específico en el formulario |
+| Error 401 | Token expirado o revocado | Logout automático + redirect `/login`. Ver sección 2.6 |
+| Error 403 | Acción no permitida para el rol | Mostrar mensaje "No tienes permiso para realizar esta acción" |
+| Error 404 | Recurso no encontrado | Mostrar página o componente de estado vacío |
+| Error 500 | Error interno del servidor | Mostrar mensaje genérico, capturar en Sentry |
+ 
+### Error Boundary
+ 
+Cada feature crítica debe estar envuelta en un `ErrorBoundary` de React para capturar errores de renderizado sin romper toda la aplicación. Usar el wrapper de Sentry:
+
+### Mensajes de error al usuario
+ 
+- Los errores nunca deben mostrar mensajes técnicos, stack traces ni códigos de error del servidor.
+- Los mensajes deben ser claros, en español y orientados a la acción del usuario.
+Ejemplo en [errorMessages.ts](./frontend/src/utils/errorMessages.ts) 
+
+
+---
+ 
+## Manejo de estado
+ 
+### Separación de responsabilidades
+ 
+El estado del frontend de JICA se divide en dos capas con responsabilidades distintas. No se deben mezclar:
+ 
+| Capa | Herramienta | Qué maneja |
+|---|---|---|
+| Estado del servidor | TanStack Query | Datos del backend: inversiones, pymes, documentos, simulaciones |
+| Estado global de UI | Zustand | Sesión del usuario, notificaciones, filtros activos, tema |
+ 
+### Stores de Zustand
+ 
+Cada store de Zustand debe tener una responsabilidad única. No se debe crear un store global que maneje todo.
+ 
+| Store | Archivo | Responsabilidad |
+|---|---|---|
+| `authStore` | `/src/store/authStore.ts` | Sesión y usuario autenticado. Ver sección 2.6 |
+| `notificationStore` | `/src/store/notificationStore.ts` | Notificaciones en tiempo real de Socket.io |
+| `uiStore` | `/src/store/uiStore.ts` | Estado de UI global: tema, sidebar abierto/cerrado |
+| `filterStore` | `/src/store/filterStore.ts` | Filtros activos en el dashboard de inversiones |
+ 
+No se deben crear stores adicionales sin justificación documentada.
+ 
+---
+ 
+## Caché
+ 
+El caché en JICA es gestionado exclusivamente por TanStack Query. No se debe implementar caché manual con variables, refs o `localStorage`.
+ 
+### Configuración de staleTime por tipo de dato
+ 
+El `staleTime` define cuánto tiempo los datos se consideran frescos antes de hacer un nuevo request. Debe configurarse por query según la frecuencia de cambio del dato:
+ 
+| Dato | staleTime | Justificación |
+|---|---|---|
+| Lista de inversiones disponibles | 5 minutos | Cambia con frecuencia moderada |
+| Detalle de una inversión | 10 minutos | Cambia poco una vez publicada |
+| Perfil del inversionista | 15 minutos | Cambia raramente |
+| Métricas financieras de pyme | 10 minutos | Se actualizan periódicamente |
+| Simulación de inversión | 0 (sin caché) | Siempre debe ser fresca |
+ 
+```ts
+// Ejemplo de staleTime por query
+useQuery({
+  queryKey: investmentKeys.detail(id),
+  queryFn: () => getInvestmentById(id),
+  staleTime: 1000 * 60 * 10, // 10 minutos
+});
+```
+ 
+### Invalidación de caché
+ 
+El caché debe invalidarse después de mutaciones que modifiquen datos en el servidor:
+ 
+```ts
+// Después de confirmar una inversión, invalidar el detalle y la lista
+queryClient.invalidateQueries({ queryKey: investmentKeys.detail(id) });
+queryClient.invalidateQueries({ queryKey: investmentKeys.all });
+```
+ 
+---
+ 
+## Reintentos
+ 
+### Queries (lectura de datos)
+ 
+TanStack Query reintenta automáticamente los queries fallidos con backoff exponencial. La configuración global está en `/src/App.tsx` . Los queries individuales pueden sobreescribir esta configuración.
+ 
+```ts
+// Query sin reintentos (datos que no deben reintentarse automáticamente)
+useQuery({
+  queryKey: ['simulation', params],
+  queryFn: () => runSimulation(params),
+  retry: 0,
+});
+```
+ 
+### Mutaciones (escritura de datos)
+ 
+Las mutaciones **no deben reintentarse automáticamente**. Un reintento automático en una operación de escritura (confirmar inversión, subir documento) puede causar duplicados o efectos no deseados. El usuario debe reintentar manualmente.
+ 
+```ts
+// Correcto: retry: 0 en mutaciones
+useMutation({
+  mutationFn: confirmInvestment,
+  retry: 0,
+  onError: (error) => {
+    // Mostrar error al usuario con opción de reintento manual
+  },
+});
+```
+ 
+### Reintentos en Socket.io
+ 
+El cliente de Socket.io debe intentar reconectarse automáticamente hasta 5 veces con un delay de 2 segundos entre intentos. Ver configuración en `/src/services/socketService.ts`. Si supera los 5 intentos, debe mostrarse un banner informando al usuario que las notificaciones en tiempo real no están disponibles, sin interrumpir el resto de la aplicación.

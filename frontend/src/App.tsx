@@ -4,6 +4,7 @@ import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
 
+
 function App() {
   const [count, setCount] = useState(0)
 
@@ -117,6 +118,23 @@ function App() {
       <section id="spacer"></section>
     </>
   )
+  // /src/App.tsx
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+ 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,      // 5 minutos antes de considerar datos obsoletos
+      gcTime: 1000 * 60 * 10,         // 10 minutos antes de limpiar caché inactivo
+      retry: 2,                        // 2 reintentos automáticos en caso de error
+      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000), // backoff exponencial
+      refetchOnWindowFocus: false,     // no refetch automático al volver al tab
+    },
+    mutations: {
+      retry: 0, // las mutaciones no deben reintentarse automáticamente
+    },
+  },
+});
 }
 
 export default App
