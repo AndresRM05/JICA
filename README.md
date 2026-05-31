@@ -1710,7 +1710,7 @@ Reglas obligatorias:
 * El ID Token de Firebase debe adjuntarse automáticamente en el header `Authorization`.
 * El token debe obtenerse con `user.getIdToken()`, nunca desde `localStorage`, `sessionStorage` ni Zustand.
 * Los errores HTTP deben normalizarse antes de llegar a la UI.
-* El timeout recomendado para requests generales es de `15000 ms`.
+* El timeout debe configurarse de forma centralizada en httpClient.ts.
 
 ---
 
@@ -1850,10 +1850,8 @@ Reglas obligatorias:
 * Los componentes no deben interpretar directamente errores de Axios o del backend.
 * Los errores técnicos no deben mostrarse al usuario final.
 * Los mensajes visibles deben estar en español.
-* Los errores `401` deben cerrar sesión y redirigir a `/login`.
-* Los errores `403` deben mostrar un mensaje de permisos insuficientes.
-* Los errores `500` deben mostrar un mensaje genérico y reportarse a Sentry.
-* Los errores de validación `400` deben mapearse a campos del formulario.
+* Los errores deben transformarse a un formato común antes de llegar a la UI.
+* La estrategia específica de monitoreo y reporte dependerá del entorno de despliegue.
 
 Mensajes visibles requeridos:
 
@@ -1863,7 +1861,7 @@ Mensajes visibles requeridos:
 
 ### Validación de contratos con Zod
 
-TypeScript valida durante desarrollo, pero no protege contra respuestas incorrectas en tiempo de ejecución. Por eso, las respuestas críticas del backend deben validarse con Zod.
+TypeScript valida durante desarrollo, pero no protege contra respuestas incorrectas en tiempo de ejecución. Por eso, las respuestas críticas del backend deben validarse con Zod antes de ser utilizadas por la aplicación.
 
 Ubicación requerida:
 
@@ -1880,6 +1878,31 @@ Ejemplos de archivos esperados para futuras features:
 * `/src/features/auth/validations/loginSchema.ts`
 * `/src/features/simulation/validations/simulationSchema.ts`
 
+La validación de contratos debe realizarse dentro de la capa de servicios antes de retornar los datos al hook correspondiente.
+
+Flujo obligatorio:
+
+```txt
+Backend
+   ↓
+Servicio de API
+   ↓
+Validación Zod
+   ↓
+Dato tipado
+   ↓
+Hook
+   ↓
+UI
+```
+
+Si la validación falla:
+
+* La respuesta debe considerarse inválida.
+* No se debe actualizar el estado de la aplicación.
+* Debe lanzarse un error controlado para que el hook maneje el estado correspondiente.
+* No se deben utilizar datos parcialmente válidos.
+
 Deben validarse con Zod:
 
 * Formularios de login y registro.
@@ -1889,6 +1912,12 @@ Deben validarse con Zod:
 * Roles y permisos.
 * Inversiones y detalle de inversión.
 * Parámetros enviados en mutaciones críticas.
+
+No se permite:
+
+* Validar respuestas directamente en componentes visuales.
+* Duplicar validaciones entre componentes, hooks y servicios.
+* Utilizar datos provenientes del backend sin validación cuando hayan sido definidos como contratos críticos.
 
 ---
 
@@ -1979,25 +2008,6 @@ Componentes reutilizables recomendados:
 /src/components/ui/EmptyState
 /src/components/ui/ErrorState
 ```
-
----
-
-### Endpoints esperados para el MVP
-
-Los siguientes endpoints son los mínimos esperados para el frontend del MVP. Los nombres finales deben coincidir con el contrato definido por backend.
-
-| Feature     | Método  | Endpoint                        | Uso                                           |
-| ----------- | ------- | ------------------------------- | --------------------------------------------- |
-| Auth        | `POST`  | `/auth/register`                | Registrar usuario y asignar rol inicial.      |
-| Auth        | `GET`   | `/auth/me`                      | Obtener perfil del usuario autenticado.       |
-| Investments | `GET`   | `/investments`                  | Listar oportunidades de inversión.            |
-| Investments | `GET`   | `/investments/:id`              | Obtener detalle de una oportunidad.           |
-| Investments | `POST`  | `/investments/:id/interest`     | Registrar interés del inversionista.          |
-| Simulation  | `POST`  | `/simulations`                  | Calcular o registrar simulación de inversión. |
-| Business    | `GET`   | `/businesses/:id`               | Obtener información pública de una pyme.      |
-| Documents   | `POST`  | `/documents/upload`             | Cargar documentos financieros de una pyme.    |
-| Admin       | `PATCH` | `/admin/businesses/:id/approve` | Aprobar pyme.                                 |
-| Admin       | `PATCH` | `/admin/businesses/:id/reject`  | Rechazar pyme.                                |
 
 ---
 
