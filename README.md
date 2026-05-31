@@ -529,7 +529,7 @@ El frontend debe utilizar **Tailwind CSS** como herramienta principal de estilos
 
 ---
 
-## Paleta de colores
+### Paleta de colores
 
 La paleta de colores debe transmitir confianza, seguridad financiera, claridad y modernidad. 
 
@@ -565,7 +565,7 @@ No se deben usar colores arbitrarios directamente en los componentes si ya exist
 
 ---
 
-## Tipografías
+### Tipografías
 
 Tipografía que se va a utilizar:
 
@@ -594,7 +594,7 @@ No se deben mezclar muchas fuentes ni tamaños sin justificación.
 
 ---
 
-## Logos
+### Logos
 
 El logo del sistema debe utilizarse de forma consistente en todas las pantallas.
 
@@ -1635,4 +1635,421 @@ El pipeline de GitHub Actions debe ejecutar en orden:
 ```
  
 Las pruebas E2E solo se ejecutan en el pipeline de `stage`. No se ejecutan en `production`; el deploy a production depende de que el pipeline de stage haya pasado completamente.
- 
+
+
+ ## 2.10 Consumo de APIs y contratos de datos
+
+Esta sección define cómo el frontend de JICA debe comunicarse con el backend y cómo se deben manejar los contratos de datos entre ambas capas.
+
+El objetivo es evitar llamadas dispersas, estructuras inconsistentes y errores al consumir información de autenticación, usuarios, inversiones, simulaciones, documentos o administración.
+
+---
+
+### Regla general
+
+El frontend **no debe consumir APIs directamente desde páginas ni componentes visuales**.
+
+Toda comunicación con el backend debe seguir este flujo:
+
+```txt
+Página / Componente
+        ↓
+Hook de feature
+        ↓
+Servicio de API
+        ↓
+Cliente HTTP centralizado
+        ↓
+Backend
+```
+
+Ejemplo de flujo esperado:
+
+```txt
+InvestmentDetailsPage.tsx
+        ↓
+useInvestmentDetail.ts
+        ↓
+investmentService.ts
+        ↓
+httpClient.ts
+        ↓
+GET /investments/:id
+```
+
+---
+
+### Responsabilidad de cada capa
+
+| Capa              | Ubicación                                                  | Responsabilidad                                                                  |
+| ----------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Página            | `/src/pages` o `/src/features/{feature}/pages`             | Renderiza la pantalla y conecta los componentes principales.                     |
+| Componente visual | `/src/components` o `/src/features/{feature}/components`   | Muestra información recibida por props. No consume APIs directamente.            |
+| Hook de feature   | `/src/features/{feature}/hooks`                            | Usa TanStack Query para manejar loading, error, success, caché e invalidación.   |
+| Servicio de API   | `/src/features/{feature}/services` o `/src/services`       | Define funciones específicas para llamar endpoints del backend.                  |
+| Cliente HTTP      | `/src/services/httpClient.ts`                              | Centraliza base URL, headers, token Firebase, timeout y manejo común de errores. |
+| Tipos             | `/src/types` o `/src/features/{feature}/types`             | Define contratos TypeScript para requests y responses.                           |
+| Validaciones      | `/src/validations` o `/src/features/{feature}/validations` | Define esquemas Zod para formularios y respuestas críticas.                      |
+
+---
+
+### Cliente HTTP centralizado
+
+Todas las llamadas HTTP deben realizarse desde el cliente centralizado.
+
+Archivo requerido:
+
+[httpClient.ts](./frontend/src/services/httpClient.ts)
+
+Reglas obligatorias:
+
+* No usar `fetch` directamente en componentes, páginas o hooks.
+* No usar `axios` directamente fuera de `httpClient.ts`.
+* Todas las requests deben usar `VITE_API_BASE_URL`.
+* En `stage` y `production`, `VITE_API_BASE_URL` debe iniciar con `https://`.
+* El ID Token de Firebase debe adjuntarse automáticamente en el header `Authorization`.
+* El token debe obtenerse con `user.getIdToken()`, nunca desde `localStorage`, `sessionStorage` ni Zustand.
+* Los errores HTTP deben normalizarse antes de llegar a la UI.
+* El timeout recomendado para requests generales es de `15000 ms`.
+
+---
+
+### Servicios de API
+
+Los servicios contienen las funciones que llaman endpoints específicos del backend.
+
+Ubicación requerida para servicios por feature:
+
+```txt
+/src/features/{feature}/services
+```
+
+Ejemplos requeridos:
+
+* [investmentService.ts](./frontend/src/features/investments/services/investmentService.ts)
+* [simulationService.ts](./frontend/src/features/simulation/services/simulationService.ts)
+* [documentService.ts](./frontend/src/features/documents/services/documentService.ts)
+
+Reglas obligatorias:
+
+* Cada servicio debe representar un dominio del sistema.
+* Las funciones deben usar nombres claros como `getInvestments`, `getInvestmentById`, `confirmInvestment`, `runSimulation` o `uploadDocument`.
+* Cada función debe retornar datos tipados.
+* Los servicios no deben manejar renderizado, navegación ni mensajes visuales.
+* Los servicios no deben modificar stores de Zustand.
+* Los servicios no deben contener lógica de UI.
+
+---
+
+### Hooks para consumo de datos
+
+Los componentes y páginas deben consumir datos mediante hooks de feature. Estos hooks deben usar TanStack Query.
+
+Ubicación requerida:
+
+```txt
+/src/features/{feature}/hooks
+```
+
+Ejemplos requeridos:
+
+* [useInvestments.ts](./frontend/src/features/investments/hooks/useInvestments.ts)
+* [useInvestmentDetail.ts](./frontend/src/features/investments/hooks/useInvestmentDetail.ts)
+* [useConfirmInvestment.ts](./frontend/src/features/investments/hooks/useConfirmInvestment.ts)
+* [useSimulation.ts](./frontend/src/features/simulation/hooks/useSimulation.ts)
+
+Reglas obligatorias:
+
+* No definir `useQuery` ni `useMutation` directamente dentro de páginas.
+* No llamar servicios directamente desde componentes visuales.
+* Cada hook debe tener una responsabilidad clara.
+* Las query keys deben estar centralizadas y ser predecibles.
+* Las mutaciones de escritura deben tener `retry: 0`.
+* Después de una mutación exitosa, se debe invalidar el caché relacionado.
+
+---
+
+### Contratos de datos
+
+Todo dato enviado o recibido del backend debe tener contrato TypeScript.
+
+Ubicación requerida para contratos globales:
+
+[api.types.ts](./frontend/src/types/api.types.ts)
+
+Ubicación requerida para contratos por feature:
+
+```txt
+/src/features/{feature}/types
+```
+
+Ejemplos requeridos:
+
+* [investment.types.ts](./frontend/src/features/investments/types/investment.types.ts)
+* [auth.types.ts](./frontend/src/features/auth/types/auth.types.ts)
+* [simulation.types.ts](./frontend/src/features/simulation/types/simulation.types.ts)
+
+Reglas obligatorias:
+
+* No usar `any` para respuestas del backend.
+* No asumir campos que no estén definidos en el contrato.
+* Todo dato financiero debe tener tipo explícito.
+* Los nombres de propiedades deben coincidir con el contrato acordado con backend.
+* Si el backend cambia un contrato, se debe actualizar primero el tipo correspondiente.
+* No transformar datos directamente dentro de componentes visuales.
+
+---
+
+### Contrato estándar de respuesta
+
+Cuando el backend retorne una respuesta envolvente, debe seguir esta estructura en el frontend:
+
+Archivo requerido:
+
+[api.types.ts](./frontend/src/types/api.types.ts)
+
+```ts
+export interface ApiResponse<T> {
+  data: T;
+  message?: string;
+  meta?: {
+    page?: number;
+    pageSize?: number;
+    totalItems?: number;
+    totalPages?: number;
+  };
+}
+```
+
+Para listados paginados, el campo `meta` debe utilizarse para renderizar los controles de paginación.
+
+---
+
+### Contrato estándar de error
+
+Los errores del backend deben transformarse a una estructura estándar antes de llegar a la UI.
+
+Archivo requerido:
+
+[api.types.ts](./frontend/src/types/api.types.ts)
+
+```ts
+export interface ApiError {
+  statusCode: number;
+  code: string;
+  message: string;
+  fieldErrors?: Record<string, string>;
+}
+```
+
+Reglas obligatorias:
+
+* Los componentes no deben interpretar directamente errores de Axios o del backend.
+* Los errores técnicos no deben mostrarse al usuario final.
+* Los mensajes visibles deben estar en español.
+* Los errores `401` deben cerrar sesión y redirigir a `/login`.
+* Los errores `403` deben mostrar un mensaje de permisos insuficientes.
+* Los errores `500` deben mostrar un mensaje genérico y reportarse a Sentry.
+* Los errores de validación `400` deben mapearse a campos del formulario.
+
+Mensajes visibles requeridos:
+
+[errorMessages.ts](./frontend/src/utils/errorMessages.ts)
+
+---
+
+### Validación de contratos con Zod
+
+TypeScript valida durante desarrollo, pero no protege contra respuestas incorrectas en tiempo de ejecución. Por eso, las respuestas críticas del backend deben validarse con Zod.
+
+Ubicación requerida:
+
+```txt
+/src/features/{feature}/validations
+```
+
+Ejemplos requeridos:
+
+* [investmentSchema.ts](./frontend/src/features/investments/validations/investmentSchema.ts)
+* [loginSchema.ts](./frontend/src/features/auth/validations/loginSchema.ts)
+* [simulationSchema.ts](./frontend/src/features/simulation/validations/simulationSchema.ts)
+
+Deben validarse con Zod:
+
+* Formularios de login y registro.
+* Formularios de simulación de inversión.
+* Datos financieros recibidos del backend.
+* Perfil del usuario autenticado.
+* Roles y permisos.
+* Inversiones y detalle de inversión.
+* Parámetros enviados en mutaciones críticas.
+
+---
+
+### Parámetros de consulta
+
+Los filtros, búsquedas y paginación deben enviarse como query parameters usando el objeto `params` del cliente HTTP.
+
+Correcto:
+
+```ts
+httpClient.get("/investments", {
+  params: {
+    riskLevel: "medium",
+    page: 1,
+    pageSize: 10,
+  },
+});
+```
+
+Incorrecto:
+
+```ts
+httpClient.get("/investments?riskLevel=" + riskLevel + "&page=" + page);
+```
+
+Reglas obligatorias:
+
+* No construir URLs concatenando input del usuario.
+* No enviar datos sensibles como query parameters.
+* Los filtros deben estar tipados.
+* La paginación debe usar `page` y `pageSize`.
+* Las búsquedas deben usar `search`.
+
+---
+
+### Mutations y operaciones de escritura
+
+Las operaciones que modifican datos deben implementarse con `useMutation`.
+
+Ejemplos de operaciones de escritura:
+
+* Registro de usuario.
+* Confirmación de inversión.
+* Registro de interés.
+* Actualización de perfil.
+* Carga de documentos.
+* Simulación de inversión cuando queda registrada en backend.
+
+Reglas obligatorias:
+
+* Las mutations no deben tener reintentos automáticos.
+* Toda mutation debe mostrar estado de carga.
+* Toda mutation debe manejar error visible.
+* Toda mutation exitosa debe invalidar queries relacionadas.
+* Las mutations críticas deben mostrar confirmación visual al usuario.
+* No se deben ejecutar mutations automáticamente al renderizar un componente.
+
+Ejemplo requerido:
+
+[useConfirmInvestment.ts](./frontend/src/features/investments/hooks/useConfirmInvestment.ts)
+
+---
+
+### Estados obligatorios en pantallas con APIs
+
+Toda pantalla que consuma APIs debe manejar explícitamente estos estados:
+
+```txt
+loading
+success
+empty
+error
+```
+
+Reglas obligatorias:
+
+* `loading`: mostrar skeleton o indicador visual claro.
+* `success`: mostrar los datos.
+* `empty`: mostrar mensaje cuando no existan resultados.
+* `error`: mostrar mensaje claro y botón de reintento.
+* No dejar pantallas en blanco mientras se cargan datos.
+* No mostrar errores técnicos al usuario.
+
+Componentes reutilizables recomendados:
+
+```txt
+/src/components/ui/LoadingState
+/src/components/ui/EmptyState
+/src/components/ui/ErrorState
+```
+
+---
+
+### Endpoints esperados para el MVP
+
+Los siguientes endpoints son los mínimos esperados para el frontend del MVP. Los nombres finales deben coincidir con el contrato definido por backend.
+
+| Feature     | Método  | Endpoint                        | Uso                                           |
+| ----------- | ------- | ------------------------------- | --------------------------------------------- |
+| Auth        | `POST`  | `/auth/register`                | Registrar usuario y asignar rol inicial.      |
+| Auth        | `GET`   | `/auth/me`                      | Obtener perfil del usuario autenticado.       |
+| Investments | `GET`   | `/investments`                  | Listar oportunidades de inversión.            |
+| Investments | `GET`   | `/investments/:id`              | Obtener detalle de una oportunidad.           |
+| Investments | `POST`  | `/investments/:id/interest`     | Registrar interés del inversionista.          |
+| Simulation  | `POST`  | `/simulations`                  | Calcular o registrar simulación de inversión. |
+| Business    | `GET`   | `/businesses/:id`               | Obtener información pública de una pyme.      |
+| Documents   | `POST`  | `/documents/upload`             | Cargar documentos financieros de una pyme.    |
+| Admin       | `PATCH` | `/admin/businesses/:id/approve` | Aprobar pyme.                                 |
+| Admin       | `PATCH` | `/admin/businesses/:id/reject`  | Rechazar pyme.                                |
+
+---
+
+### Versionado de contratos
+
+Los contratos entre frontend y backend deben mantenerse estables durante cada entrega. Si se requiere cambiar un contrato, se debe actualizar en este orden:
+
+```txt
+1. Actualizar contrato documentado del endpoint.
+2. Actualizar tipos TypeScript.
+3. Actualizar esquemas Zod.
+4. Actualizar servicio de API.
+5. Actualizar hooks afectados.
+6. Actualizar componentes afectados.
+7. Actualizar pruebas unitarias, integración o E2E afectadas.
+```
+
+Reglas obligatorias:
+
+* No cambiar nombres de campos sin actualizar tipos y validaciones.
+* No eliminar campos usados por la UI sin ajustar los componentes.
+* No agregar lógica temporal en componentes para compensar respuestas inconsistentes.
+* Todo cambio de contrato debe reflejarse en pruebas.
+
+---
+
+### Prohibiciones
+
+No se permite:
+
+* Consumir APIs directamente desde componentes.
+* Usar `fetch` directamente fuera de `httpClient.ts`.
+* Usar `axios` directamente fuera de `httpClient.ts`.
+* Usar `any` para respuestas del backend.
+* Guardar respuestas completas con datos sensibles en `localStorage`.
+* Mostrar errores técnicos del backend al usuario.
+* Concatenar parámetros manualmente en URLs.
+* Reintentar automáticamente operaciones de escritura.
+* Duplicar lógica de consumo de APIs entre features.
+* Usar datos mockeados en producción.
+* Ignorar estados de carga, error o vacío.
+
+---
+
+### Checklist para implementar un nuevo endpoint
+
+Antes de consumir un nuevo endpoint desde el frontend, se debe completar esta lista:
+
+```txt
+[ ] Definir el contrato TypeScript de request y response.
+[ ] Definir esquema Zod si el dato es crítico o viene de formularios.
+[ ] Crear o actualizar el servicio de API correspondiente.
+[ ] Consumir el servicio desde un hook de feature con TanStack Query.
+[ ] Definir query key si es una operación de lectura.
+[ ] Definir invalidación de caché si es una mutation.
+[ ] Manejar loading, success, empty y error states en la UI.
+[ ] Agregar pruebas unitarias o de integración según corresponda.
+[ ] Verificar que no se expongan datos sensibles.
+[ ] Enlazar el archivo implementado en esta documentación si aplica.
+```
+
