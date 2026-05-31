@@ -1754,7 +1754,6 @@ Ubicación requerida:
 Ejemplos requeridos:
 
 * [useInvestments.ts](./frontend/src/features/investments/hooks/useInvestments.ts)
-* [useInvestmentDetail.ts](./frontend/src/features/investments/hooks/useInvestmentDetail.ts)
 * [useConfirmInvestment.ts](./frontend/src/features/investments/hooks/useConfirmInvestment.ts)
 * [useSimulation.ts](./frontend/src/features/simulation/hooks/useSimulation.ts)
 
