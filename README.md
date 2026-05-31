@@ -1867,11 +1867,14 @@ Ubicación requerida:
 /src/features/{feature}/validations
 ```
 
-Ejemplos requeridos:
+Implementación de referencia:
 
 * [investmentSchema.ts](./frontend/src/features/investments/validations/investmentSchema.ts)
-* [loginSchema.ts](./frontend/src/features/auth/validations/loginSchema.ts)
-* [simulationSchema.ts](./frontend/src/features/simulation/validations/simulationSchema.ts)
+
+Ejemplos de archivos esperados para futuras features:
+
+* `/src/features/auth/validations/loginSchema.ts`
+* `/src/features/simulation/validations/simulationSchema.ts`
 
 Deben validarse con Zod:
 
