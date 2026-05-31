@@ -1782,12 +1782,16 @@ Ubicación requerida para contratos por feature:
 /src/features/{feature}/types
 ```
 
-Ejemplos requeridos:
+Implementación de referencia:
 
 * [investment.types.ts](./frontend/src/features/investments/types/investment.types.ts)
-* [auth.types.ts](./frontend/src/features/auth/types/auth.types.ts)
-* [simulation.types.ts](./frontend/src/features/simulation/types/simulation.types.ts)
 
+Ejemplos de contratos esperados para features:
+
+```txt
+/src/features/auth/types/auth.types.ts
+/src/features/simulation/types/simulation.types.ts
+```
 Reglas obligatorias:
 
 * No usar `any` para respuestas del backend.
