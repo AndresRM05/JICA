@@ -1,32 +1,25 @@
 // /src/store/authStore.ts
 import { create } from 'zustand';
-import { User } from 'firebase/auth';
+import { AccountInfo } from '@azure/msal-browser';
 import { UserRole } from '@/types/auth.types';
-
-interface AuthenticatedUser {
+ 
+export interface AuthenticatedUser {
   uid: string;
   email: string;
-  role: UserRole;
   fullName: string;
-  emailVerified: boolean;
+  role: UserRole;
 }
-
+ 
 interface AuthState {
-  firebaseUser: User | null;
   user: AuthenticatedUser | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
-  setFirebaseUser: (firebaseUser: User | null, user: AuthenticatedUser | null) => void;
+  setUser: (user: AuthenticatedUser) => void;
   clearSession: () => void;
 }
-
+ 
 export const useAuthStore = create<AuthState>((set) => ({
-  firebaseUser: null,
   user: null,
   isAuthenticated: false,
-  isLoading: true,
-  setFirebaseUser: (firebaseUser, user) =>
-    set({ firebaseUser, user, isAuthenticated: !!firebaseUser, isLoading: false }),
-  clearSession: () =>
-    set({ firebaseUser: null, user: null, isAuthenticated: false, isLoading: false }),
+  setUser: (user) => set({ user, isAuthenticated: true }),
+  clearSession: () => set({ user: null, isAuthenticated: false }),
 }));

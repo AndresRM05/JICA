@@ -1,24 +1,35 @@
 // /src/hooks/useAuthListener.ts
 import { useEffect } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
-import { firebaseAuth } from '@/services/firebase';
+import { useMsal } from '@azure/msal-react';
 import { useAuthStore } from '@/store/authStore';
-import { getUserProfile } from '@/services/userService';
-
+import { UserRole } from '@/types/auth.types';
+ 
 export function useAuthListener() {
-  const { setFirebaseUser, clearSession } = useAuthStore();
-
+  const { accounts, instance } = useMsal();
+  const { setUser, clearSession } = useAuthStore();
+ 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser) => {
-      if (firebaseUser) {
-        // Obtener perfil del usuario (incluye role desde el backend)
-        const profile = await getUserProfile(firebaseUser);
-        setFirebaseUser(firebaseUser, profile);
-      } else {
-        clearSession();
-      }
+    if (accounts.length === 0) {
+      clearSession();
+      return;
+    }
+ 
+    const account = accounts[0];
+ 
+    // El rol viene en los App Roles del token de Entra ID
+    const roles = account.idTokenClaims?.roles as UserRole[] | undefined;
+    const role = roles?.[0] ?? null;
+ 
+    if (!role) {
+      clearSession();
+      return;
+    }
+ 
+    setUser({
+      uid: account.localAccountId,
+      email: account.username,
+      fullName: account.name ?? '',
+      role,
     });
-
-    return () => unsubscribe();
-  }, []);
+  }, [accounts]);
 }

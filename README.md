@@ -807,86 +807,114 @@ Riesgo alto: bg-red-100 text-red-700
 
 ---
 ## 2.6 Seguridad del frontend
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 2.6 Seguridad del frontend
+ 
+Esta sección define las reglas obligatorias de autenticación, autorización, manejo de sesiones, privacidad de datos y cifrado que debe seguir el frontend de JICA. 
+ 
+---
+ 
 ## Tecnologías y servicios de autenticación
  
 | Categoría | Tecnología / Servicio | Versión | Uso |
 |---|---|---|---|
-| Proveedor de autenticación | Firebase Authentication | SDK v10.x | Gestión de identidad, login, registro, sesión y tokens |
-| SDK cliente | `firebase` (npm) | 10.x | Integración del frontend con Firebase Auth |
-| Método de autenticación | Email y contraseña | — | Único método de login en JICA MVP |
-| Token de identidad | Firebase ID Token (JWT) | — | Token enviado al backend en cada request |
-| Renovación de token | Firebase SDK (automático) | — | El SDK renueva el ID Token cada 60 minutos sin intervención manual |
-| Estado de sesión | Zustand + Firebase `onAuthStateChanged` | — | Sincronización del estado de autenticación con el store global |
-| Rol de usuario | Custom Claims en Firebase Token | — | El backend asigna el rol (`investor`, `business`, `admin`) como claim en el token |
+| Proveedor de autenticación | Microsoft Entra ID (Azure AD) | N/A | Gestión de identidad, login, registro, sesión y tokens. Integración nativa con Azure Static Web Apps |
+| SDK cliente — core | `@azure/msal-browser` | 3.x | Manejo de flujos de autenticación, adquisición y renovación de tokens |
+| SDK cliente — React | `@azure/msal-react` | 2.x | Hooks y componentes de React para integración con MSAL |
+| Método de autenticación | Email y contraseña | — | Único método de login en JICA MVP, gestionado por Entra ID |
+| Token de acceso | Azure AD Access Token (JWT) | — | Token enviado al backend en cada request |
+| Renovación de token | MSAL `acquireTokenSilent()` | — | El SDK renueva el token automáticamente sin intervención manual |
+| Estado de sesión | MSAL + Zustand | — | MSAL gestiona la sesión; Zustand sincroniza el estado de UI |
+| Roles de usuario | App Roles de Entra ID | — | Los roles (`investor`, `business`, `admin`) se asignan desde el portal de Azure y vienen en el token |
  
 ---
  
 ## Autenticación
  
-JICA utiliza **Firebase Authentication** con método de **email y contraseña**. El frontend no gestiona tokens manualmente; el SDK de Firebase se encarga de la emisión, almacenamiento y renovación del ID Token.
+JICA utiliza **Microsoft Entra ID** con **MSAL.js** como SDK cliente. El método de autenticación es email y contraseña. El frontend no gestiona tokens manualmente; MSAL se encarga de la emisión, almacenamiento y renovación del Access Token.
  
-### Cómo funciona Firebase Auth en JICA
+### Cómo funciona MSAL en JICA
  
 ```
 1. Usuario ingresa email + contraseña en el formulario de login
-2. Frontend llama: signInWithEmailAndPassword(auth, email, password)
-3. Firebase autentica y devuelve un UserCredential con un ID Token (JWT, exp: 1 hora)
-4. Firebase SDK almacena la sesión de forma segura internamente (IndexedDB)
-5. Frontend obtiene el ID Token con: user.getIdToken()
-6. Cada request al backend incluye: Authorization: Bearer <idToken>
-7. El SDK renueva el ID Token automáticamente antes de que expire
-8. Si el usuario cierra sesión o el token es revocado → sesión destruida
+2. Frontend llama: msalInstance.loginRedirect(loginRequest)
+3. Entra ID autentica y redirige de vuelta con el Access Token (JWT)
+4. MSAL almacena la sesión de forma segura en sessionStorage (por defecto)
+5. Frontend obtiene el token con: msalInstance.acquireTokenSilent(tokenRequest)
+6. Cada request al backend incluye: Authorization: Bearer <accessToken>
+7. MSAL renueva el token automáticamente antes de que expire
+8. Si el refresh falla → logout forzado + redirect a /login
+```
+### Configuración de MSAL
+ 
+La configuración debe ubicarse en `/src/services/msalConfig.ts`. Las credenciales deben provenir exclusivamente de variables de entorno. Ejemplo [msalConfig.ts](./frontend/src/services/msalConfig.ts)
+
+Variables de entorno requeridas:
+ 
+```bash
+VITE_AZURE_CLIENT_ID        # ID de la aplicación registrada en Entra ID
+VITE_AZURE_TENANT_ID        # ID del tenant de Azure
+VITE_AZURE_REDIRECT_URI     # URI de redirección registrada en Entra ID (ej: http://localhost:5173)
+VITE_AZURE_API_SCOPE        # Scope de la API del backend (ej: api://<client-id>/access_as_user)
 ```
 
-### Inicialización de Firebase
+### Inicialización de MSAL en la aplicación
  
-La configuración de Firebase debe ubicarse en `/src/services/firebase.ts`. Las credenciales deben provenir exclusivamente de variables de entorno.
-Ejemplo en [firebase.ts](./frontend/src/services/firebase.ts)
- 
-Variables de entorno requeridas en todos los ambientes:
- 
-```
-VITE_FIREBASE_API_KEY
-VITE_FIREBASE_AUTH_DOMAIN
-VITE_FIREBASE_PROJECT_ID
-```
+MSAL debe inicializarse antes de montar la aplicación en `/src/main.tsx`:
+Ejemplo [main.tsx](./frontend/src/main.tsx)
 
 ### Servicio de autenticación
  
-Todas las operaciones de autenticación deben centralizarse en `/src/services/authService.ts`. Ningún componente o página debe llamar al SDK de Firebase directamente.
-
- Ejemplo en [authService.ts](./frontend/src/services/authService.ts)
+Todas las operaciones de autenticación deben centralizarse en `/src/services/authService.ts`. Ningún componente o página debe llamar a MSAL directamente.[authService.ts](./frontend/src/services/authService.ts) 
 
 
- ### Store de autenticación
-El store de Zustand debe sincronizarse con Firebase `onAuthStateChanged`. El ID Token no se almacena en el store; se obtiene fresco desde el SDK cuando se necesita.
- Ejemplo en [authStore.ts](./frontend/src/store/authStore.ts)
-
- ### Escucha del estado de autenticación
+### Store de autenticación
  
-La sincronización entre Firebase y el store debe iniciarse una sola vez al montar la app en un hook dedicado `/src/hooks/useAuthListener.ts`.
+El store de Zustand sincroniza el estado del usuario autenticado. MSAL gestiona el token internamente; Zustand solo mantiene los datos del usuario necesarios para la UI.
+Ejemplo [authStore.ts](./frontend/src/store/authStore.ts)
 
-Ejemplo en  [useAuthListener.ts](./frontend/src/hooks/useAuthListener.ts)
+### Escucha del estado de autenticación
  
+La sincronización entre MSAL y el store debe realizarse en `/src/hooks/useAuthListener.ts`. El rol del usuario se extrae directamente del token de MSAL.
+Ejemplo [useAuthListener.ts](./frontend/src/hooks/useAuthListener.ts)
+
+
 ## Roles y autorización
  
-JICA maneja tres roles de usuario. El rol es asignado por el backend como **Custom Claim** dentro del Firebase ID Token, después del registro.
+JICA maneja tres roles de usuario definidos como **App Roles en Microsoft Entra ID**. Los roles se asignan desde el portal de Azure y vienen incluidos en el Access Token como claim `roles`.
  
-| Rol | Valor en claim | Acceso principal |
+| Rol | Valor en token | Acceso principal |
 |---|---|---|
 | Inversionista | `investor` | Dashboard, exploración de pymes, simulación, registro de interés |
 | Empresa (Pyme) | `business` | Panel de negocio, carga de métricas, publicación de oportunidades |
 | Administrador | `admin` | Panel de administración, gestión de usuarios, aprobación de pymes |
  
-### Lectura del rol desde el token
- 
-El rol viene en el Custom Claims del ID Token decodificado. El frontend lo lee así:
- Ejemplo [authService.ts](./frontend/src/services/authService.ts)
+El tipo de roles debe definirse en `/src/types/auth.types.ts`:
 
- El tipo de roles debe definirse en `/src/types/auth.types.ts`:
- Ejemplo [auth.types.ts](./frontend/src/types/auth.types.ts) 
+Ejemplo [auth.types.ts](./frontend/src/types/auth.types.ts)
 
- ### Rutas protegidas
+### Rutas protegidas
  
 Las rutas deben clasificarse en tres categorías en `/src/routes/`:
  
@@ -905,113 +933,118 @@ Rutas por rol:
   investor:  /investments, /investments/:id, /simulate, /portfolio
   business:  /my-business, /financials, /publish-opportunity
   admin:     /admin/users, /admin/approvals, /admin/businesses
- 
 ```
-
-El componente `ProtectedRoute` debe ubicarse en `/src/routes/ProtectedRoute.tsx`:
-Ejemplo [ProtectedRoute.tsx](./frontend/src/routes/ProtectedRoute.tsx) 
+El componente `ProtectedRoute` debe ubicarse en `/src/routes/ProtectedRoute.tsx`: Ejemplo [ProtectedRoute.tsx](./frontend/src/routes/ProtectedRoute.tsx)
 
 ### Visibilidad de UI por rol
  
-Los elementos de UI condicionados por rol deben usar el componente `RoleGuard` en `/src/components/auth/RoleGuard.tsx`. No se deben usar condicionales inline `if (user.role === 'investor')` dispersos en los componentes.
-Ejemplo [ProtectedRoute.tsx](./frontend/src/components/auth/RoleGuard.tsx) 
+Los elementos de UI condicionados por rol deben usar el componente `RoleGuard` en `/src/components/auth/RoleGuard.tsx`. No se deben usar condicionales inline `if (user.role === 'investor')` dispersos en los componentes. Ejemplo [RoleGuard.tsx](./frontend/src/components/auth/RoleGuard.tsx)
 
+ 
 ## Interceptor HTTP
  
-Todo cliente HTTP debe adjuntar el ID Token de Firebase en cada request al backend. El token debe obtenerse fresco desde el SDK (no desde el store) para garantizar que siempre esté vigente.
- 
-El interceptor se ubica en  `/src/services/httpClient.ts`:
-Ejemplo [httpClient.ts](./frontend/src/services/httpClient.ts) 
+Todo cliente HTTP debe obtener el Access Token desde MSAL y adjuntarlo en cada request al backend. El token debe obtenerse con `acquireTokenSilent` para garantizar que siempre esté vigente.
+
+Ejemplo [httpClient.ts](./frontend/src/services/httpClient.ts)
+
 
 ## Manejo seguro de sesiones
  
 ### Persistencia de sesión
  
-Firebase SDK persiste la sesión en `IndexedDB` del navegador de forma automática. No se debe configurar `browserSessionPersistence` salvo requerimiento explícito, ya que eliminaría la sesión al cerrar el tab.
+MSAL almacena la sesión en `sessionStorage` por configuración definida en `msalConfig.ts`. Esto significa que la sesión se mantiene mientras el tab esté abierto y se destruye al cerrarlo. Esta es la configuración correcta para una plataforma financiera.
  
-La persistencia por defecto de Firebase (`LOCAL`) es la correcta para JICA, ya que el usuario espera seguir autenticado al regresar al sitio.
+No cambiar `cacheLocation` a `localStorage` bajo ninguna circunstancia.
  
 ### Logout automático por inactividad
  
-El frontend debe cerrar sesión automáticamente si el usuario lleva 30 minutos sin interacción. El hook debe ubicarse en `/src/hooks/useInactivityLogout.ts`.
+El tiempo de inactividad debe venir de una variable de entorno, no estar hardcodeado. El hook debe ubicarse en `/src/hooks/useInactivityLogout.ts`.
+Ejemplo [useInactivityLogout.ts](./frontend/src/services/useInactivityLogout.ts)
 
-
-```ts
-// /src/hooks/useInactivityLogout.ts
-const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutos
+Variable de entorno requerida:
  
-// Eventos a escuchar: mousemove, keydown, click, scroll, touchstart
-// Al cumplir el tiempo: logoutUser() + clearSession() + redirect '/login'
-// Al desmontar: limpiar todos los listeners y el timer
+```bash
+VITE_INACTIVITY_TIMEOUT_MS=1800000  # 30 minutos en ms (development)
+VITE_INACTIVITY_TIMEOUT_MS=1800000  # configurable por ambiente en GitHub Actions Secrets
 ```
- 
 ### Logout manual
  
 ```ts
 // Flujo correcto de logout:
-// 1. Llamar logoutUser() de authService (signOut de Firebase)
-// 2. clearSession() en el store
-// 3. redirect '/login'
+// 1. clearSession() en el store
+// 2. msalInstance.logoutRedirect() — Entra ID invalida la sesión y redirige a /login
 ```
  
-### Verificación de email
- 
-Los usuarios recién registrados deben tener `emailVerified: false`. El frontend debe:
- 
-- Mostrar un banner de advertencia en el dashboard mientras `emailVerified` sea `false`.
-- No bloquear el acceso por este motivo en el MVP, pero sí advertir visualmente.
-- Ofrecer un botón para reenviar el email de verificación usando `sendEmailVerification`.
 ---
-
-## Privacidad de datos y masking
  
-Los datos sensibles no deben mostrarse completos en la UI. Las funciones de masking deben ubicarse en `/src/utils/maskData.ts`.
+## Privacidad de datos
  
-| Dato | Masking aplicado | Ejemplo visible |
-|---|---|---|
-| Número de cédula | Solo últimos 4 dígitos | `***-****-1234` |
-| Número de cuenta bancaria | Solo últimos 4 dígitos | `**** **** **** 5678` |
-| Email en listados admin | Dominio visible, local parcial | `ju***@gmail.com` |
-| Monto de inversión de terceros | No visible para otros roles | — |
-| Datos financieros internos de pyme | Solo visibles si están marcados como públicos | — |
+El masking de datos sensibles es responsabilidad del **backend**. El frontend renderiza únicamente lo que el backend entrega; nunca recibe datos sin masking para ocultarlos en el cliente.
  
- Ejemplo en  [maskData.ts](./frontend/src/utils/maskData.ts)  
-
+### Datos que el backend debe entregar con masking aplicado
+ 
+| Dato | Formato que llega al frontend |
+|---|---|
+| Número de cédula | `***-***-1234` |
+| Número de cuenta bancaria | `**** **** **** 5678` |
+| Email en listados de admin | `ju***@gmail.com` |
  
 ### Reglas de visibilidad por rol
  
-- `investor`: no puede ver datos financieros internos de una pyme que no estén marcados como públicos por el negocio.
-- `business`: no puede ver la identidad ni montos de otros inversionistas interesados en su proyecto.
-- `admin`: puede ver datos sin masking únicamente dentro de rutas `/admin/*`.
-Esta regla se valida en el backend . El frontend la aplica para no renderizar lo que no corresponde mostrar.
+El backend es responsable de filtrar qué datos se incluyen en cada respuesta según el rol del usuario autenticado. El frontend no debe recibir datos que el usuario no tiene permitido ver.
  
+- `investor`: no recibe datos financieros internos de una pyme que no estén marcados como públicos.
+- `business`: no recibe identidad ni montos de otros inversionistas interesados en su proyecto.
+- `admin`: recibe datos completos únicamente en endpoints de `/admin/*`.
 ---
  
 ## Cifrado y transmisión de datos
  
 - Toda comunicación con el backend debe realizarse exclusivamente por **HTTPS**. No se permiten requests HTTP en `stage` ni `production`.
 - `VITE_API_BASE_URL` debe comenzar con `https://` en ambientes distintos a `development`.
-- No se deben transmitir tokens, contraseñas ni datos sensibles como query parameters en la URL.
+- No transmitir tokens ni datos sensibles como query parameters en la URL.
 - Los formularios con datos sensibles deben enviarse siempre por `POST` o `PUT`, nunca por `GET`.
-### Variables de entorno
-**development**
+
+
+
+### Variables de entorno por ambiente
  
-Se usa un archivo `.env.development` 
+**development** — archivo `.env.development` en máquina local, nunca al repositorio:
  
-**stage y production**
+```bash
+VITE_AZURE_CLIENT_ID=
+VITE_AZURE_TENANT_ID=
+VITE_AZURE_REDIRECT_URI=http://localhost:5173
+VITE_AZURE_API_SCOPE=api://<client-id>/access_as_user
+VITE_API_BASE_URL=http://localhost:3000
+VITE_INACTIVITY_TIMEOUT_MS=1800000
+```
  
- Las variables se configuran exclusivamente en **GitHub Actions Secrets** y se inyectan durante el `vite build` en el pipeline de CI/CD.
+
  
+**stage y production** — sin archivos `.env`. Las variables se inyectan durante el `vite build` desde **GitHub Actions Secrets**:
+
 ## Reglas generales de seguridad
  
-- Nunca llamar al SDK de Firebase directamente desde componentes o páginas. Usar exclusivamente `authService.ts`.
-- Nunca almacenar el ID Token en `localStorage`, `sessionStorage` ni Zustand. Siempre obtenerlo con `user.getIdToken()`.
+- Nunca llamar a MSAL directamente desde componentes o páginas. Usar exclusivamente `/src/services/authService.ts`.
+- Nunca almacenar el Access Token en Zustand ni en ninguna variable accesible desde el código de la aplicación. Siempre obtenerlo con `acquireTokenSilent()`.
 - Nunca exponer el rol del usuario en la URL. El rol viene del store.
 - Nunca renderizar rutas o componentes de un rol sin pasar por `ProtectedRoute` o `RoleGuard`.
-- Nunca mostrar mensajes de error de Firebase directamente al usuario. Traducirlos a mensajes genéricos en UI.
-- Nunca loguear ID Tokens, contraseñas ni datos financieros con `console.log` en `stage` o `production`.
-- Los formularios de login y registro deben manejar los códigos de error de Firebase (`auth/user-not-found`, `auth/wrong-password`, `auth/email-already-in-use`) y mostrar mensajes claros sin revelar si el email existe o no en el sistema.
+- Nunca mostrar mensajes de error de MSAL directamente al usuario. Traducirlos a mensajes genéricos en UI.
+- Nunca loguear Access Tokens, contraseñas ni datos financieros con `console.log` en `stage` o `production`.
+- No cambiar `cacheLocation` de `sessionStorage` a `localStorage` en `msalConfig.ts`.
+- Los errores de autenticación de Entra ID deben capturarse en Sentry sin incluir tokens en el payload.
+---
+ 
 
+
+
+
+
+
+
+
+---
 ## 2.7 Estándares de seguridad OWASP aplicados al frontend
 
 Esta sección define las prácticas de seguridad obligatorias del frontend de JICA basadas en el estándar **OWASP Top 10**. 
