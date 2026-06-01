@@ -2068,4 +2068,196 @@ Antes de consumir un nuevo endpoint desde el frontend, se debe completar esta li
 [ ] Verificar que no se expongan datos sensibles.
 [ ] Enlazar el archivo implementado en esta documentación si aplica.
 ```
+---
+## 2.10 Optimización de rendimiento
+ 
+Esta sección define las estrategias obligatorias de rendimiento para el frontend de JICA. Al ser una aplicación CSR con datos financieros, la percepción de velocidad es crítica para la confianza del inversionista. Cada técnica aquí definida debe aplicarse en el contexto específico que se indica; no deben aplicarse de forma generalizada sin justificación.
+ 
+ 
+## Lazy Loading y Code Splitting
+ 
+Vite aplica code splitting automáticamente por punto de entrada. El frontend de JICA debe complementar esto con lazy loading manual de páginas y componentes pesados usando `React.lazy` y `Suspense`.
+ 
+### Regla general
+ 
+Todas las páginas deben cargarse con lazy loading. Ninguna página debe importarse de forma estática en el archivo de rutas.
 
+### Implementación obligatoria en rutas
+Ejemplo [AppRouter.tsx](./frontend/src/routes/AppRouter.tsx)
+
+### Componentes que deben usar lazy loading
+ 
+Además de las páginas, los siguientes componentes deben cargarse con lazy loading por su peso:
+ 
+| Componente | Justificación |
+|---|---|
+| Gráficas financieras (ROI, proyecciones) | Dependen de librerías de charting pesadas |
+| Modal de simulación de inversión | Solo se carga cuando el usuario lo abre |
+| Panel de documentos financieros | Contiene lógica de preview de archivos |
+| Sección de métricas del dashboard de admin | Solo visible para el rol `admin` |
+ 
+```tsx
+// Correcto: lazy loading de modal pesado
+const SimulationModal = lazy(() => import('@/features/simulation/components/SimulationModal'));
+ 
+// Incorrecto: import estático de componente pesado
+import SimulationModal from '@/features/simulation/components/SimulationModal';
+```
+ 
+---
+
+## Reducción de bundles
+ 
+El tamaño del bundle afecta directamente el tiempo de carga inicial. Las siguientes reglas son obligatorias para mantener el bundle bajo control.
+ 
+### Imports específicos en lugar de imports totales
+ 
+Nunca importar una librería completa si solo se usa una parte de ella.
+ 
+```ts
+// Correcto: import específico
+import { format } from 'date-fns';
+import { TrendingUp } from 'lucide-react';
+ 
+// Incorrecto: import total
+import * as dateFns from 'date-fns';
+import * as Icons from 'lucide-react';
+```
+
+### Análisis de bundle obligatorio antes de cada release
+ 
+Usar `rollup-plugin-visualizer` para analizar el bundle antes de cada deploy a production. El reporte debe revisarse si el bundle supera **500KB** en el chunk principal.
+
+Ejemplo  [vite.config.ts](vite.config.ts)
+
+
+## Manejo eficiente de imágenes
+ 
+### Formatos permitidos
+ 
+| Tipo de imagen | Formato obligatorio | Justificación |
+|---|---|---|
+| Fotos de negocios, portadas | WebP | Mejor compresión que JPG con calidad similar |
+| Logos e íconos vectoriales | SVG | Escalables sin pérdida de calidad |
+| Íconos de UI | `lucide-react` | No son imágenes, son componentes. Ver sección 2.5 |
+| Ilustraciones de estados vacíos | SVG | Livianas y escalables |
+ 
+No se deben usar imágenes PNG o JPG salvo que el formato WebP no sea viable por el origen de la imagen (por ejemplo, imágenes subidas por usuarios).
+ 
+### Atributos obligatorios en imágenes
+ 
+Todo elemento `<img>` debe incluir obligatoriamente:
+ 
+```tsx
+<img
+  src="/assets/business-cover.webp"
+  alt="Fotografía del restaurante El Sabor"  // descriptivo, nunca vacío
+  width={400}                                 // dimensiones explícitas para evitar layout shift
+  height={240}
+  loading="lazy"                              // lazy loading nativo del navegador
+  decoding="async"
+/>
+```
+ 
+- `alt` nunca debe estar vacío en imágenes de contenido. Solo puede estar vacío (`alt=""`) en imágenes puramente decorativas.
+- `width` y `height` siempre deben definirse para evitar **Cumulative Layout Shift (CLS)**.
+- `loading="lazy"` debe aplicarse a todas las imágenes que no estén en el viewport inicial (above the fold).
+- Las imágenes del hero o portada principal deben usar `loading="eager"` para priorizarse.
+### Imágenes subidas por usuarios (pymes)
+ 
+Las imágenes subidas por pymes (fotos del negocio, documentos escaneados) deben procesarse en el backend antes de mostrarse. El frontend no debe escalar ni transformar imágenes en el cliente. El backend es responsable de entregar la imagen en el tamaño y formato correcto.
+ 
+---
+ 
+## Memoization
+ 
+La memoization debe aplicarse únicamente cuando existe un problema de rendimiento identificado. No debe usarse de forma preventiva en todos los componentes.
+ 
+### Cuándo usar `React.memo`
+ 
+Usar `React.memo` solo en componentes que:
+- Reciben props que cambian con poca frecuencia.
+- Son costosos de renderizar (listas largas, gráficas, tablas financieras).
+- Son hijos de un componente que se re-renderiza frecuentemente.
+```tsx
+// Correcto: InvestmentCard se renderiza dentro de una lista larga
+// y sus props cambian solo cuando los datos del servidor cambian
+export const InvestmentCard = React.memo(function InvestmentCard({
+  investment,
+  onViewDetail,
+}: InvestmentCardProps) {
+  return (...);
+});
+ 
+// Incorrecto: aplicar memo a un componente simple que no tiene problema de rendimiento
+export const RiskBadge = React.memo(function RiskBadge({ level }: RiskBadgeProps) {
+  return <span>{level}</span>; // no justifica memo
+});
+```
+ 
+### Cuándo usar `useMemo`
+ 
+Usar `useMemo` solo para cálculos costosos que dependen de datos que cambian con poca frecuencia. En JICA los casos válidos son:
+ 
+```tsx
+// Cálculo de retorno estimado basado en monto y ROI
+const estimatedReturn = useMemo(() => {
+  return calculateExpectedReturn(amount, investment.roi, investment.termMonths);
+}, [amount, investment.roi, investment.termMonths]);
+ 
+// Filtrado y ordenamiento de lista de inversiones en el cliente
+const filteredInvestments = useMemo(() => {
+  return investments
+    .filter((inv) => inv.riskLevel === selectedRisk)
+    .sort((a, b) => b.roi - a.roi);
+}, [investments, selectedRisk]);
+```
+ 
+No usar `useMemo` para valores simples, strings, booleans o cálculos triviales.
+ 
+### Cuándo usar `useCallback`
+ 
+Usar `useCallback` solo en funciones que se pasan como props a componentes memoizados. Sin `React.memo` en el hijo, `useCallback` no tiene efecto útil.
+ 
+```tsx
+// Correcto: onViewDetail se pasa a InvestmentCard que usa React.memo
+const handleViewDetail = useCallback((id: string) => {
+  navigate(`/investments/${id}`);
+}, [navigate]);
+ 
+<InvestmentCard investment={inv} onViewDetail={handleViewDetail} />
+```
+ 
+---
+ 
+## Virtualización
+ 
+La virtualización debe aplicarse en listas que rendericen más de **50 elementos simultáneamente**. Renderizar cientos de tarjetas o filas de tabla sin virtualización degrada significativamente el rendimiento en dispositivos de gama baja.
+ 
+### Librería
+ 
+Usar **TanStack Virtual** (`@tanstack/react-virtual`) para virtualización de listas y tablas. Es consistente con TanStack Query ya definido en el stack (ver sección 2.8).
+ 
+```bash
+npm install @tanstack/react-virtual
+```
+ 
+### Cuándo aplicar virtualización en JICA
+ 
+| Lista | Threshold para virtualizar | Justificación |
+|---|---|---|
+| Lista de inversiones disponibles | > 50 items | El dashboard puede tener muchas oportunidades |
+| Tabla de inversiones del admin | > 50 filas | Panel de administración con historial completo |
+| Lista de inversionistas interesados (vista business) | > 50 items | Proyectos populares pueden tener muchos interesados |
+ 
+### Implementación de referencia
+[InvestmentList.tsx](./frontend/src/features/investments/components/InvestmentList/InvestmentList.tsx)
+Si la lista tiene menos de 50 elementos, usar un `map` estándar sin virtualización.
+
+## Reglas generales de rendimiento
+ 
+- No aplicar `React.memo`, `useMemo` ni `useCallback` de forma preventiva. Aplicarlos solo cuando se identifica un problema concreto de rendimiento.
+- No bloquear el hilo principal con cálculos síncronos pesados. Si un cálculo financiero tarda más de 50ms, debe moverse a un Web Worker.
+- Las páginas deben mostrar contenido significativo en menos de 2 segundos en una conexión 4G estándar.
+- El skeleton loader debe usarse en lugar de spinners para contenido que tiene una estructura conocida (tarjetas de inversión, tablas, perfiles). El spinner solo aplica para acciones puntuales sin estructura predefinida.
+- TanStack Query maneja el estado de loading de datos del servidor. No duplicar ese estado con `useState` local.
