@@ -1,37 +1,56 @@
 // /tests/unit/services/authService.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { loginUser, logoutUser } from '@/services/authService';
- 
-vi.mock('firebase/auth', () => ({
-  signInWithEmailAndPassword: vi.fn(),
-  signOut: vi.fn(),
-  getAuth: vi.fn(),
+import { loginUser, getAccessToken } from '@/services/authService';
+import { PublicClientApplication } from '@azure/msal-browser';
+
+vi.mock('@azure/msal-browser', () => ({
+  PublicClientApplication: vi.fn().mockImplementation(() => ({
+    loginRedirect: vi.fn(),
+    logoutRedirect: vi.fn(),
+    acquireTokenSilent: vi.fn(),
+    getAllAccounts: vi.fn().mockReturnValue([]),
+  })),
 }));
- 
-import { signInWithEmailAndPassword } from 'firebase/auth';
- 
+
 describe('loginUser', () => {
-  beforeEach(() => vi.clearAllMocks());
- 
-  it('debe llamar a signInWithEmailAndPassword con email y password', async () => {
-    (signInWithEmailAndPassword as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      user: { uid: 'abc123', email: 'test@jica.com' },
-    });
- 
-    await loginUser('test@jica.com', 'Segura123!');
- 
-    expect(signInWithEmailAndPassword).toHaveBeenCalledWith(
-      expect.anything(),
-      'test@jica.com',
-      'Segura123!'
-    );
+  let msalInstance: PublicClientApplication;
+
+  beforeEach(() => {
+    msalInstance = new PublicClientApplication({} as any);
+    vi.clearAllMocks();
   });
- 
-  it('debe propagar el error si Firebase falla', async () => {
-    (signInWithEmailAndPassword as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
-      new Error('auth/user-not-found')
+
+  it('debe llamar a loginRedirect al iniciar sesión', async () => {
+    await loginUser(msalInstance);
+    expect(msalInstance.loginRedirect).toHaveBeenCalled();
+  });
+});
+
+describe('getAccessToken', () => {
+  let msalInstance: PublicClientApplication;
+
+  beforeEach(() => {
+    msalInstance = new PublicClientApplication({} as any);
+    vi.clearAllMocks();
+  });
+
+  it('debe retornar el accessToken si acquireTokenSilent es exitoso', async () => {
+    (msalInstance.acquireTokenSilent as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      accessToken: 'mock-token-xyz',
+    });
+
+    const account = { localAccountId: 'abc123' } as any;
+    const token = await getAccessToken(msalInstance, account);
+
+    expect(token).toBe('mock-token-xyz');
+  });
+
+  it('debe propagar el error si acquireTokenSilent falla', async () => {
+    (msalInstance.acquireTokenSilent as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      new Error('InteractionRequired')
     );
- 
-    await expect(loginUser('noexiste@jica.com', 'pass')).rejects.toThrow('auth/user-not-found');
+
+    const account = { localAccountId: 'abc123' } as any;
+    await expect(getAccessToken(msalInstance, account)).rejects.toThrow('InteractionRequired');
   });
 });

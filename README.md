@@ -1133,11 +1133,11 @@ Implementación incorrecta de autenticación que permite accesos no autorizados.
 
 **Reglas obligatorias:**
 
-- La autenticación se gestiona exclusivamente con **Firebase Authentication**. No se debe implementar autenticación custom. Ver implementación en `/src/services/authService.ts` [authService.ts](./frontend/src/services/authService.ts) .
-- Los errores de Firebase Auth (`auth/user-not-found`, `auth/wrong-password`) no deben exponerse directamente. Deben mostrarse como un mensaje genérico: *"Credenciales incorrectas"*, sin revelar si el email existe o no en el sistema.
-- El formulario de login debe tener un límite visual de intentos fallidos. Después de 5 intentos fallidos debe mostrarse un mensaje indicando que intente más tarde (Firebase maneja el bloqueo real en el backend).
-- La sesión debe cerrarse automáticamente tras 30 minutos de inactividad. Ver implementación en `/src/hooks/useInactivityLogout.ts` [useInactivityLogout.ts](./frontend/src/hooks/useInactivityLogout.ts) ..
-- Los usuarios con `emailVerified: false` deben ver un banner de advertencia. No se bloquea el acceso en el MVP pero sí se advierte visualmente.
+- La autenticación se gestiona exclusivamente con **Microsoft Entra ID** usando **MSAL.js**. No se debe implementar autenticación custom. Ver implementación en `/src/services/authService.ts`. [authService.ts](./frontend/src/services/authService.ts) .
+- Los errores de MSAL no deben exponerse directamente al usuario. Deben mostrarse como un mensaje genérico: *"Credenciales incorrectas"*, sin revelar si el email existe o no en el sistema
+- El formulario de login debe tener un límite visual de intentos fallidos. Después de 5 intentos fallidos debe mostrarse un mensaje indicando que intente más tarde. Entra ID maneja el bloqueo real en el backend.
+- La sesión debe cerrarse automáticamente por inactividad según el valor de `VITE_INACTIVITY_TIMEOUT_MS`. Ver implementación en `/src/hooks/useInactivityLogout.ts`[useInactivityLogout.ts](./frontend/src/hooks/useInactivityLogout.ts) .
+
 
 ---
 
