@@ -2294,3 +2294,129 @@ Si la lista tiene menos de 50 elementos, usar un `map` estándar sin virtualizac
 - Las páginas deben mostrar contenido significativo en menos de 2 segundos en una conexión 4G estándar.
 - El skeleton loader debe usarse en lugar de spinners para contenido que tiene una estructura conocida (tarjetas de inversión, tablas, perfiles). El spinner solo aplica para acciones puntuales sin estructura predefinida.
 - TanStack Query maneja el estado de loading de datos del servidor. No duplicar ese estado con `useState` local.
+----
+## 2.11 Estrategia de CI/CD
+ 
+Esta sección define los pipelines, scripts de deployment, validaciones automáticas, análisis estático y acciones automáticas de código del frontend de JICA. Todo lo definido aquí es obligatorio; ningún deploy puede realizarse fuera de este flujo.
+ 
+ 
+## Ambientes y flujo de promoción
+ 
+```
+feature branch → develop → stage → production
+```
+ 
+| Ambiente | Branch | Trigger | Destino |
+|---|---|---|---|
+| development | `feature/*`, `fix/*` | Local (Husky) | Máquina del desarrollador |
+| stage | `develop` | Push a `develop` | Azure Static Web Apps — slot stage |
+| production | `main` | Push a `main` (via PR aprobado) | Azure Static Web Apps — slot production |
+ 
+Ningún push directo a `main` está permitido. El único camino a production es a través de un Pull Request aprobado desde `develop`.
+ 
+---
+ 
+## Validaciones locales antes del commit (Husky)
+ 
+Husky ejecuta validaciones automáticas antes de cada commit. Si alguna falla, el commit es bloqueado.
+ 
+Configuración en `/frontend/.husky/pre-commit`:
+Ejemplo
+[pre-commit](./frontend/.husky/pre-commit)
+
+Ejemplo 
+[pre-push](./frontend/.husky/pre-push)
+
+## Pipeline de stage
+ 
+Se ejecuta en cada push a la rama `develop`. Ubicación: `.github/workflows/deploy-stage.yml`.
+Ejemplo [deploy-stage.](.github/workflows/deploy-stage.yml)
+
+## Pipeline de production
+ 
+Se ejecuta cuando un Pull Request es mergeado a `main`. No ejecuta E2E nuevamente; confía en que el pipeline de stage ya los pasó. Solo revalida, construye y despliega.
+ 
+Ubicación: `.github/workflows/deploy-production.yml`.
+Ejemplo [deploy-production.](.github/workflows/deploy-production.yml)
+
+## Análisis estático
+ 
+El análisis estático se ejecuta en cada pipeline como paso obligatorio antes del build. Nunca debe omitirse.
+ 
+### TypeScript
+ 
+El compilador de TypeScript debe ejecutarse en modo `--noEmit` para validar tipos sin generar archivos. Ningún error de TypeScript debe llegar al pipeline.
+ 
+```bash
+npm run type-check  # tsc --noEmit
+
+```
+La configuración de TypeScript debe estar en `/frontend/tsconfig.json` con `strict: true` obligatorio:
+Ejemplo [tsconfig.json](./frontend/tsconfig.json) 
+
+### ESLint
+ 
+ESLint debe ejecutarse con `--max-warnings 0`. Cualquier warning es tratado como error y bloquea el pipeline.
+ 
+Las reglas mínimas obligatorias en `eslint.config.js`:
+### Prettier
+ 
+Prettier verifica que todos los archivos estén formateados. Si un archivo no está formateado, el pipeline falla. El desarrollador debe ejecutar `npm run format` antes de hacer push.
+ 
+---
+ 
+## Acciones automáticas de código
+ 
+### Dependabot
+ 
+Dependabot debe estar configurado para revisar actualizaciones de dependencias del frontend semanalmente. Ubicación: `.github/dependabot.yml`.
+Ejemplo [dependabot.yml](.github/dependabot.yml)
+
+### Cache de dependencias
+ 
+El pipeline debe cachear `node_modules` usando el hash de `package-lock.json` para evitar instalar dependencias en cada ejecución innecesariamente. Esto está configurado en el paso `actions/setup-node` con `cache: 'npm'` en todos los jobs del pipeline.
+ 
+### Resumen del orden de ejecución por pipeline
+ 
+**Stage** (push a `develop`):
+```
+1. validate   → type-check + lint + format:check
+2. test        → vitest run --coverage (bloquea si cobertura < mínimo)
+3. e2e         → playwright test contra ambiente stage
+4. build-and-deploy → vite build + deploy a Azure Static Web Apps stage
+```
+ 
+**Production** (merge a `main`):
+```
+1. validate   → type-check + lint + format:check
+2. test        → vitest run --coverage
+3. build-and-deploy → vite build + deploy a Azure Static Web Apps production
+```
+ 
+Cada job depende del anterior con `needs`. Si cualquier job falla, los siguientes no se ejecutan y el deploy queda bloqueado.
+ 
+---
+ 
+## Secrets requeridos en GitHub
+ 
+Todos los secrets deben estar configurados en **Settings → Secrets and variables → Actions** del repositorio de GitHub. Los secrets con prefijo `STAGE_` y `PROD_` tienen valores distintos por ambiente; el resto es compartido.
+ 
+| Secret | Ambientes | Descripción |
+|---|---|---|
+| `VITE_AZURE_CLIENT_ID` | stage, production | ID de la app registrada en Entra ID |
+| `VITE_AZURE_TENANT_ID` | stage, production | ID del tenant de Azure |
+| `VITE_AZURE_API_SCOPE` | stage, production | Scope de la API del backend |
+| `STAGE_VITE_AZURE_REDIRECT_URI` | stage | URI de redirección para stage |
+| `PROD_VITE_AZURE_REDIRECT_URI` | production | URI de redirección para production |
+| `STAGE_API_BASE_URL` | stage | URL del backend en stage |
+| `PROD_API_BASE_URL` | production | URL del backend en production |
+| `STAGE_SOCKET_URL` | stage | URL del servidor Socket.io en stage |
+| `PROD_SOCKET_URL` | production | URL del servidor Socket.io en production |
+| `VITE_SENTRY_DSN` | stage, production | DSN de Sentry |
+| `VITE_INACTIVITY_TIMEOUT_MS` | stage, production | Tiempo de inactividad en ms |
+| `AZURE_STATIC_WEB_APPS_TOKEN_STAGE` | stage | Token de deploy de Azure SWA stage |
+| `AZURE_STATIC_WEB_APPS_TOKEN_PROD` | production | Token de deploy de Azure SWA production |
+| `PLAYWRIGHT_TEST_EMAIL` | stage | Email de usuario de prueba para E2E |
+| `PLAYWRIGHT_TEST_PASSWORD` | stage | Contraseña de usuario de prueba para E2E |
+| `STAGE_BASE_URL` | stage | URL base de la app en stage para Playwright |
+ 

@@ -1,0 +1,5 @@
+#!/bin/sh
+cd frontend
+npm run lint        # ESLint — falla si hay errores
+npm run format:check # Prettier — falla si hay archivos sin formatear
+npm run type-check  # TypeScript — falla si hay errores de tipos

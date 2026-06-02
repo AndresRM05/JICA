@@ -20,3 +20,13 @@ export default defineConfig([
     },
   },
 ])
+export default [
+  {
+    rules: {
+      'no-console': ['warn', { allow: ['warn', 'error'] }], // prohibir console.log en código
+      'no-unused-vars': 'error',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+    },
+  },
+];
