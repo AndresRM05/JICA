@@ -611,7 +611,7 @@ El atributo `alt` siempre debe estar presente para accesibilidad.
 
 ---
 
-## Iconografía
+### Iconografía
 
 La iconografía debe ser simple, clara y consistente. 
 
@@ -620,7 +620,7 @@ Librería que se va a utilizar :
 lucide-react
 ```
 
-### Reglas de uso
+#### Reglas de uso
 
 * Todos los iconos deben mantener el mismo estilo visual.
 * El tamaño estándar debe ser `20px` o `24px`.
@@ -630,11 +630,11 @@ lucide-react
 
 ---
 
-## Espaciados
+### Espaciados
 
 El sistema debe seguir una escala de espaciado consistente basada en Tailwind CSS.
 
-### Escala recomendada
+#### Escala recomendada
 
 ```txt
 xs: 0.25rem  // p-1
@@ -645,7 +645,44 @@ xl: 2rem     // p-8
 2xl: 3rem    // p-12
 ```
 
-### Reglas generales
+### Responsive Design
+
+El diseño responsive debe implementarse utilizando exclusivamente los breakpoints de Tailwind CSS.
+
+No se permite crear media queries manuales dentro de componentes salvo casos excepcionales justificados.
+
+Breakpoints oficiales:
+
+```txt
+sm: 640px
+md: 768px
+lg: 1024px
+xl: 1280px
+2xl: 1536px
+```
+
+Reglas obligatorias:
+
+* Mobile-first por defecto.
+* Toda nueva pantalla debe diseñarse primero para mobile y luego escalar a desktop.
+* Los layouts principales deben construirse con Flexbox o Grid utilizando utilidades de Tailwind.
+* No utilizar anchos fijos para contenedores principales.
+* Tablas extensas deben tener scroll horizontal controlado.
+* Sidebars deben colapsarse en dispositivos móviles.
+
+Ejemplos:
+
+```tsx
+className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+```
+
+```tsx
+className="flex flex-col lg:flex-row"
+```
+
+
+
+#### Reglas generales
 
 * Las tarjetas deben usar `p-4` o `p-6`.
 * Las secciones principales deben usar `py-8` o `py-12`.
@@ -704,7 +741,7 @@ className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium"
 
 ---
 
-## Responsive design
+### Responsive design
 
 El sistema debe diseñarse siguiendo un enfoque **mobile-first**. Esto significa que primero se debe construir la interfaz para pantallas pequeñas y luego adaptarla progresivamente a pantallas medianas y grandes.
 
@@ -729,11 +766,11 @@ xl: 1280px
 
 ---
 
-## Branding y etiquetado visual
+### Branding y etiquetado visual
 
 La identidad visual de JICA debe seguir el estilo definido en los prototipos: interfaz fintech limpia, fondo claro, tarjetas blancas, bordes redondeados, sombras suaves, verde oscuro como color principal y acentos amarillos/naranjas únicamente para advertencias o riesgo medio.
 
-### Lineamientos de branding
+#### Lineamientos de branding
 
 * Usar lenguaje visual limpio y profesional.
 * Evitar saturación de colores.
@@ -744,11 +781,11 @@ La identidad visual de JICA debe seguir el estilo definido en los prototipos: in
 
 ---
 
-## Etiquetas de estado
+### Etiquetas de estado
 
 Las etiquetas visuales deben ayudar al usuario a identificar rápidamente el estado de una inversión o proyecto.
 
-### Estados recomendados
+#### Estados recomendados
 
 ```txt
 Disponible
@@ -760,7 +797,7 @@ Rechazado
 Cancelado
 ```
 
-### Estilos sugeridos
+#### Estilos sugeridos
 
 ```tsx
 Disponible: bg-green-100 text-green-700
@@ -775,7 +812,7 @@ Cancelado: bg-slate-100 text-slate-600
 
 ---
 
-## Etiquetas de riesgo
+### Etiquetas de riesgo
 
 Los niveles de riesgo deben representarse con texto y color. Nunca se debe depender únicamente del color.
 
@@ -794,7 +831,7 @@ Riesgo alto: bg-red-100 text-red-700
 ```
 ---
 
-## Reglas generales de estilos
+### Reglas generales de estilos
 
 * No usar estilos inline salvo casos excepcionales.
 * No duplicar clases extensas si el patrón se repite muchas veces.
