@@ -1,0 +1,15 @@
+.form-error {
+  @apply text-sm font-medium text-red-600;
+}
+
+.form-success {
+  @apply text-sm font-medium text-green-700;
+}
+
+.form-warning {
+  @apply text-sm font-medium text-yellow-700;
+}
+
+.form-info {
+  @apply text-sm font-medium text-blue-700;
+}

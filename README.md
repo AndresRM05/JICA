@@ -120,7 +120,7 @@ El objetivo es que cualquier programador pueda identificar rápidamente qué com
 ---
 
 
-## Estructura recomendada de un componente
+### Estructura recomendada de un componente
 
 Cada componente reutilizable seguirá una arquitectura modular separando lógica, tipos y exportaciones.
 
@@ -644,12 +644,22 @@ lg: 1.5rem   // p-6
 xl: 2rem     // p-8
 2xl: 3rem    // p-12
 ```
+#### Reglas generales
+
+* Las tarjetas deben usar `p-4` o `p-6`.
+* Las secciones principales deben usar `py-8` o `py-12`.
+* Los elementos internos deben separarse con `gap-4` o `gap-6`.
+* No se deben usar márgenes aleatorios sin seguir la escala de Tailwind.
+
+---
 
 ### Responsive Design
 
-El diseño responsive debe implementarse utilizando exclusivamente los breakpoints de Tailwind CSS.
+El diseño responsive debe implementarse con los breakpoints oficiales de Tailwind CSS definidos en:
 
-No se permite crear media queries manuales dentro de componentes salvo casos excepcionales justificados.
+[tailwind.config.ts](./frontend/tailwind.config.ts)
+
+No se permite definir breakpoints personalizados ni media queries manuales dentro de componentes. Toda regla responsive debe implementarse mediante clases de Tailwind.
 
 Breakpoints oficiales:
 
@@ -663,14 +673,22 @@ xl: 1280px
 
 Reglas obligatorias:
 
-* Mobile-first por defecto.
-* Toda nueva pantalla debe diseñarse primero para mobile y luego escalar a desktop.
-* Los layouts principales deben construirse con Flexbox o Grid utilizando utilidades de Tailwind.
-* No utilizar anchos fijos para contenedores principales.
-* Tablas extensas deben tener scroll horizontal controlado.
-* Sidebars deben colapsarse en dispositivos móviles.
+* Usar enfoque mobile-first.
+* Aplicar responsive directamente en componentes mediante clases de Tailwind.
+* Construir layouts principales con Flexbox o Grid.
+* No usar anchos fijos en contenedores principales.
+* Las tablas extensas deben usar scroll horizontal controlado.
+* Los sidebars deben colapsarse en mobile.
 
-Ejemplos:
+Ubicación de aplicación:
+
+```txt
+/src/pages
+/src/features/{feature}/pages
+/src/features/{feature}/components
+```
+
+Ejemplos permitidos:
 
 ```tsx
 className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
@@ -680,18 +698,24 @@ className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
 className="flex flex-col lg:flex-row"
 ```
 
+```tsx
+className="overflow-x-auto"
+```
 
+No permitido:
 
-#### Reglas generales
+```css
+@media (max-width: 768px) {
+  .dashboard {
+    width: 100%;
+  }
+}
+```
 
-* Las tarjetas deben usar `p-4` o `p-6`.
-* Las secciones principales deben usar `py-8` o `py-12`.
-* Los elementos internos deben separarse con `gap-4` o `gap-6`.
-* No se deben usar márgenes aleatorios sin seguir la escala de Tailwind.
 
 ---
 
-## Estilos reutilizables
+### Estilos reutilizables
 
 Los patrones visuales frecuentes deben estandarizarse para evitar duplicación y mantener consistencia.
 
@@ -699,45 +723,103 @@ Los patrones visuales frecuentes deben estandarizarse para evitar duplicación y
 
 Uso: acciones principales como registrarse, iniciar sesión o confirmar inversión.
 
-```tsx
-className="inline-flex items-center justify-center rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:cursor-not-allowed disabled:opacity-50"
+Implementación requerida:
+
+[button.css](./frontend/src/styles/components/button.css)
+
+Clase requerida:
+
+```txt
+.btn-primary
 ```
+
+---
 
 ### Botón secundario
 
 Uso: acciones alternativas o menos importantes.
 
-```tsx
-className="inline-flex items-center justify-center rounded-xl border border-emerald-700 px-5 py-3 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+Implementación requerida:
+
+[button.css](./frontend/src/styles/components/button.css)
+
+Clase requerida:
+
+```txt
+.btn-secondary
 ```
+
+---
 
 ### Tarjetas
 
-Uso: proyectos de inversión, resumen financiero, datos del usuario.
+Uso: proyectos de inversión, resumen financiero y datos del usuario.
 
-```tsx
-className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+Implementación requerida:
+
+[card.css](./frontend/src/styles/components/card.css)
+
+Clase requerida:
+
+```txt
+.card
 ```
+
+---
 
 ### Inputs
 
 Uso: formularios de registro, inicio de sesión, perfil e inversión.
 
-```tsx
-className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+Implementación requerida:
+
+[input.css](./frontend/src/styles/components/input.css)
+
+Clases requeridas:
+
+```txt
+.input
+.input-error
 ```
+
+---
 
 ### Mensajes de error
 
-```tsx
-className="text-sm font-medium text-red-600"
+Implementación requerida:
+
+[feedback.css](./frontend/src/styles/components/feedback.css)
+
+Clase requerida:
+
+```txt
+.form-error
 ```
+
+---
 
 ### Etiquetas visuales
 
-```tsx
-className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium"
+Implementación requerida:
+
+[badges.css](./frontend/src/styles/components/badges.css)
+
+Clases requeridas:
+
+```txt
+.badge
+.badge-available
+.badge-review
+.badge-funded
+.badge-confirmed
+.badge-pending
+.badge-rejected
+.badge-cancelled
+.badge-risk-low
+.badge-risk-medium
+.badge-risk-high
 ```
+
 
 ---
 
@@ -785,7 +867,11 @@ La identidad visual de JICA debe seguir el estilo definido en los prototipos: in
 
 Las etiquetas visuales deben ayudar al usuario a identificar rápidamente el estado de una inversión o proyecto.
 
-#### Estados recomendados
+Implementación requerida:
+
+[badges.css](./frontend/src/styles/components/badges.css)
+
+Estados permitidos:
 
 ```txt
 Disponible
@@ -797,18 +883,28 @@ Rechazado
 Cancelado
 ```
 
-#### Estilos sugeridos
+Clases requeridas:
 
-```tsx
-Disponible: bg-green-100 text-green-700
-En revisión: bg-yellow-100 text-yellow-700
-Financiado: bg-blue-100 text-blue-700
-Confirmado: bg-green-100 text-green-700
-Pendiente: bg-orange-100 text-orange-700
-Rechazado: bg-red-100 text-red-700
-Cancelado: bg-slate-100 text-slate-600
+```txt
+.badge
+.badge-available
+.badge-review
+.badge-funded
+.badge-confirmed
+.badge-pending
+.badge-rejected
+.badge-cancelled
 ```
 
+Uso esperado:
+
+```tsx
+<span className="badge badge-available">
+  Disponible
+</span>
+```
+
+No se deben escribir clases de color directamente en componentes para estados.
 
 ---
 
@@ -816,31 +912,50 @@ Cancelado: bg-slate-100 text-slate-600
 
 Los niveles de riesgo deben representarse con texto y color. Nunca se debe depender únicamente del color.
 
+Implementación requerida:
+
+[badges.css](./frontend/src/styles/components/badges.css)
+
+Niveles permitidos:
+
 ```txt
 Riesgo bajo
 Riesgo medio
 Riesgo alto
 ```
 
-Estilos sugeridos:
+Clases requeridas:
+
+```txt
+.badge
+.badge-risk-low
+.badge-risk-medium
+.badge-risk-high
+```
+
+Uso esperado:
 
 ```tsx
-Riesgo bajo: bg-green-100 text-green-700
-Riesgo medio: bg-yellow-100 text-yellow-700
-Riesgo alto: bg-red-100 text-red-700
+<span className="badge badge-risk-medium">
+  Riesgo medio
+</span>
 ```
+
+No se deben escribir clases de color directamente en componentes para niveles de riesgo.
+
 ---
 
 ### Reglas generales de estilos
 
-* No usar estilos inline salvo casos excepcionales.
-* No duplicar clases extensas si el patrón se repite muchas veces.
-* Mantener consistencia entre botones, tarjetas, formularios y modales.
+* No usar estilos inline salvo casos excepcionales justificados.
+* No escribir clases de color directamente en componentes cuando exista una clase reutilizable.
+* No duplicar clases extensas si el patrón se repite más de una vez.
+* Mantener consistencia entre botones, tarjetas, formularios, modales y etiquetas.
 * Usar Tailwind CSS como fuente principal de estilos.
 * Evitar colores o tamaños arbitrarios sin justificación.
 * Todos los elementos interactivos deben tener estados `hover`, `focus` y `disabled`.
 * Los textos deben tener contraste suficiente con el fondo.
-* La interfaz debe ser clara tanto para usuarios técnicos como no técnicos.
+
 
 ---
 ## 2.6 Seguridad del frontend
