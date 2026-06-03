@@ -2539,16 +2539,59 @@ Se selecciona **PostgreSQL** como motor principal de base de datos porque el sis
 
 Se utiliza **Prisma ORM** para definir el modelo de datos, ejecutar migraciones, generar consultas tipadas y reducir errores en el acceso a la base de datos.
 
-La autenticación se integrará con **Microsoft Entra ID**, no con Firebase Auth, para mantener una integración nativa con Azure. El frontend obtiene un **Access Token JWT** mediante MSAL y lo envía al backend en cada request usando el encabezado:
+La autenticación se integrará con **Microsoft Entra ID**, manteniendo una integración nativa con Azure. El frontend obtiene un **Access Token JWT** mediante MSAL y lo envía al backend en cada solicitud.
 
-### Versiones y compatibilidad
+## 3.2 Servicios cloud y hosting
 
-Para desarrollo y despliegue se recomienda utilizar versiones estables y compatibles entre sí. En producción se priorizarán versiones LTS o ampliamente soportadas.
+### Servicios cloud seleccionados
+
+| Categoría | Servicio | Uso en el proyecto |
+|---|---|---|
+| Hosting Frontend | Azure Static Web Apps | Hospedaje de la aplicación React |
+| Hosting Backend | Azure App Service | Despliegue de la API NestJS |
+| Base de Datos | Azure Database for PostgreSQL Flexible Server | Persistencia de datos |
+| Autenticación e Identidad | Microsoft Entra ID | Gestión de usuarios, roles y autenticación |
+| Observabilidad | Azure Application Insights | Monitoreo y métricas |
+| Gestión de secretos | Azure Key Vault | Almacenamiento seguro de credenciales |
+| CI/CD | Azure DevOps Pipelines | Automatización de despliegues |
+| Repositorio | Azure DevOps Repos | Control de versiones |
+| Almacenamiento de archivos | Azure Blob Storage | Almacenamiento de documentos e imágenes |
+
+---
+
+### Arquitectura de despliegue
 
 ```txt
-Node.js: 24.x LTS o 26.x Current
-TypeScript: 5.x
-NestJS: 11.x
-PostgreSQL: 18.x
-Prisma ORM: 7.x
-Jest: 30.x
+Usuario
+    │
+    ▼
+Azure Static Web Apps
+(Frontend React)
+    │
+    ▼
+Azure App Service
+(API NestJS)
+    │
+    ▼
+Azure Database for PostgreSQL
+
+Autenticación: Microsoft Entra ID
+Monitoreo: Azure Application Insights
+Secretos: Azure Key Vault
+```
+
+---
+
+### Ambientes de despliegue
+
+JICA contará con tres ambientes independientes:
+
+| Ambiente    | Propósito                                |
+| ----------- | ---------------------------------------- |
+| Development | Desarrollo y pruebas locales del equipo  |
+| Staging     | Validación previa a producción           |
+| Production  | Entorno productivo para usuarios finales |
+
+Cada ambiente tendrá sus propias variables de configuración, credenciales, base de datos y recursos cloud para evitar interferencias entre entornos.
+
+
