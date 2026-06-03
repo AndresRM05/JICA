@@ -1622,9 +1622,9 @@ describe('tests', () => {
 [loginSchema.test.ts](./frontend/tests/unit/validations/loginSchema.test.ts) 
 
 
-### Mocking de Firebase Auth
+### Mocking de Auth
  
-Las pruebas que involucren Firebase deben mockear el módulo completo. Nunca se debe conectar a Firebase real en pruebas.
+Las pruebas  deben mockear el módulo completo. Nunca se debe conectarse a azure real en pruebas.
 
 [authService.test.ts](./frontend/tests/unit/services/authService.test.ts)
 
