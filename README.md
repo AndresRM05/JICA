@@ -2532,8 +2532,6 @@ El backend de JICA será desarrollado utilizando un stack basado en **Node.js, T
 
 ### Servicios cloud seleccionados
 
-### Servicios cloud seleccionados
-
 | Categoría | Servicio | Uso en el proyecto |
 |---|---|---|
 | Hosting Frontend | Azure Static Web Apps | Hospedaje de la aplicación React |
