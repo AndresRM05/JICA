@@ -911,27 +911,6 @@ No se deben escribir clases de color directamente en componentes para niveles de
 
 
 ---
-## 2.6 Seguridad del frontend
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 ## 2.6 Seguridad del frontend
@@ -2502,7 +2481,7 @@ Cada job depende del anterior con `needs`. Si cualquier job falla, los siguiente
  
 ---
  
-## Secrets requeridos en GitHub
+### Secrets requeridos en GitHub
  
 Todos los secrets deben estar configurados en **Settings → Secrets and variables → Actions** del repositorio de GitHub. Los secrets con prefijo `STAGE_` y `PROD_` tienen valores distintos por ambiente; el resto es compartido.
  
@@ -2525,3 +2504,48 @@ Todos los secrets deben estar configurados en **Settings → Secrets and variabl
 | `PLAYWRIGHT_TEST_PASSWORD` | stage | Contraseña de usuario de prueba para E2E |
 | `STAGE_BASE_URL` | stage | URL base de la app en stage para Playwright |
  
+
+
+## 3.1 Stack de tecnologías y frameworks del backend
+
+El backend de JICA será desarrollado utilizando un stack basado en **Node.js, TypeScript, NestJS y PostgreSQL**, con el objetivo de mantener coherencia con el frontend, facilitar la escalabilidad del sistema y permitir una arquitectura modular, segura y mantenible.
+
+| Categoría | Tecnología | Versión recomendada | Uso en el proyecto |
+|---|---|---:|---|
+| Runtime backend | Node.js | 26.x Current / 24.x LTS | Ejecución del backend |
+| Lenguaje | TypeScript | 5.x | Tipado estático y mantenibilidad |
+| Framework backend | NestJS | 11.x | API REST modular y escalable |
+| Servidor HTTP | Express | 5.x | Adaptador HTTP usado por NestJS |
+| Base de datos | PostgreSQL | 18.x | Persistencia relacional |
+| ORM | Prisma ORM | 7.x | Modelado, consultas y migraciones |
+| Validación backend | class-validator / class-transformer | Compatible con NestJS 11 | Validación de DTOs |
+| Autenticación | Firebase Auth Admin SDK | Última versión estable | Validación de tokens enviados por el frontend |
+| Documentación API | Swagger / OpenAPI | Compatible con NestJS 11 | Documentación de endpoints |
+| Testing unitario | Jest | 30.x | Pruebas unitarias |
+| Testing API / integración | Supertest | Última versión estable | Pruebas de endpoints HTTP |
+| Variables de entorno | @nestjs/config | 4.x | Manejo centralizado de configuración |
+| Observabilidad | Azure Application Insights | Última versión estable | Logs, métricas y trazabilidad |
+
+### Justificación del stack
+
+Se selecciona **Node.js con TypeScript** porque permite mantener un lenguaje común entre frontend y backend, reduciendo la curva de aprendizaje del equipo y facilitando la reutilización de contratos de datos.
+
+Se utiliza **NestJS** porque provee una arquitectura modular basada en controladores, servicios, módulos, inyección de dependencias, guards, interceptors y pipes. Esto permite organizar el backend por dominios funcionales como autenticación, inversionistas, pymes, oportunidades de inversión, simulaciones y reportes.
+
+Se selecciona **PostgreSQL** como motor principal de base de datos porque el sistema maneja información altamente relacional, como usuarios, perfiles de inversionista, pymes, métricas financieras, oportunidades de inversión, simulaciones e inversiones confirmadas.
+
+Se utiliza **Prisma ORM** para definir el modelo de datos, ejecutar migraciones, generar consultas tipadas y reducir errores en el acceso a la base de datos.
+
+La autenticación se integrará con **Firebase Auth**, manteniendo coherencia con el frontend. El backend no gestionará contraseñas directamente, sino que validará los tokens enviados por el cliente antes de permitir el acceso a rutas protegidas.
+
+### Versiones y compatibilidad
+
+Para desarrollo y despliegue se recomienda utilizar versiones estables y compatibles entre sí. En producción se priorizarán versiones LTS o ampliamente soportadas.
+
+```txt
+Node.js: 24.x LTS o 26.x Current
+TypeScript: 5.x
+NestJS: 11.x
+PostgreSQL: 18.x
+Prisma ORM: 7.x
+Jest: 30.x
