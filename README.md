@@ -2582,3 +2582,280 @@ JICA contará con tres ambientes independientes:
 Cada ambiente tendrá sus propias variables de configuración, credenciales, base de datos y recursos cloud para evitar interferencias entre entornos.
 
 
+## 3.3 Estructura general del backend
+ 
+El backend de JICA estará ubicado dentro de la carpeta `/backend` del repositorio, organizado en módulos NestJS donde cada módulo agrupa toda la lógica relacionada a una funcionalidad.
+ 
+```txt
+/backend
+│
+├── prisma/
+│   └── migrations/
+│
+├── src/
+│   ├── auth/
+│   │   ├── decorators/
+│   │   ├── guards/
+│   │   └── strategies/
+│   │
+│   ├── users/
+│   │   └── dto/
+│   │
+│   ├── investors/
+│   │   └── dto/
+│   │
+│   ├── businesses/
+│   │   └── dto/
+│   │
+│   ├── investments/
+│   │   └── dto/
+│   │
+│   ├── simulation/
+│   │   └── dto/
+│   │
+│   ├── documents/
+│   │   └── dto/
+│   │
+│   ├── admin/
+│   │   └── dto/
+│   │
+│   ├── prisma/
+│   │
+│   ├── common/
+│   │   ├── decorators/
+│   │   ├── filters/
+│   │   ├── interceptors/
+│   │   ├── pipes/
+│   │   └── utils/
+│   │
+│   └── config/
+│
+└── tests/
+    ├── unit/
+    └── integration/
+```
+
+| Carpeta | Responsabilidad |
+|---|---|
+| `/prisma` | Schema de base de datos, migraciones y seeders |
+| `/src/auth` | Guards, decoradores y estrategia JWT para validar tokens de Entra ID |
+| `/src/users` | Gestión básica de usuarios del sistema |
+| `/src/investors` | Perfil del inversionista, preferencias y portafolio |
+| `/src/businesses` | Registro y gestión de pymes gastronómicas |
+| `/src/investments` | Oportunidades de inversión y registro de interés |
+| `/src/simulation` | Cálculo de retorno estimado y simulación de inversión |
+| `/src/documents` | Carga y gestión de documentos financieros en Azure Blob Storage |
+| `/src/admin` | Aprobación de pymes y operaciones administrativas |
+| `/src/prisma` | `PrismaService` global para acceso a la base de datos |
+| `/src/common` | Filtros de excepciones, interceptores, pipes y utilidades compartidas |
+| `/src/config` | Configuración centralizada de variables de entorno |
+| `/tests/unit` | Pruebas unitarias de services y repositories por módulo |
+| `/tests/integration` | Pruebas de endpoints HTTP con Supertest por módulo |
+
+---
+
+## 3.4 Diseño en capas
+ 
+El backend de JICA sigue una arquitectura en capas estricta. Cada capa tiene responsabilidades definidas y restricciones claras sobre con qué otras capas puede comunicarse. Ninguna capa puede saltarse otra ni asumir responsabilidades que no le corresponden.
+ 
+---
+ 
+## Capas del sistema
+ 
+```
+Request HTTP
+     │
+     ▼
+┌─────────────────────┐
+│     Controllers     │  ← recibe y responde requests HTTP
+└─────────────────────┘
+           │
+           ▼
+┌─────────────────────┐
+│      Services       │  ← lógica de negocio
+└─────────────────────┘
+           │
+           ▼
+┌─────────────────────┐
+│    Repositories     │  ← acceso a datos
+└─────────────────────┘
+           │
+           ▼
+┌─────────────────────┐
+│       Prisma        │  ← comunicación con PostgreSQL
+└─────────────────────┘
+           │
+           ▼
+     PostgreSQL
+```
+ 
+La comunicación entre capas es **unidireccional y descendente**. Una capa solo puede comunicarse con la capa inmediatamente inferior. Ninguna capa puede saltar niveles.
+ 
+---
+ 
+## Capa 1 — Controllers
+ 
+### Responsabilidades
+ 
+- Recibir requests HTTP y extraer datos de entrada (body, params, query).
+- Invocar el método correspondiente del Service.
+- Retornar la respuesta HTTP con el status code correcto.
+- Aplicar Guards de autenticación y autorización.
+- Aplicar Pipes de validación de DTOs.
+### Lo que debe implementarse
+ 
+- Decoradores de rutas (`@Get`, `@Post`, `@Put`, `@Patch`, `@Delete`).
+- Decoradores de Guards (`@UseGuards`).
+- Extracción de datos del request (`@Body`, `@Param`, `@Query`).
+- Retorno del resultado del Service como respuesta HTTP.
+### Lo que NO debe implementarse
+ 
+- Lógica de negocio de ningún tipo.
+- Consultas a la base de datos.
+- Llamadas a `PrismaService` directamente.
+- Validaciones de reglas de negocio.
+- Transformaciones complejas de datos.
+### Restricciones
+ 
+- Un Controller solo puede inyectar su propio Service.
+- Un Controller nunca inyecta un Repository directamente.
+- Un Controller nunca inyecta `PrismaService`.
+### Referencia de implementación
+[investments.controller.ts](./backend/src/investments/investments.controller.ts)
+
+## Capa 2 — Services
+ 
+### Responsabilidades
+ 
+- Contener toda la lógica de negocio del sistema.
+- Orquestar llamadas a uno o más Repositories.
+- Aplicar reglas de negocio antes y después de acceder a datos.
+- Lanzar excepciones de negocio cuando las reglas no se cumplen.
+- Realizar cálculos financieros (ROI, retorno estimado, nivel de riesgo).
+### Lo que debe implementarse
+ 
+- Validaciones de negocio (ej: no se puede registrar interés en un proyecto ya financiado).
+- Orquestación de múltiples Repositories cuando una operación afecta varias entidades.
+- Cálculos financieros.
+- Lanzamiento de excepciones tipadas de NestJS (`NotFoundException`, `BadRequestException`, `ForbiddenException`).
+### Lo que NO debe implementarse
+ 
+- Llamadas directas a `PrismaService`.
+- Lógica de routing o manejo de requests HTTP.
+- Acceso directo a headers, cookies o el objeto `Request`.
+- Formateo de respuestas HTTP.
+### Restricciones
+ 
+- Un Service puede inyectar uno o más Repositories.
+- Un Service puede inyectar otros Services de módulos exportados explícitamente.
+- Un Service nunca inyecta `PrismaService` directamente.
+- Un Service nunca accede al objeto `Request` de HTTP.
+### Referencia de implementación
+[investments.service.ts](./backend/src/investments/investments.service.ts)
+
+## Capa 3 — Repositories
+ 
+### Responsabilidades
+ 
+- Encapsular todo acceso a la base de datos a través de `PrismaService`.
+- Proveer métodos de consulta, creación, actualización y eliminación de datos.
+- Aplicar masking de datos sensibles antes de retornar datos al Service.
+- Usar `select` explícito en todas las consultas para evitar exponer campos innecesarios.
+### Lo que debe implementarse
+ 
+- Todas las consultas a la base de datos usando `PrismaService`.
+- Selección explícita de campos con `select` en cada consulta.
+- Aplicación de masking sobre datos sensibles (cédula, cuenta bancaria, email).
+- Paginación de resultados cuando el volumen de datos lo requiera.
+### Lo que NO debe implementarse
+ 
+- Lógica de negocio.
+- Validaciones de reglas de negocio.
+- Cálculos financieros.
+- Excepciones de negocio (`BadRequestException`, `ForbiddenException`).
+### Restricciones
+ 
+- Un Repository solo puede inyectar `PrismaService`.
+- Un Repository nunca inyecta otros Repositories ni Services.
+- Un Repository nunca retorna un modelo completo de Prisma si contiene campos sensibles.
+- Todo dato sensible debe ser maskeado antes de retornarse al Service.
+### Referencia de implementación
+[investments.repository.ts](./backend/src/investments/investments.repository.ts)
+
+### Masking en el Repository
+ 
+El masking se aplica en `/backend/src/common/utils/maskData.ts` y se llama desde el Repository. Es la única capa donde se aplica; el Service y el Controller nunca reciben datos sin masking.
+Ejemplo [investments.repository.ts](./backend/src/common/utils/maskData.ts)
+
+
+## Capa 4 — Prisma
+ 
+### Responsabilidades
+ 
+- Gestionar la conexión con PostgreSQL.
+- Proveer el cliente tipado para todas las operaciones de base de datos.
+- Gestionar el schema, migraciones y seeders.
+### Lo que debe implementarse
+ 
+- `PrismaService` en `/backend/src/prisma/prisma.service.ts` como servicio global.
+- Schema en `/backend/prisma/schema.prisma`.
+- Migraciones en `/backend/prisma/migrations/`.
+- Seeders en `/backend/prisma/seed.ts`.
+### Lo que NO debe implementarse
+ 
+- Lógica de negocio.
+- Validaciones.
+- Transformaciones de datos.
+
+Ejemplo [investments.repository.ts](./backend/src/prisma/prisma.service.ts)
+
+`PrismaService` debe registrarse como global en `/backend/src/prisma/prisma.module.ts` para estar disponible en todos los módulos sin necesidad de importarlo en cada uno.
+
+
+## Flujo de comunicación entre capas
+ 
+Ejemplo completo con una operación real: un inversionista registra interés en una inversión.
+ 
+```
+1. POST /investments/:id/interest
+        │
+        ▼
+2. InvestmentsController
+   - EntraIdGuard valida el token de Entra ID
+   - RolesGuard verifica rol 'investor'
+   - Extrae investmentId de @Param
+   - Extrae user del token con @CurrentUser
+   - Llama: investmentsService.registerInterest(investmentId, user.id)
+        │
+        ▼
+3. InvestmentsService
+   - Llama: investmentsRepository.findById(investmentId)
+   - Si no existe → lanza NotFoundException
+   - Si status !== 'available' → lanza BadRequestException
+   - Llama: investmentsRepository.registerInterest(investmentId, investorId)
+        │
+        ▼
+4. InvestmentsRepository
+   - prisma.investment.findUnique({ where: { id } })
+   - prisma.investmentInterest.create({ data: { investmentId, investorId } })
+        │
+        ▼
+5. PrismaService → PostgreSQL
+        │
+        ▼
+   Respuesta sube en orden inverso
+        │
+        ▼
+6. Controller retorna HTTP 201 Created
+```
+ 
+---
+ 
+## Resumen de restricciones por capa
+ 
+| Capa | Puede inyectar | No puede inyectar | Excepciones que lanza |
+|---|---|---|---|
+| Controller | Su propio Service | Repositories, PrismaService | Ninguna |
+| Service | Repositories, otros Services exportados | PrismaService directamente | `NotFoundException`, `BadRequestException`, `ForbiddenException` |
+| Repository | PrismaService | Otros Repositories, Services | `InternalServerErrorException` |
+| Prisma | — | — | Errores de conexión y consulta |
