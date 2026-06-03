@@ -2508,23 +2508,26 @@ Todos los secrets deben estar configurados en **Settings → Secrets and variabl
 
 ## 3.1 Stack de tecnologías y frameworks del backend
 
-El backend de JICA será desarrollado utilizando un stack basado en **Node.js, TypeScript, NestJS y PostgreSQL**, con el objetivo de mantener coherencia con el frontend, facilitar la escalabilidad del sistema y permitir una arquitectura modular, segura y mantenible.
+El backend de JICA será desarrollado utilizando un stack basado en **Node.js, TypeScript, NestJS, PostgreSQL y Microsoft Entra ID**, manteniendo coherencia con la infraestructura cloud seleccionada en Azure y con la seguridad definida en el frontend.
 
-| Categoría | Tecnología | Versión recomendada | Uso en el proyecto |
+| Categoría | Tecnología / Framework | Versión recomendada | Uso en el proyecto |
 |---|---|---:|---|
-| Runtime backend | Node.js | 26.x Current / 24.x LTS | Ejecución del backend |
+| Runtime backend | Node.js | 24.x LTS | Ejecución del servidor backend |
 | Lenguaje | TypeScript | 5.x | Tipado estático y mantenibilidad |
-| Framework backend | NestJS | 11.x | API REST modular y escalable |
-| Servidor HTTP | Express | 5.x | Adaptador HTTP usado por NestJS |
-| Base de datos | PostgreSQL | 18.x | Persistencia relacional |
-| ORM | Prisma ORM | 7.x | Modelado, consultas y migraciones |
-| Validación backend | class-validator / class-transformer | Compatible con NestJS 11 | Validación de DTOs |
-| Autenticación | Firebase Auth Admin SDK | Última versión estable | Validación de tokens enviados por el frontend |
-| Documentación API | Swagger / OpenAPI | Compatible con NestJS 11 | Documentación de endpoints |
-| Testing unitario | Jest | 30.x | Pruebas unitarias |
+| Framework backend | NestJS | 11.x | API REST modular, escalable y mantenible |
+| Servidor HTTP | Express | 5.x | Adaptador HTTP utilizado por NestJS |
+| Base de datos | PostgreSQL | 18.x | Persistencia relacional de usuarios, pymes, inversiones y simulaciones |
+| ORM | Prisma ORM | 7.x | Modelado de datos, consultas tipadas, migraciones y seeders |
+| Autenticación | Microsoft Entra ID | N/A | Gestión de identidad, login, sesión y emisión de tokens |
+| Validación de tokens | Microsoft JWT / JWKS | N/A | Validación del Access Token recibido desde el frontend |
+| Autorización | App Roles de Entra ID | N/A | Control de acceso por roles: `investor`, `business`, `admin` |
+| Validación backend | class-validator / class-transformer | Compatible con NestJS 11 | Validación de DTOs de entrada |
+| Documentación API | Swagger / OpenAPI | Compatible con NestJS 11 | Documentación de endpoints REST |
+| Testing unitario | Jest | 30.x | Pruebas unitarias de servicios y reglas de negocio |
 | Testing API / integración | Supertest | Última versión estable | Pruebas de endpoints HTTP |
-| Variables de entorno | @nestjs/config | 4.x | Manejo centralizado de configuración |
-| Observabilidad | Azure Application Insights | Última versión estable | Logs, métricas y trazabilidad |
+| Configuración | @nestjs/config | 4.x | Manejo centralizado de variables de entorno |
+| Observabilidad | Azure Application Insights | Última versión estable | Logs, métricas, trazabilidad y monitoreo |
+
 
 ### Justificación del stack
 
@@ -2536,7 +2539,7 @@ Se selecciona **PostgreSQL** como motor principal de base de datos porque el sis
 
 Se utiliza **Prisma ORM** para definir el modelo de datos, ejecutar migraciones, generar consultas tipadas y reducir errores en el acceso a la base de datos.
 
-La autenticación se integrará con **Firebase Auth**, manteniendo coherencia con el frontend. El backend no gestionará contraseñas directamente, sino que validará los tokens enviados por el cliente antes de permitir el acceso a rutas protegidas.
+La autenticación se integrará con **Microsoft Entra ID**, no con Firebase Auth, para mantener una integración nativa con Azure. El frontend obtiene un **Access Token JWT** mediante MSAL y lo envía al backend en cada request usando el encabezado:
 
 ### Versiones y compatibilidad
 
