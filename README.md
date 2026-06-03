@@ -2528,20 +2528,9 @@ El backend de JICA será desarrollado utilizando un stack basado en **Node.js, T
 | Configuración | @nestjs/config | 4.x | Manejo centralizado de variables de entorno |
 | Observabilidad | Azure Application Insights | Última versión estable | Logs, métricas, trazabilidad y monitoreo |
 
-
-### Justificación del stack
-
-Se selecciona **Node.js con TypeScript** porque permite mantener un lenguaje común entre frontend y backend, reduciendo la curva de aprendizaje del equipo y facilitando la reutilización de contratos de datos.
-
-Se utiliza **NestJS** porque provee una arquitectura modular basada en controladores, servicios, módulos, inyección de dependencias, guards, interceptors y pipes. Esto permite organizar el backend por dominios funcionales como autenticación, inversionistas, pymes, oportunidades de inversión, simulaciones y reportes.
-
-Se selecciona **PostgreSQL** como motor principal de base de datos porque el sistema maneja información altamente relacional, como usuarios, perfiles de inversionista, pymes, métricas financieras, oportunidades de inversión, simulaciones e inversiones confirmadas.
-
-Se utiliza **Prisma ORM** para definir el modelo de datos, ejecutar migraciones, generar consultas tipadas y reducir errores en el acceso a la base de datos.
-
-La autenticación se integrará con **Microsoft Entra ID**, manteniendo una integración nativa con Azure. El frontend obtiene un **Access Token JWT** mediante MSAL y lo envía al backend en cada solicitud.
-
 ## 3.2 Servicios cloud y hosting
+
+### Servicios cloud seleccionados
 
 ### Servicios cloud seleccionados
 
@@ -2553,8 +2542,8 @@ La autenticación se integrará con **Microsoft Entra ID**, manteniendo una inte
 | Autenticación e Identidad | Microsoft Entra ID | Gestión de usuarios, roles y autenticación |
 | Observabilidad | Azure Application Insights | Monitoreo y métricas |
 | Gestión de secretos | Azure Key Vault | Almacenamiento seguro de credenciales |
-| CI/CD | Azure DevOps Pipelines | Automatización de despliegues |
-| Repositorio | Azure DevOps Repos | Control de versiones |
+| CI/CD | GitHub Actions | Automatización de pruebas, compilación y despliegue |
+| Repositorio | GitHub | Control de versiones y colaboración del equipo |
 | Almacenamiento de archivos | Azure Blob Storage | Almacenamiento de documentos e imágenes |
 
 ---
