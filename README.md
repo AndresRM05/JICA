@@ -2505,7 +2505,7 @@ Todos los secrets deben estar configurados en **Settings → Secrets and variabl
 | `STAGE_BASE_URL` | stage | URL base de la app en stage para Playwright |
  
 
-
+# BACKEND
 ## 3.1 Stack de tecnologías y frameworks del backend
 
 El backend de JICA será desarrollado utilizando un stack basado en **Node.js, TypeScript, NestJS, PostgreSQL y Microsoft Entra ID**, manteniendo coherencia con la infraestructura cloud seleccionada en Azure y con la seguridad definida en el frontend.
