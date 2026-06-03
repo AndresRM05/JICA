@@ -2503,7 +2503,7 @@ Todos los secrets deben estar configurados en **Settings → Secrets and variabl
 | `PLAYWRIGHT_TEST_EMAIL` | stage | Email de usuario de prueba para E2E |
 | `PLAYWRIGHT_TEST_PASSWORD` | stage | Contraseña de usuario de prueba para E2E |
 | `STAGE_BASE_URL` | stage | URL base de la app en stage para Playwright |
- 
+--- 
 
 # BACKEND
 ## 3.1 Stack de tecnologías y frameworks del backend
