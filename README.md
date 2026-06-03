@@ -523,17 +523,19 @@ dashboardContainer
 ---
 ## 2.5 Lineamientos de CSS y estilos
 
-Esta sección define las reglas visuales que debe seguir el frontend del sistema. 
+Esta sección define las reglas visuales que debe seguir el frontend de JICA.
 
-El frontend debe utilizar **Tailwind CSS** como herramienta principal de estilos. Se deben evitar estilos CSS aislados o inconsistentes, salvo cuando sea estrictamente necesario.
+El frontend debe usar **Tailwind CSS** como herramienta principal de estilos. Los estilos reutilizables deben centralizarse en archivos CSS dentro de:
+
+[/src/styles](./frontend/src/styles)
 
 ---
 
 ### Paleta de colores
 
-La paleta de colores debe transmitir confianza, seguridad financiera, claridad y modernidad. 
+Los colores oficiales deben configurarse en:
 
-### Colores principales
+[tailwind.config.ts](./frontend/tailwind.config.ts)
 
 ```ts
 primary: "#064E3B"       // Verde oscuro JICA
@@ -545,41 +547,41 @@ textPrimary: "#0F172A"   // Texto principal
 textSecondary: "#64748B" // Texto secundario
 border: "#E2E8F0"        // Bordes suaves
 error: "#DC2626"         // Errores
-warning: "#F59E0B"       // Riesgo medio / advertencias
+warning: "#F59E0B"       // Advertencias o riesgo medio
 success: "#16A34A"       // Confirmaciones
-info: "#2563EB"          // Información secundaria, no color principal
+info: "#2563EB"          // Información secundaria
 ```
 
-### Uso recomendado
+Uso requerido:
 
-* `primary`: encabezados, navegación principal, elementos institucionales.
+* `primary`: encabezados, navegación principal y elementos institucionales.
 * `secondary`: botones principales, enlaces y acciones importantes.
-* `accent`: indicadores positivos, rentabilidad, inversión confirmada.
+* `accent`: indicadores positivos y rentabilidad.
 * `background`: fondo general de las pantallas.
 * `surface`: tarjetas, formularios, modales y paneles.
 * `error`: mensajes de error y validaciones fallidas.
-* `warning`: alertas preventivas.
+* `warning`: alertas preventivas y riesgo medio.
 * `success`: operaciones exitosas.
 
-No se deben usar colores arbitrarios directamente en los componentes si ya existe un color definido en la paleta.
+No se deben usar colores arbitrarios directamente en componentes si ya existe un color definido en la paleta.
 
 ---
 
 ### Tipografías
 
-Tipografía que se va a utilizar:
+Fuente principal:
 
 ```txt
 Inter
 ```
 
-En caso de no estar disponible, se debe usar la siguiente cadena de respaldo:
+Fuente de respaldo:
 
 ```css
 font-family: Inter, system-ui, sans-serif;
 ```
 
-### Jerarquía tipográfica
+Jerarquía requerida:
 
 ```txt
 Título principal: text-3xl font-bold
@@ -590,51 +592,48 @@ Texto secundario: text-sm text-slate-500
 Texto auxiliar: text-xs text-slate-400
 ```
 
-No se deben mezclar muchas fuentes ni tamaños sin justificación.
+No se deben mezclar fuentes ni tamaños fuera de esta jerarquía sin justificación.
 
 ---
 
 ### Logos
 
-El logo del sistema debe utilizarse de forma consistente en todas las pantallas.
+Los archivos del logo deben almacenarse en:
 
-### Reglas de uso
+[/src/assets](./frontend/src/assets)
 
-* El logo debe aparecer en la pantalla de inicio de sesión, registro y layout principal.
+Reglas obligatorias:
+
+* El logo debe aparecer en login, registro y layout principal.
 * No se debe deformar, recortar ni cambiar su proporción.
-* Debe mantener suficiente espacio alrededor.
+* Debe mantener espacio visual alrededor.
 * No debe colocarse sobre fondos con poco contraste.
 * La versión horizontal debe usarse en desktop.
-* La versión compacta o isotipo debe usarse en mobile o sidebar reducido.
-
-El atributo `alt` siempre debe estar presente para accesibilidad.
+* La versión compacta debe usarse en mobile o sidebar reducido.
+* El atributo `alt` siempre debe estar presente.
 
 ---
 
 ### Iconografía
 
-La iconografía debe ser simple, clara y consistente. 
+Librería requerida:
 
-Librería que se va a utilizar :
 ```txt
 lucide-react
 ```
 
-#### Reglas de uso
+Reglas obligatorias:
 
-* Todos los iconos deben mantener el mismo estilo visual.
+* No mezclar librerías de iconos sin justificación.
 * El tamaño estándar debe ser `20px` o `24px`.
 * Los iconos no deben reemplazar texto importante.
-* Cuando un icono represente una acción crítica, debe ir acompañado de una etiqueta textual.
-* No se deben mezclar librerías de iconos distintas sin justificación.
+* Las acciones críticas deben incluir icono y texto.
 
 ---
 
 ### Espaciados
 
-El sistema debe seguir una escala de espaciado consistente basada en Tailwind CSS.
-
-#### Escala recomendada
+El sistema debe seguir la escala de Tailwind CSS.
 
 ```txt
 xs: 0.25rem  // p-1
@@ -644,12 +643,13 @@ lg: 1.5rem   // p-6
 xl: 2rem     // p-8
 2xl: 3rem    // p-12
 ```
-#### Reglas generales
+
+Reglas obligatorias:
 
 * Las tarjetas deben usar `p-4` o `p-6`.
 * Las secciones principales deben usar `py-8` o `py-12`.
 * Los elementos internos deben separarse con `gap-4` o `gap-6`.
-* No se deben usar márgenes aleatorios sin seguir la escala de Tailwind.
+* No se deben usar márgenes aleatorios fuera de la escala de Tailwind.
 
 ---
 
@@ -674,7 +674,7 @@ xl: 1280px
 Reglas obligatorias:
 
 * Usar enfoque mobile-first.
-* Aplicar responsive directamente en componentes mediante clases de Tailwind.
+* Aplicar responsive directamente en páginas y componentes mediante clases de Tailwind.
 * Construir layouts principales con Flexbox o Grid.
 * No usar anchos fijos en contenedores principales.
 * Las tablas extensas deben usar scroll horizontal controlado.
@@ -712,48 +712,37 @@ No permitido:
 }
 ```
 
-
 ---
 
 ### Estilos reutilizables
 
-Los patrones visuales frecuentes deben estandarizarse para evitar duplicación y mantener consistencia.
+Los patrones visuales frecuentes deben centralizarse para evitar duplicación de clases.
 
-### Botón primario
+Ubicación requerida:
 
-Uso: acciones principales como registrarse, iniciar sesión o confirmar inversión.
+[/src/styles/components](./frontend/src/styles/components)
+
+#### Botones
 
 Implementación requerida:
 
 [button.css](./frontend/src/styles/components/button.css)
 
-Clase requerida:
+Clases requeridas:
 
 ```txt
 .btn-primary
-```
-
----
-
-### Botón secundario
-
-Uso: acciones alternativas o menos importantes.
-
-Implementación requerida:
-
-[button.css](./frontend/src/styles/components/button.css)
-
-Clase requerida:
-
-```txt
 .btn-secondary
 ```
 
+Uso:
+
+* `.btn-primary`: registrarse, iniciar sesión o confirmar inversión.
+* `.btn-secondary`: cancelar, volver o ejecutar acciones alternativas.
+
 ---
 
-### Tarjetas
-
-Uso: proyectos de inversión, resumen financiero y datos del usuario.
+#### Tarjetas
 
 Implementación requerida:
 
@@ -765,11 +754,16 @@ Clase requerida:
 .card
 ```
 
+Uso:
+
+* Proyectos de inversión.
+* Resumen financiero.
+* Datos del usuario.
+* Paneles de dashboard.
+
 ---
 
-### Inputs
-
-Uso: formularios de registro, inicio de sesión, perfil e inversión.
+#### Inputs
 
 Implementación requerida:
 
@@ -782,90 +776,49 @@ Clases requeridas:
 .input-error
 ```
 
+Uso:
+
+* Registro.
+* Inicio de sesión.
+* Perfil.
+* Simulación de inversión.
+
 ---
 
-### Mensajes de error
+#### Mensajes de retroalimentación
 
 Implementación requerida:
 
 [feedback.css](./frontend/src/styles/components/feedback.css)
 
-Clase requerida:
-
-```txt
-.form-error
-```
-
----
-
-### Etiquetas visuales
-
-Implementación requerida:
-
-[badges.css](./frontend/src/styles/components/badges.css)
-
 Clases requeridas:
 
 ```txt
-.badge
-.badge-available
-.badge-review
-.badge-funded
-.badge-confirmed
-.badge-pending
-.badge-rejected
-.badge-cancelled
-.badge-risk-low
-.badge-risk-medium
-.badge-risk-high
+.form-error
+.form-success
+.form-warning
+.form-info
 ```
-
 
 ---
 
-### Responsive design
+### Branding visual
 
-El sistema debe diseñarse siguiendo un enfoque **mobile-first**. Esto significa que primero se debe construir la interfaz para pantallas pequeñas y luego adaptarla progresivamente a pantallas medianas y grandes.
+La interfaz debe seguir el estilo definido en los prototipos: fintech limpio, fondo claro, tarjetas blancas, bordes redondeados, sombras suaves y verde oscuro como color principal.
 
-### Breakpoints recomendados
+Reglas obligatorias:
 
-```txt
-sm: 640px
-md: 768px
-lg: 1024px
-xl: 1280px
-2xl: 1536px
-```
-
-### Reglas responsive
-
-* En mobile, el contenido debe mostrarse en una sola columna.
-* En tablet, pueden utilizarse dos columnas cuando el contenido lo permita.
-* En desktop, se pueden usar grids de tres o más columnas.
-* Los formularios deben ocupar el ancho disponible en mobile.
-* La navegación principal debe adaptarse a menú colapsable en pantallas pequeñas.
-* Las tablas grandes deben convertirse en tarjetas o permitir scroll horizontal.
-
----
-
-### Branding y etiquetado visual
-
-La identidad visual de JICA debe seguir el estilo definido en los prototipos: interfaz fintech limpia, fondo claro, tarjetas blancas, bordes redondeados, sombras suaves, verde oscuro como color principal y acentos amarillos/naranjas únicamente para advertencias o riesgo medio.
-
-#### Lineamientos de branding
-
-* Usar lenguaje visual limpio y profesional.
-* Evitar saturación de colores.
-* Priorizar claridad sobre decoración.
 * Usar tarjetas para separar información financiera.
 * Resaltar datos clave como rentabilidad, monto mínimo, riesgo y estado del proyecto.
+* Usar amarillo o naranja solo para advertencias o riesgo medio.
 * Mantener consistencia entre dashboard, formularios y páginas de detalle.
+* Priorizar claridad sobre decoración.
 
 ---
 
 ### Etiquetas de estado
 
-Las etiquetas visuales deben ayudar al usuario a identificar rápidamente el estado de una inversión o proyecto.
+Las etiquetas visuales deben ayudar a identificar el estado de una inversión o proyecto.
 
 Implementación requerida:
 
@@ -950,11 +903,11 @@ No se deben escribir clases de color directamente en componentes para niveles de
 * No usar estilos inline salvo casos excepcionales justificados.
 * No escribir clases de color directamente en componentes cuando exista una clase reutilizable.
 * No duplicar clases extensas si el patrón se repite más de una vez.
-* Mantener consistencia entre botones, tarjetas, formularios, modales y etiquetas.
 * Usar Tailwind CSS como fuente principal de estilos.
 * Evitar colores o tamaños arbitrarios sin justificación.
 * Todos los elementos interactivos deben tener estados `hover`, `focus` y `disabled`.
 * Los textos deben tener contraste suficiente con el fondo.
+
 
 
 ---
