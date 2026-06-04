@@ -3250,3 +3250,265 @@ Ejemplo [main.ts](./backend/src/main.ts)
 - `forbidNonWhitelisted: true` es obligatorio. Rechaza requests con campos desconocidos en lugar de ignorarlos silenciosamente.
 - `transform: true` es obligatorio. Permite que los query params lleguen con el tipo correcto al Controller.
 - La validación de reglas de negocio (ej: monto mínimo de inversión según el proyecto) no pertenece al DTO; pertenece al Service.
+---
+## 3.6 Organización del código
+ 
+Esta sección define cómo debe organizarse el código del backend para facilitar mantenimiento, navegación y escalabilidad.
+---
+ 
+## Estructura del monorepo
+ 
+El repositorio de JICA es un monorepo que contiene frontend y backend como proyectos independientes. Cada uno tiene su propio `package.json`, sus propias dependencias y su propio pipeline de CI/CD.
+ 
+```txt
+/ (raíz del repositorio)
+│
+├── .github/
+│   └── workflows/
+│       ├── deploy-frontend-stage.yml
+│       ├── deploy-frontend-production.yml
+│       ├── deploy-backend-stage.yml
+│       └── deploy-backend-production.yml
+│
+├── frontend/
+│   └──
+│
+├── backend/
+│   └── 
+│
+├── .gitignore
+├── .env.example         
+└── README.md
+```
+ 
+### Reglas del monorepo
+ 
+- Frontend y backend son completamente independientes. Ninguno importa código del otro.
+- Los cambios en `/frontend` no deben disparar el pipeline del backend y viceversa. Los workflows de GitHub Actions deben usar `paths` para filtrar por carpeta.
+- Cada proyecto tiene su propio `.env.example` dentro de su carpeta.
+
+# Organización interna del backend
+ 
+### Principio general
+ 
+El código del backend se organiza por **dominio de negocio**, no por tipo de archivo. Cada módulo NestJS es una unidad autocontenida que agrupa todo lo relacionado a una funcionalidad: controller, service, repository, DTOs y module.
+ 
+### Regla de dependencias entre módulos
+ 
+Los módulos solo pueden depender de otros módulos exportando explícitamente sus Services. Un módulo nunca accede directamente a los internos de otro módulo.
+ 
+```
+✓ InvestmentsModule importa UsersModule porque necesita verificar datos del usuario
+✗ InvestmentsService importa UsersRepository directamente
+```
+ 
+El módulo que expone funcionalidad debe declararlo explícitamente:
+ 
+```ts
+// /backend/src/users/users.module.ts
+@Module({
+  providers: [UsersService, UsersRepository],
+  exports: [UsersService], // solo el Service se expone, nunca el Repository
+})
+export class UsersModule {}
+```
+ 
+### Módulos globales
+ 
+Los siguientes módulos deben registrarse como globales en `app.module.ts` para estar disponibles en toda la aplicación sin necesidad de importarlos en cada módulo:
+ 
+| Módulo | Justificación |
+|---|---|
+| `PrismaModule` | Toda la aplicación necesita acceso a la base de datos |
+| `ConfigModule` | Toda la aplicación necesita acceso a variables de entorno |
+| `CacheModule` | El caché debe estar disponible globalmente |
+| `AuthModule` | Los guards de autenticación se usan en todos los módulos |
+ 
+---
+ 
+## Organización dentro de cada módulo
+ 
+Cada módulo sigue esta estructura interna sin excepción:
+ 
+```txt
+{modulo}/
+├── dto/
+│   ├── create-{modulo}.dto.ts
+│   ├── update-{modulo}.dto.ts      (si aplica)
+│   ├── get-{modulo}-query.dto.ts   (si aplica)
+│   └── {modulo}-response.dto.ts
+├── {modulo}.controller.ts
+├── {modulo}.service.ts
+├── {modulo}.repository.ts          (excepto simulation)
+└── {modulo}.module.ts
+```
+ 
+### Responsabilidad de cada archivo dentro del módulo
+ 
+| Archivo | Contiene |
+|---|---|
+| `*.controller.ts` | Rutas, guards, extracción de params/body/query |
+| `*.service.ts` | Lógica de negocio, validaciones de negocio, cálculos |
+| `*.repository.ts` | Queries a Prisma, masking de datos, select explícito |
+| `*.module.ts` | Registro de providers, imports y exports del módulo |
+| `dto/create-*.dto.ts` | Validación de datos de entrada para creación |
+| `dto/update-*.dto.ts` | Validación de datos de entrada para actualización |
+| `dto/get-*-query.dto.ts` | Validación de filtros y paginación |
+| `dto/*-response.dto.ts` | Contrato de datos que se retornan al cliente |
+ 
+---
+ 
+## Código compartido
+ 
+El código que se usa en más de un módulo debe vivir en `/backend/src/common/`. Nada debe duplicarse entre módulos.
+ 
+```txt
+common/
+├── decorators/     ← decoradores reutilizables entre módulos
+├── filters/        ← HttpExceptionFilter global
+├── interceptors/   ← interceptores globales de respuesta
+├── pipes/          ← pipes de validación globales
+└── utils/          ← funciones utilitarias: maskData, formatCurrency, etc.
+```
+ 
+### Regla de utils
+ 
+Las funciones en `common/utils/` deben ser funciones puras sin dependencias de NestJS. No deben inyectar servicios ni acceder a la base de datos.
+ 
+```ts
+// Correcto: función pura en common/utils/
+export function maskTaxId(taxId: string): string {
+  return taxId.replace(/^.+(.{4})$/, '***-***-$1');
+}
+ 
+// Incorrecto: lógica de negocio en utils
+export async function validateInvestmentLimit(investorId: string) {
+  // esto pertenece al Service, no a utils
+}
+```
+ 
+---
+ 
+## Escalabilidad
+ 
+### Agregar un nuevo módulo
+ 
+Cuando se deba agregar una nueva funcionalidad al backend, el proceso es:
+ 
+```
+1. Crear la carpeta /backend/src/{nuevo-modulo}/
+2. Crear los archivos siguiendo la estructura estándar del módulo
+3. Registrar el módulo en /backend/src/app.module.ts
+4. Si el módulo expone Services para otros módulos, declararlo en exports
+5. Crear las pruebas en /tests/unit/{nuevo-modulo}/ y /tests/integration/{nuevo-modulo}/
+```
+ 
+No se debe agregar lógica de una nueva funcionalidad dentro de un módulo existente si esa lógica tiene entidad propia.
+ 
+### Agregar un nuevo endpoint a un módulo existente
+ 
+```
+1. Agregar el DTO de entrada en /dto/ si el endpoint recibe datos nuevos
+2. Agregar el método en el Repository si requiere una nueva query a la base de datos
+3. Agregar el método en el Service con la lógica de negocio
+4. Agregar el método en el Controller con la ruta y los guards
+5. Agregar pruebas unitarias y de integración para el nuevo endpoint
+```
+ 
+### Cuándo crear un nuevo módulo vs extender uno existente
+ 
+| Situación | Decisión |
+|---|---|
+| La funcionalidad tiene su propia entidad en la base de datos | Nuevo módulo |
+| La funcionalidad tiene reglas de negocio independientes | Nuevo módulo |
+| Es una operación adicional sobre una entidad existente | Extender módulo existente |
+| Es una utilidad compartida sin entidad propia | `common/utils/` |
+ 
+---
+ 
+## Convenciones de nomenclatura
+ 
+### Archivos
+ 
+Todos los archivos del backend usan **kebab-case**:
+ 
+```
+investments.controller.ts
+investments.service.ts
+investments.repository.ts
+create-investment.dto.ts
+investment-response.dto.ts
+http-exception.filter.ts
+```
+ 
+### Clases
+ 
+Todas las clases usan **PascalCase** con sufijo que indica su tipo:
+ 
+```ts
+InvestmentsController
+InvestmentsService
+InvestmentsRepository
+InvestmentsModule
+CreateInvestmentDto
+InvestmentResponseDto
+HttpExceptionFilter
+EntraIdGuard
+RolesGuard
+```
+ 
+### Métodos en Controllers
+ 
+Los métodos de Controllers deben usar verbos estándar REST:
+ 
+```ts
+findAll()    // GET /
+findOne()    // GET /:id
+create()     // POST /
+update()     // PUT /:id o PATCH /:id
+remove()     // DELETE /:id
+```
+ 
+Para acciones que no encajan en CRUD estándar, usar verbos descriptivos:
+ 
+```ts
+registerInterest()   // POST /investments/:id/interest
+approveBusinesss()   // PATCH /admin/businesses/:id/approve
+runSimulation()      // POST /simulation
+```
+ 
+### Métodos en Services y Repositories
+ 
+Los métodos deben describir claramente su acción:
+ 
+```ts
+// Services
+findAll(filters: GetInvestmentsQueryDto): Promise<InvestmentResponseDto[]>
+findOne(id: string): Promise<InvestmentResponseDto>
+registerInterest(investmentId: string, investorId: string): Promise<void>
+calculateExpectedReturn(amount: number, roi: number, termMonths: number): number
+ 
+// Repositories
+findAll(filters: GetInvestmentsQueryDto): Promise<InvestmentResponseDto[]>
+findById(id: string): Promise<InvestmentResponseDto | null>
+create(data: CreateInvestmentDto): Promise<InvestmentResponseDto>
+registerInterest(investmentId: string, investorId: string): Promise<void>
+```
+ 
+### Variables de entorno
+ 
+Las variables de entorno del backend usan **UPPER_SNAKE_CASE** sin prefijo:
+ 
+```
+PORT
+NODE_ENV
+DATABASE_URL
+AZURE_TENANT_ID
+AZURE_CLIENT_ID
+REDIS_HOST
+REDIS_PORT
+REDIS_PASSWORD
+ALLOWED_ORIGINS
+```
+ 
+---
