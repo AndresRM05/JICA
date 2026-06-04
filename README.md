@@ -2859,3 +2859,394 @@ Ejemplo completo con una operación real: un inversionista registra interés en 
 | Service | Repositories, otros Services exportados | PrismaService directamente | `NotFoundException`, `BadRequestException`, `ForbiddenException` |
 | Repository | PrismaService | Otros Repositories, Services | `InternalServerErrorException` |
 | Prisma | — | — | Errores de conexión y consulta |
+
+---
+## 3.5 Lineamientos del backend
+ 
+Esta sección define las reglas obligatorias para middlewares, autenticación, autorización, manejo de errores, observabilidad, procesos largos, comunicación asíncrona, variables de entorno, caché, queues, conexiones y validación de datos. 
+  
+## Middlewares
+ 
+Los middlewares en JICA se usan exclusivamente para lógica transversal que debe ejecutarse en todas las rutas o en un conjunto de rutas antes de llegar al Controller. No deben contener lógica de negocio.
+ 
+### Middlewares obligatorios
+ 
+| Middleware | Responsabilidad | Alcance |
+|---|---|---|
+| `helmet` | Configurar headers HTTP de seguridad | Global |
+| `compression` | Comprimir respuestas HTTP | Global |
+| CORS | Permitir únicamente orígenes autorizados | Global |
+| Logger | Registrar cada request con método, ruta y status | Global |
+ 
+### Configuración en `/backend/src/main.ts`
+Ejemplo de codigo [main.ts](./backend/src/main.ts)
+
+
+### Restricciones
+ 
+- Los middlewares no deben acceder a la base de datos.
+- Los middlewares no deben lanzar excepciones de negocio.
+- No se deben crear middlewares custom para lógica que pertenece a un Guard o un Interceptor.
+---
+ 
+## Autenticación
+ 
+JICA utiliza **Microsoft Entra ID** para autenticación. El backend valida el Access Token JWT emitido por Entra ID en cada request. No se implementa autenticación propia.
+ 
+### Tecnologías
+ 
+| Tecnología | Versión | Uso |
+|---|---|---|
+| `@nestjs/passport` | 10.x | Integración de Passport con NestJS |
+| `passport-azure-ad` | 4.x | Estrategia JWT para validar tokens de Entra ID |
+ 
+### Flujo de validación
+ 
+```
+1. Request llega con header: Authorization: Bearer <accessToken>
+2. EntraIdGuard intercepta el request
+3. JwtStrategy valida el token contra las claves públicas de Entra ID
+4. Si el token es válido → extrae el payload (uid, email, roles)
+5. Adjunta el usuario autenticado al objeto Request
+6. El request continúa al Controller
+7. Si el token es inválido o expirado → retorna 401 Unauthorized
+```
+ 
+### JwtStrategy
+Ejemplo de codigo [main.ts](./backend/src/auth/strategies/jwt.strategy.ts)
+
+### EntraIdGuard
+Ejemplo de codigo [entra-id.guard.ts](./backend/src/auth/guards/entra-id.guard.ts)
+
+### Decorador CurrentUser
+ 
+El usuario autenticado debe extraerse del Request usando el decorador `@CurrentUser`. Ningún Controller debe acceder a `req.user` directamente.
+Ejemplo de codigo [current-user.decorator.ts](./backend/src/auth/decorators/current-user.decorator.ts)
+
+### Tipo del usuario autenticado
+Ejemplo de codigo [auth.types.ts](./backend/src/auth/auth.types.ts)
+---
+ 
+## Autorización
+ 
+La autorización se basa en roles definidos como **App Roles en Microsoft Entra ID**. El rol viene en el claim `roles` del Access Token.
+ 
+### RolesGuard
+Ejemplo de codigo [roles.guard.ts](./backend/src/auth/guards/roles.guard.ts)
+
+### Decorador Roles
+Ejemplo de codigo [roles.decorator.ts](./backend/src/auth/decorators/roles.decorator.ts)
+
+
+### Uso en Controllers
+ 
+`EntraIdGuard` y `RolesGuard` deben aplicarse siempre juntos. `EntraIdGuard` autentica, `RolesGuard` autoriza.
+ 
+```ts
+@Controller('investments')
+@UseGuards(EntraIdGuard, RolesGuard)
+export class InvestmentsController {
+ 
+  @Get()
+  @Roles('investor', 'admin')
+  findAll() { ... }
+ 
+  @Post()
+  @Roles('admin')
+  create() { ... }
+}
+```
+ 
+### Rutas públicas
+ 
+Las rutas que no requieren autenticación deben marcarse con el decorador `@Public`:
+Ejemplo de codigo [public.decorator.ts](./backend/src/auth/decorators/public.decorator.ts)
+`EntraIdGuard` debe verificar si la ruta está marcada como pública antes de validar el token.
+ 
+---
+ 
+## Manejo de errores
+ 
+Todos los errores del backend deben pasar por un filtro global de excepciones. Ningún Controller ni Service debe formatear manualmente las respuestas de error.
+ 
+### HttpExceptionFilter
+Ejemplo de codigo [http-exception.filter.ts](./backend/src/common/filters/http-exception.filter.ts)
+Registrar globalmente en `/backend/src/main.ts`:
+ 
+```ts
+app.useGlobalFilters(new HttpExceptionFilter());
+```
+
+### Excepciones por capa
+ 
+| Capa | Excepciones permitidas |
+|---|---|
+| Service | `NotFoundException`, `BadRequestException`, `ForbiddenException`, `ConflictException` |
+| Repository | `InternalServerErrorException` ante errores inesperados de Prisma |
+| Controller | No lanza excepciones; delega al Service |
+ 
+### Errores de Prisma
+ 
+Los errores de Prisma deben capturarse en el Repository y traducirse a excepciones de NestJS. Nunca deben llegar al Service ni al Controller sin traducir.
+ 
+```ts
+// Referencia de códigos de error de Prisma que deben manejarse
+// P2002 → registro duplicado → ConflictException (lanzado desde Service)
+// P2025 → registro no encontrado → el Repository retorna null, el Service lanza NotFoundException
+```
+ 
+### Formato de respuesta de error
+ 
+Todas las respuestas de error deben seguir esta estructura:
+ 
+```json
+{
+  "statusCode": 404,
+  "message": "Inversión con id abc123 no encontrada",
+  "timestamp": "2025-01-01T00:00:00.000Z",
+  "path": "/api/v1/investments/abc123"
+}
+```
+ 
+---
+
+
+## Observabilidad y monitoreo
+ 
+JICA utiliza **Azure Application Insights** para monitoreo en `stage` y `production`. Está definido en el stack (sección 3.1).
+ 
+### Qué debe monitorearse
+ 
+- Tiempo de respuesta de cada endpoint.
+- Errores 4xx y 5xx con su contexto (ruta, método, usuario si aplica).
+- Excepciones no manejadas.
+- Queries lentas a la base de datos (más de 1000ms).
+- Fallos de conexión con PostgreSQL o Redis.
+### Qué nunca debe loguearse
+ 
+- Access Tokens de Entra ID.
+- Contraseñas o datos de autenticación.
+- Datos financieros sensibles (cuentas bancarias, cédulas).
+- Datos personales sin justificación.
+### Logger de NestJS
+ 
+Usar el `Logger` nativo de NestJS en Services y Repositories para registrar eventos relevantes. No usar `console.log` en ninguna parte del código.
+ 
+```ts
+// Uso correcto del Logger
+private readonly logger = new Logger(InvestmentsService.name);
+ 
+this.logger.log('Procesando registro de interés');
+this.logger.warn('Intento de inversión en proyecto no disponible');
+this.logger.error('Error al registrar interés', error.stack);
+```
+ 
+---
+ 
+## Procesos largos
+ 
+Los siguientes procesos en JICA se consideran largos y no deben ejecutarse sincrónicamente en el ciclo de request/response:
+ 
+| Proceso | Estrategia |
+|---|---|
+| Envío de emails de notificación | Queue con BullMQ |
+| Aprobación de pyme por admin | Queue con BullMQ + notificación Socket.io al resolverse |
+| Carga y validación de documentos financieros | Queue con BullMQ |
+| Generación de reporte de simulación complejo | Queue con BullMQ |
+ 
+Ningún proceso largo debe bloquear el response HTTP. El endpoint debe retornar inmediatamente con `202 Accepted` y encolar el trabajo.
+ 
+---
+ 
+## Comunicación asíncrona — Queues con BullMQ
+ 
+### Tecnologías
+ 
+| Tecnología | Versión | Uso |
+|---|---|---|
+| `@nestjs/bull` | 10.x | Integración de BullMQ con NestJS |
+| `bullmq` | 5.x | Sistema de queues basado en Redis |
+| Redis | 7.x | Broker de mensajes para BullMQ |
+| Azure Cache for Redis | N/A | Hosting de Redis en Azure |
+ 
+### Queues definidas
+ 
+| Queue | Responsabilidad |
+|---|---|
+| `notifications` | Envío de emails y notificaciones |
+| `documents` | Procesamiento y validación de documentos financieros |
+| `approvals` | Proceso de aprobación de pymes por el admin |
+ 
+### Estructura de un Queue en NestJS
+ 
+Cada queue debe tener su propio módulo con un Producer y un Consumer:
+Ejemplo de codigo Producer [documents.service.ts](./backend/src/documents/documents.service.ts)
+
+Ejemplo de codigo Consumer [documents.processor.ts](./backend/src/documents/documents.processor.ts)
+
+ ---
+### Configuración de Redis para BullMQ
+Ejemplo [documents.processor.ts](./backend/src/documents/documents.processor.ts)
+
+## Integración con IA
+ 
+> **Pendiente de definición.** Esta sección será completada cuando se defina el alcance y el proveedor de IA a integrar en JICA.
+ 
+---
+ 
+## Variables de entorno y configuración
+ 
+La configuración del backend se gestiona con `@nestjs/config`. Ningún valor de configuración debe estar hardcodeado en el código.
+ 
+### Configuración centralizada
+Ejemplo [configuration.ts](./backend/src/config/configuration.ts)
+
+### Manejo por ambiente
+ 
+**development** — archivo `.env` local, nunca al repositorio. El repositorio incluye `.env.example` con keys vacías.
+ 
+```bash
+# /backend/.env.example
+PORT=
+NODE_ENV=
+DATABASE_URL=
+AZURE_TENANT_ID=
+AZURE_CLIENT_ID=
+AZURE_BLOB_CONNECTION_STRING=
+AZURE_KEY_VAULT_URL=
+REDIS_HOST=
+REDIS_PORT=
+REDIS_PASSWORD=
+ALLOWED_ORIGINS=
+```
+
+**stage y production** — sin archivos `.env`. Las variables se inyectan desde **Azure Key Vault** a través de **Azure App Service — Application Settings**. 
+
+### Validación de variables de entorno al arrancar
+ 
+El backend debe validar que todas las variables requeridas estén presentes al iniciar. Si falta alguna, la aplicación no debe arrancar.
+
+---
+ 
+## Caché
+ 
+JICA usa `CacheModule` de NestJS con almacenamiento en memoria.
+
+Ejemplo [app.module.ts](./backend/src/app.module.ts)
+
+ 
+### Qué debe cachearse
+ 
+| Dato | TTL | Justificación |
+|---|---|---|
+| Lista de inversiones disponibles | 5 minutos | Cambia con frecuencia moderada |
+| Detalle de una inversión | 10 minutos | Cambia poco una vez publicada |
+| Perfil público de una pyme | 10 minutos | Cambia raramente |
+ 
+### Qué no debe cachearse
+ 
+- Datos del usuario autenticado.
+- Resultados de simulación (siempre deben ser frescos).
+- Datos financieros internos de una pyme.
+- Cualquier dato que cambie en tiempo real.
+### Uso en Controllers
+ 
+```ts
+// Cachear respuesta de un endpoint con @CacheKey y @CacheTTL
+@Get()
+@CacheKey('available-investments')
+@CacheTTL(300)
+findAll(@Query() filters: GetInvestmentsQueryDto) {
+  return this.investmentsService.findAll(filters);
+}
+```
+ 
+La invalidación del caché debe realizarse en el Service después de cualquier mutación que afecte los datos cacheados:
+ 
+```ts
+constructor(
+  private readonly cacheManager: Cache,
+) {}
+ 
+async create(dto: CreateInvestmentDto): Promise<void> {
+  await this.investmentsRepository.create(dto);
+  await this.cacheManager.del('available-investments');
+}
+```
+ 
+---
+
+
+## Manejo de conexiones y Connection Pooling
+ 
+### PostgreSQL — Connection Pooling con Prisma
+ 
+Prisma maneja el connection pool automáticamente. La configuración del pool se define en la `DATABASE_URL`:
+ 
+```bash
+# /backend/.env.example
+DATABASE_URL="postgresql://user:password@host:5432/jica?connection_limit=10&pool_timeout=10"
+```
+ 
+| Parámetro | Valor  | Descripción |
+|---|---|---|
+| `connection_limit` | 10 | Máximo de conexiones simultáneas al pool |
+| `pool_timeout` | 10 | Segundos de espera antes de error si el pool está lleno |
+
+### Redis — Manejo de conexión
+ 
+La conexión con Redis se gestiona a través de BullMQ. En caso de pérdida de conexión, BullMQ reintenta automáticamente con backoff exponencial. No se necesita configuración adicional.
+ 
+### Restricciones
+ 
+- No crear conexiones a PostgreSQL fuera de `PrismaService`.
+- No crear conexiones a Redis fuera de la configuración de BullMQ y CacheModule.
+- `PrismaService` debe ser el único punto de acceso a la base de datos en toda la aplicación.
+---
+ 
+## Threading
+ 
+Node.js es **single-threaded** por diseño. NestJS no requiere configuración de threads para operaciones normales. Los procesos que podrían bloquear el event loop deben delegarse a queues con BullMQ (ver sección de Queues).
+ 
+No se deben usar Worker Threads en el MVP. Si en el futuro un cálculo financiero resulta ser suficientemente costoso como para bloquear el event loop, se evaluará el uso de Worker Threads en ese momento específico.
+ 
+---
+ 
+## DTOs
+ 
+Los DTOs definen el contrato de entrada y salida de cada endpoint. Todo dato que entra o sale del sistema debe estar tipado con un DTO.
+ 
+### Tipos de DTOs
+ 
+| Tipo | Sufijo | Uso |
+|---|---|---|
+| Entrada de creación | `Create{Entidad}Dto` | Datos para crear un recurso |
+| Entrada de actualización | `Update{Entidad}Dto` | Datos para actualizar un recurso (campos opcionales) |
+| Query params | `Get{Entidad}QueryDto` | Filtros y paginación |
+| Respuesta | `{Entidad}ResponseDto` | Datos que se retornan al cliente |
+ 
+### Reglas obligatorias
+ 
+- Todo DTO debe usar decoradores de `class-validator` para validación.
+- Los DTOs de respuesta nunca deben incluir campos sensibles sin masking (cédula, cuenta bancaria).
+- Los DTOs de actualización deben extender el DTO de creación usando `PartialType` de NestJS.
+- Los DTOs deben ubicarse en la carpeta `dto/` dentro de su módulo.
+### Referencia de implementación
+Ejemplo [create-investment.dto.ts](./backend/src/investments/dto/create-investment.dto.ts)
+
+
+---
+ 
+## Validación de datos
+ 
+### ValidationPipe global
+ 
+La validación de DTOs debe aplicarse globalmente con `ValidationPipe`. Se configura en `/backend/src/main.ts`:
+Ejemplo [main.ts](./backend/src/main.ts)
+
+### Reglas de validación
+ 
+- `whitelist: true` es obligatorio. Previene que campos no declarados en el DTO lleguen al Service.
+- `forbidNonWhitelisted: true` es obligatorio. Rechaza requests con campos desconocidos en lugar de ignorarlos silenciosamente.
+- `transform: true` es obligatorio. Permite que los query params lleguen con el tipo correcto al Controller.
+- La validación de reglas de negocio (ej: monto mínimo de inversión según el proyecto) no pertenece al DTO; pertenece al Service.
