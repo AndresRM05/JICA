@@ -1292,7 +1292,7 @@ El uso de `localStorage` y `sessionStorage` está **restringido** en JICA. La ma
  
 ### Casos prohibidos
  
-- ID Token de Firebase → obtener siempre con `user.getIdToken()`. Ver sección 2.6.
+- ID Token  → obtener siempre con `user.getIdToken()`. Ver sección 2.6.
 - Datos del usuario autenticado → viven en `authStore` (Zustand). Ver `/src/store/authStore.ts`.
 - Datos financieros de pymes o inversiones → viven en caché de TanStack Query.
 - Cualquier dato sensible: contraseñas, cuentas bancarias, cédulas, montos.
