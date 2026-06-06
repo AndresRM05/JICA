@@ -3512,3 +3512,166 @@ ALLOWED_ORIGINS
 ```
  
 ---
+
+
+## 3.7 Técnicas y patrones arquitectónicos implementados
+
+### Técnicas arquitectónicas utilizadas
+
+| Técnica | Propósito |
+|----------|-----------|
+| Separación de responsabilidades | Distribuir la lógica entre controladores, servicios y repositorios |
+| Modularización | Organizar el sistema por dominios funcionales independientes |
+| Inyección de dependencias | Reducir el acoplamiento entre componentes mediante los mecanismos de NestJS |
+| API REST | Exponer funcionalidades mediante endpoints HTTP estandarizados |
+
+### Layered Architecture
+
+#### Responsabilidad
+
+Separar la aplicación en capas con responsabilidades específicas para reducir el acoplamiento y facilitar el mantenimiento.
+
+#### Clases participantes
+
+```txt
+Controllers
+Services
+Repositories
+Prisma Client
+```
+
+#### Activación del patrón
+
+Se utiliza en cada solicitud recibida por la API.
+
+#### Interacción entre componentes
+
+```txt
+Controller
+    ↓
+Service
+    ↓
+Repository
+    ↓
+PostgreSQL
+```
+
+#### Ventajas
+
+- Separación de responsabilidades.
+- Facilita pruebas unitarias.
+- Reduce acoplamiento entre componentes.
+- Mejora mantenibilidad y escalabilidad.
+
+#### Ejemplo práctico
+
+```txt
+POST /investments
+
+InvestmentController
+    ↓
+InvestmentService
+    ↓
+InvestmentRepository
+    ↓
+PostgreSQL
+```
+
+---
+
+### Repository Pattern
+
+#### Responsabilidad
+
+Centralizar el acceso a la base de datos y desacoplar la lógica de negocio de la persistencia.
+
+#### Clases participantes
+
+```txt
+InvestmentRepository
+BusinessRepository
+UserRepository
+PrismaClient
+```
+
+#### Activación del patrón
+
+Cuando un servicio necesita consultar o modificar información persistente.
+
+#### Interacción entre componentes
+
+```txt
+Service
+    ↓
+Repository
+    ↓
+Prisma ORM
+    ↓
+PostgreSQL
+```
+
+#### Ventajas
+
+- Aísla las consultas de base de datos.
+- Facilita cambios en la capa de persistencia.
+- Permite realizar pruebas mediante mocks.
+- Mejora la reutilización de código.
+
+#### Ejemplo práctico
+
+```typescript
+const investment =
+  await investmentRepository.findById(id);
+```
+
+---
+
+### Modular Architecture
+
+#### Responsabilidad
+
+Organizar el sistema por dominios funcionales independientes.
+
+#### Clases participantes
+
+```txt
+AuthModule
+UsersModule
+BusinessesModule
+InvestmentsModule
+SimulationsModule
+```
+
+#### Activación del patrón
+
+Durante el arranque de la aplicación mediante el registro de módulos en NestJS.
+
+#### Interacción entre componentes
+
+```txt
+AppModule
+ ├── AuthModule
+ ├── UsersModule
+ ├── BusinessesModule
+ ├── InvestmentsModule
+ └── SimulationsModule
+```
+
+#### Ventajas
+
+- Facilita la escalabilidad.
+- Permite el trabajo paralelo entre equipos.
+- Reduce dependencias entre funcionalidades.
+- Mejora la organización del código.
+
+#### Ejemplo práctico
+
+```txt
+InvestmentsModule
+
+├── investment.controller.ts
+├── investment.service.ts
+├── investment.repository.ts
+├── dto/
+└── entities/
+```
