@@ -1,4 +1,39 @@
 # JICA
+
+# 1. Prototipado y Refinamiento UX
+
+## 1.1 Prototipo funcional
+
+### Flujo principal validado
+
+### Pantallas implementadas
+
+### Componentes interactivos implementados
+
+### Evidencia del prototipo
+
+## 1.2 UX Testing
+
+### Participantes
+
+### Tareas evaluadas
+
+### Resultados obtenidos
+
+### Evidencias del UX Testing
+
+### Hallazgos identificados
+
+### Comentarios relevantes de los participantes
+
+## 1.3 Refinamiento del prototipo
+
+### Correcciones aplicadas
+
+### Comparación antes y después
+
+## 1.4 Conclusiones
+
 # Frontend
 
 ## 2.1 Stack de tecnologías del frontend
