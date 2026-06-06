@@ -1256,7 +1256,187 @@ Sentry.init({
 - No construir URLs de API concatenando input del usuario directamente.
 - Mantener el principio de mínimo privilegio: mostrar solo la información que el rol del usuario necesita ver.
 
-## 2.8 Almacenamiento, comunicación y observabilidad
+
+## 2.8 Patrones Utilizados
+
+---
+### Patrones arquitectónicos
+
+Esta sección define los patrones arquitectónicos que debe seguir el frontend de JICA para mantener una estructura modular, escalable y fácil de mantener. Todo desarrollo nuevo debe respetar estos lineamientos.
+
+---
+
+#### Arquitectura basada en Features (Feature-Based Architecture)
+
+El frontend se organiza por funcionalidades del negocio en lugar de agrupar el código únicamente por tipo de archivo. Cada feature contiene los componentes, hooks, servicios, tipos y validaciones que necesita para funcionar.
+
+### Objetivo
+
+- Mantener alta cohesión entre archivos relacionados.
+- Reducir el acoplamiento entre funcionalidades.
+- Facilitar el trabajo colaborativo.
+- Permitir agregar nuevas funcionalidades sin afectar módulos existentes.
+
+### Estructura esperada
+
+```txt
+/src/features
+
+    investments/
+        components/
+        hooks/
+        services/
+        types/
+        validations/
+
+    simulation/
+        components/
+        hooks/
+        services/
+
+    business/
+        ...
+```
+
+### Reglas obligatorias
+
+- Cada funcionalidad nueva debe implementarse dentro de su propio feature.
+- No mezclar lógica de diferentes dominios dentro de una misma carpeta.
+- Los componentes, hooks y servicios específicos de una funcionalidad deben permanecer dentro de su feature correspondiente.
+- Solo los componentes verdaderamente reutilizables deben ubicarse en `/src/components`.
+
+---
+
+#### Arquitectura por Capas (Layered Architecture)
+
+La comunicación entre la interfaz y el backend debe seguir una separación clara de responsabilidades. Ninguna capa debe asumir responsabilidades que pertenecen a otra.
+
+### Flujo obligatorio
+
+```txt
+Página / Componente
+        ↓
+Hook de feature
+        ↓
+Servicio de API
+        ↓
+Cliente HTTP
+        ↓
+Backend
+```
+
+### Responsabilidad de cada capa
+
+| Capa | Responsabilidad |
+|-------|-----------------|
+| Página o componente | Renderizar la interfaz y manejar la interacción del usuario. |
+| Hook | Gestionar estados de carga, errores, caché y comunicación mediante TanStack Query. |
+| Servicio | Implementar las operaciones específicas del dominio y consumir los endpoints correspondientes. |
+| Cliente HTTP | Centralizar la configuración de la comunicación con el backend, incluyendo base URL, autenticación y manejo común de errores. |
+
+### Reglas obligatorias
+
+- Ningún componente o página debe consumir APIs directamente.
+- Toda llamada al backend debe realizarse mediante un servicio.
+- Los hooks son responsables de utilizar TanStack Query para gestionar loading, error y caché.
+- El cliente HTTP centralizado es el único punto autorizado para realizar solicitudes HTTP.
+- La lógica de negocio no debe implementarse dentro de componentes visuales.
+
+---
+### Patrones de diseño
+
+Esta sección define los patrones de diseño que deben utilizarse en el frontend de JICA para mejorar la mantenibilidad, reutilización y separación de responsabilidades. Su implementación busca reducir el acoplamiento entre componentes y facilitar la evolución del sistema.
+
+---
+
+#### Facade Pattern
+
+El patrón **Facade** proporciona una interfaz sencilla para acceder a funcionalidades que internamente pueden involucrar varios servicios o procesos. De esta forma, los componentes no necesitan conocer la complejidad de la implementación.
+
+### Objetivo
+
+- Reducir el acoplamiento entre la interfaz y los servicios.
+- Centralizar operaciones relacionadas con una misma funcionalidad.
+- Facilitar cambios internos sin afectar a los componentes que consumen el servicio.
+- Simplificar las pruebas y el mantenimiento.
+
+### Flujo esperado
+
+```txt
+Componente
+        ↓
+Facade
+        ↓
+Servicios del dominio
+        ↓
+Cliente HTTP
+        ↓
+Backend
+```
+
+### Estructura esperada
+
+```txt
+/src/features
+
+    investments/
+
+        services/
+            investmentFacade.ts
+            investmentService.ts
+```
+
+### Reglas obligatorias
+
+- Los componentes no deben coordinar múltiples servicios directamente.
+- Las operaciones complejas deben exponerse mediante una fachada del dominio correspondiente.
+- La fachada puede utilizar uno o varios servicios internos según sea necesario.
+- Cada feature puede definir su propia fachada cuando la lógica lo requiera.
+
+---
+
+### Container–Presentational Pattern
+
+Este patrón separa la lógica de la aplicación de la presentación visual. Los componentes contenedores obtienen y preparan la información, mientras que los componentes de presentación únicamente renderizan la interfaz utilizando las propiedades recibidas.
+
+### Objetivo
+
+- Separar la lógica de negocio de la interfaz.
+- Facilitar la reutilización de componentes visuales.
+- Mejorar la mantenibilidad del código.
+- Simplificar las pruebas unitarias de los componentes.
+
+### Flujo esperado
+
+```txt
+Backend
+        ↓
+Hook
+        ↓
+Container
+        ↓
+Presentational Component
+        ↓
+Usuario
+```
+
+### Responsabilidad de cada componente
+
+| Tipo | Responsabilidad |
+|-------|-----------------|
+| Container | Obtener datos, manejar estados y preparar la información para la vista. |
+| Presentational | Renderizar la interfaz utilizando únicamente las propiedades recibidas. |
+
+### Reglas obligatorias
+
+- Los componentes de presentación no deben consumir APIs directamente.
+- Los componentes de presentación no deben contener lógica de negocio.
+- Los componentes contenedores son responsables de utilizar hooks y preparar los datos necesarios para la vista.
+- La comunicación entre un componente contenedor y uno de presentación debe realizarse mediante props claramente definidas.
+- Los componentes reutilizables de la interfaz deben diseñarse como componentes de presentación siempre que sea posible.
+
+
+## 2.9 Almacenamiento, comunicación y observabilidad
  
 Esta sección define las reglas obligatorias para el manejo de almacenamiento en el navegador, comunicación asíncrona, Web Sockets, procesos largos, eventos, observabilidad, monitoreo, errores, estado, caché y reintentos en el frontend de JICA.
  
@@ -1524,7 +1704,7 @@ useMutation({
 El cliente de Socket.io debe intentar reconectarse automáticamente hasta 5 veces con un delay de 2 segundos entre intentos. Ver configuración en `/src/services/socketService.ts`. Si supera los 5 intentos, debe mostrarse un banner informando al usuario que las notificaciones en tiempo real no están disponibles, sin interrumpir el resto de la aplicación.
 
 ---
-## 2.9 Estrategia de testing del frontend
+## 2.10 Estrategia de testing del frontend
  
 Esta sección define las reglas obligatorias de testing para el frontend de JICA. Cubre pruebas unitarias, de integración de componentes y de UI end-to-end. El backend tiene su propia estrategia de testing; lo definido aquí es exclusivo del lado del cliente.
  
@@ -1754,7 +1934,7 @@ El pipeline de GitHub Actions debe ejecutar en orden:
 Las pruebas E2E solo se ejecutan en el pipeline de `stage`. No se ejecutan en `production`; el deploy a production depende de que el pipeline de stage haya pasado completamente.
 
 
- ## 2.10 Consumo de APIs y contratos de datos
+ ## 2.11 Consumo de APIs y contratos de datos
 
 Esta sección define cómo el frontend de JICA debe comunicarse con el backend y cómo se deben manejar los contratos de datos entre ambas capas.
 
@@ -2186,7 +2366,7 @@ Antes de consumir un nuevo endpoint desde el frontend, se debe completar esta li
 [ ] Enlazar el archivo implementado en esta documentación si aplica.
 ```
 ---
-## 2.10 Optimización de rendimiento
+## 2.12 Optimización de rendimiento
  
 Esta sección define las estrategias obligatorias de rendimiento para el frontend de JICA. Al ser una aplicación CSR con datos financieros, la percepción de velocidad es crítica para la confianza del inversionista. Cada técnica aquí definida debe aplicarse en el contexto específico que se indica; no deben aplicarse de forma generalizada sin justificación.
  
@@ -2379,7 +2559,7 @@ Si la lista tiene menos de 50 elementos, usar un `map` estándar sin virtualizac
 - El skeleton loader debe usarse en lugar de spinners para contenido que tiene una estructura conocida (tarjetas de inversión, tablas, perfiles). El spinner solo aplica para acciones puntuales sin estructura predefinida.
 - TanStack Query maneja el estado de loading de datos del servidor. No duplicar ese estado con `useState` local.
 ----
-## 2.11 Estrategia de CI/CD
+## 2.13 Estrategia de CI/CD
  
 Esta sección define los pipelines, scripts de deployment, validaciones automáticas, análisis estático y acciones automáticas de código del frontend de JICA. Todo lo definido aquí es obligatorio; ningún deploy puede realizarse fuera de este flujo.
  
