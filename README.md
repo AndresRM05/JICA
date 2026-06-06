@@ -3888,3 +3888,868 @@ InvestmentsModule
 ├── dto/
 └── entities/
 ```
+
+## 3.8 Especificaciones de Diseño de la Base de Datos
+
+---
+
+La base de datos es el componente encargado de almacenar de forma persistente toda la información del sistema. Su diseño debe garantizar integridad, consistencia, escalabilidad y facilidad de mantenimiento.
+
+El sistema utilizará **PostgreSQL** como motor de base de datos y **Prisma ORM** como capa de acceso a datos.
+
+---
+
+## Modelo de datos
+
+La base de datos debe seguir un modelo relacional, donde cada entidad del dominio represente una responsabilidad específica y las relaciones entre ellas se implementen mediante claves foráneas.
+
+Ejemplo de entidades principales:
+
+- Users
+- Investors
+- Businesses
+- Investment Opportunities
+- Investment Interests
+- Financial Reports
+- Documents
+- Simulations
+- Notifications
+
+Cada entidad debe representar un concepto del negocio y evitar almacenar información redundante.
+
+---
+
+## Normalización
+
+El diseño deberá mantener un nivel adecuado de normalización para reducir duplicidad de información y garantizar consistencia.
+
+Como regla general:
+
+- Evitar almacenar datos repetidos.
+- Utilizar relaciones entre entidades cuando corresponda.
+- Mantener la información dependiente únicamente de la clave primaria.
+- Desnormalizar únicamente cuando exista una justificación de rendimiento.
+
+---
+
+## Claves primarias
+
+Toda tabla debe poseer una clave primaria única.
+
+Se recomienda utilizar identificadores UUID generados por el sistema para facilitar la escalabilidad y evitar dependencias de secuencias numéricas.
+
+Ejemplo:
+
+```txt
+User
+------------------
+
+id (UUID)
+
+name
+
+email
+```
+
+---
+
+## Relaciones
+
+Las relaciones entre entidades deben implementarse mediante claves foráneas y restricciones de integridad referencial.
+
+Tipos de relaciones permitidas:
+
+- Uno a uno (1:1)
+- Uno a muchos (1:N)
+- Muchos a muchos (N:M) mediante tablas intermedias
+
+Ejemplo:
+
+```txt
+Business
+
+        1
+
+        │
+
+        │
+
+        N
+
+InvestmentOpportunity
+```
+
+---
+
+## Convenciones de nombres
+
+Para mantener consistencia, deberán seguirse las siguientes convenciones:
+
+- Tablas en singular.
+- Nombres descriptivos y en inglés.
+- Claves primarias con el nombre `id`.
+- Claves foráneas con el formato:
+
+```txt
+userId
+
+businessId
+
+investmentId
+```
+
+- Columnas utilizando camelCase cuando Prisma lo requiera.
+
+---
+
+## Auditoría
+
+Las entidades persistentes deben incluir información de auditoría cuando sea aplicable.
+
+Campos recomendados:
+
+```txt
+createdAt
+
+updatedAt
+
+deletedAt (opcional para Soft Delete)
+```
+
+Estos campos permiten trazabilidad y recuperación de información histórica.
+
+---
+
+## Soft Delete
+
+Cuando una entidad requiera eliminación lógica, no deberá eliminarse físicamente de la base de datos.
+
+En su lugar, se utilizará un campo como:
+
+```txt
+deletedAt
+```
+
+Una entidad con este campo distinto de `NULL` será considerada eliminada para efectos del sistema.
+
+---
+
+## Integridad de datos
+
+La base de datos debe garantizar la consistencia mediante restricciones apropiadas, incluyendo:
+
+- Claves primarias.
+- Claves foráneas.
+- Restricciones `NOT NULL` cuando corresponda.
+- Restricciones `UNIQUE` para datos únicos como correos electrónicos.
+- Validaciones de dominio implementadas tanto en la aplicación como en la base de datos cuando sea necesario.
+
+---
+
+## Acceso a datos
+
+El acceso a la base de datos debe realizarse exclusivamente mediante Prisma y la capa Repository.
+
+El flujo obligatorio será:
+
+```txt
+Controller
+        ↓
+Service
+        ↓
+Repository
+        ↓
+Prisma
+        ↓
+PostgreSQL
+```
+
+Ninguna otra capa del sistema debe realizar consultas directas a la base de datos.
+
+---
+
+## Migraciones
+
+Toda modificación del esquema deberá gestionarse mediante migraciones de Prisma.
+
+No se permite modificar manualmente la estructura de la base de datos en entornos compartidos sin una migración correspondiente.
+
+Cada migración debe:
+
+- Ser versionada.
+- Ser reproducible.
+- Mantener la consistencia del esquema entre ambientes.
+
+## 3.9 Agentes o herramientas automatizadas de revisión
+> **Pendiente de definición.** Esta sección será completada cuando se defina el alcance y el proveedor de IA a integrar en JICA.
+ 
+ ## 3.10 Diseño de la Base de Datos
+
+ ### Diseño de la Base de Datos (DBML)
+
+```dbml
+Enum UserRole {
+  investor
+  business
+  admin
+}
+
+Enum OpportunityStatus {
+  draft
+  open
+  funded
+  closed
+}
+
+Enum InterestStatus {
+  pending
+  accepted
+  rejected
+}
+
+Enum InvestmentStatus {
+  active
+  completed
+  cancelled
+}
+
+Enum RiskLevel {
+  low
+  medium
+  high
+}
+
+Enum DocumentType {
+  financialReport
+  taxDocument
+  legalDocument
+  other
+}
+
+Table User {
+  id uuid [pk]
+
+  firstName varchar [not null]
+  lastName varchar [not null]
+  email varchar [not null, unique]
+  role UserRole [not null]
+
+  createdAt timestamp [not null]
+  updatedAt timestamp [not null]
+  deletedAt timestamp
+}
+
+Table Investor {
+  id uuid [pk]
+
+  userId uuid [not null, unique]
+  phone varchar
+
+  createdAt timestamp [not null]
+  updatedAt timestamp [not null]
+  deletedAt timestamp
+}
+
+Table Business {
+  id uuid [pk]
+
+  userId uuid [not null, unique]
+
+  name varchar [not null]
+  description text
+  category varchar
+  location varchar
+
+  createdAt timestamp [not null]
+  updatedAt timestamp [not null]
+  deletedAt timestamp
+}
+
+Table FinancialReport {
+  id uuid [pk]
+
+  businessId uuid [not null]
+
+  year int [not null]
+  revenue decimal [not null]
+  expenses decimal [not null]
+  profit decimal [not null]
+
+  createdAt timestamp [not null]
+  updatedAt timestamp [not null]
+  deletedAt timestamp
+}
+
+Table InvestmentOpportunity {
+  id uuid [pk]
+
+  businessId uuid [not null]
+
+  title varchar [not null]
+  description text
+
+  targetAmount decimal [not null]
+  currentAmount decimal [not null]
+
+  riskLevel RiskLevel [not null]
+  status OpportunityStatus [not null]
+
+  createdAt timestamp [not null]
+  updatedAt timestamp [not null]
+  deletedAt timestamp
+}
+
+Table InvestmentInterest {
+  id uuid [pk]
+
+  investorId uuid [not null]
+  opportunityId uuid [not null]
+
+  amount decimal [not null]
+  status InterestStatus [not null]
+
+  createdAt timestamp [not null]
+  updatedAt timestamp [not null]
+  deletedAt timestamp
+
+  Indexes {
+    (investorId, opportunityId) [unique]
+  }
+}
+
+Table Investment {
+  id uuid [pk]
+
+  interestId uuid [not null, unique]
+
+  investorId uuid [not null]
+  opportunityId uuid [not null]
+
+  investedAmount decimal [not null]
+  status InvestmentStatus [not null]
+
+  createdAt timestamp [not null]
+  updatedAt timestamp [not null]
+  deletedAt timestamp
+}
+
+Table Simulation {
+  id uuid [pk]
+
+  investorId uuid [not null]
+  opportunityId uuid [not null]
+
+  investmentAmount decimal [not null]
+  estimatedReturn decimal [not null]
+
+  createdAt timestamp [not null]
+  updatedAt timestamp [not null]
+}
+
+Table Document {
+  id uuid [pk]
+
+  businessId uuid [not null]
+
+  fileName varchar [not null]
+  fileUrl varchar [not null]
+  documentType DocumentType [not null]
+
+  createdAt timestamp [not null]
+  updatedAt timestamp [not null]
+  deletedAt timestamp
+}
+
+Table Notification {
+  id uuid [pk]
+
+  userId uuid [not null]
+
+  title varchar [not null]
+  message text [not null]
+  isRead boolean [not null]
+
+  createdAt timestamp [not null]
+  updatedAt timestamp [not null]
+  deletedAt timestamp
+}
+
+Ref: Investor.userId > User.id
+
+Ref: Business.userId > User.id
+
+Ref: FinancialReport.businessId > Business.id
+
+Ref: InvestmentOpportunity.businessId > Business.id
+
+Ref: InvestmentInterest.investorId > Investor.id
+
+Ref: InvestmentInterest.opportunityId > InvestmentOpportunity.id
+
+Ref: Investment.interestId > InvestmentInterest.id
+
+Ref: Investment.investorId > Investor.id
+
+Ref: Investment.opportunityId > InvestmentOpportunity.id
+
+Ref: Simulation.investorId > Investor.id
+
+Ref: Simulation.opportunityId > InvestmentOpportunity.id
+
+Ref: Document.businessId > Business.id
+
+Ref: Notification.userId > User.id
+```
+### Diagrama Entidad-Relacion (ERD)
+
+![Back-end ERD](media/backend_ERD.png)
+
+#### Prisma ERD
+![Back-end Prisma ERD](media/backend_prisma-ERD.png)
+
+---
+## 3.11 Gestión de la Base de Datos
+
+Esta sección define la estrategia para la creación, evolución y mantenimiento de la base de datos del proyecto JICA. Todas las modificaciones del esquema deberán realizarse de forma controlada y versionada para garantizar la consistencia entre los diferentes entornos de desarrollo, pruebas y producción.
+
+---
+
+### Scripts de creación de la base de datos
+
+La creación del esquema de la base de datos será gestionada mediante **Prisma Migrations**, evitando la creación manual de tablas en los distintos entornos.
+
+El modelo de datos definido en `schema.prisma` será la fuente de verdad del sistema.
+
+### Flujo esperado
+
+```txt
+schema.prisma
+        ↓
+Prisma Migration
+        ↓
+PostgreSQL
+```
+
+### Scripts de creación
+```sql
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "./ERD.svg"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  investor
+  business
+  admin
+}
+
+enum OpportunityStatus {
+  draft
+  open
+  funded
+  closed
+}
+
+enum InterestStatus {
+  pending
+  accepted
+  rejected
+}
+
+enum InvestmentStatus {
+  active
+  completed
+  cancelled
+}
+
+enum RiskLevel {
+  low
+  medium
+  high
+}
+
+enum DocumentType {
+  financialReport
+  taxDocument
+  legalDocument
+  other
+}
+
+model User {
+  id         String   @id @default(uuid()) @db.Uuid
+  firstName  String
+  lastName   String
+  email      String   @unique
+  role       UserRole
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+
+  investor     Investor?
+  business     Business?
+  notifications Notification[]
+
+  @@index([role])
+}
+
+model Investor {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @unique @db.Uuid
+  phone      String?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+
+  user         User @relation(fields: [userId], references: [id])
+  interests    InvestmentInterest[]
+  investments  Investment[]
+  simulations  Simulation[]
+}
+
+model Business {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @unique @db.Uuid
+
+  name        String
+  description String?
+  category    String?
+  location    String?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+
+  user          User @relation(fields: [userId], references: [id])
+  reports       FinancialReport[]
+  opportunities InvestmentOpportunity[]
+  documents     Document[]
+}
+
+model FinancialReport {
+  id         String   @id @default(uuid()) @db.Uuid
+  businessId String   @db.Uuid
+
+  year      Int
+  revenue   Decimal
+  expenses  Decimal
+  profit    Decimal
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+}
+
+model InvestmentOpportunity {
+  id            String   @id @default(uuid()) @db.Uuid
+  businessId    String   @db.Uuid
+
+  title         String
+  description   String?
+  targetAmount  Decimal
+  currentAmount Decimal
+
+  riskLevel RiskLevel
+  status    OpportunityStatus
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  business     Business @relation(fields: [businessId], references: [id])
+  interests    InvestmentInterest[]
+  investments  Investment[]
+  simulations  Simulation[]
+
+  @@index([businessId])
+}
+
+model InvestmentInterest {
+  id            String   @id @default(uuid()) @db.Uuid
+  investorId    String   @db.Uuid
+  opportunityId String   @db.Uuid
+
+  amount Decimal
+  status InterestStatus
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  investor    Investor @relation(fields: [investorId], references: [id])
+  opportunity InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
+  investment  Investment?
+
+  @@unique([investorId, opportunityId])
+  @@index([investorId])
+  @@index([opportunityId])
+}
+
+model Investment {
+  id            String   @id @default(uuid()) @db.Uuid
+  interestId    String   @unique @db.Uuid
+  investorId    String   @db.Uuid
+  opportunityId String   @db.Uuid
+
+  investedAmount Decimal
+  status          InvestmentStatus
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  interest    InvestmentInterest @relation(fields: [interestId], references: [id])
+  investor    Investor @relation(fields: [investorId], references: [id])
+  opportunity InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
+
+  @@index([investorId])
+  @@index([opportunityId])
+}
+
+model Simulation {
+  id            String   @id @default(uuid()) @db.Uuid
+  investorId    String   @db.Uuid
+  opportunityId String   @db.Uuid
+
+  investmentAmount Decimal
+  estimatedReturn  Decimal
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  investor    Investor @relation(fields: [investorId], references: [id])
+  opportunity InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
+
+  @@index([investorId])
+  @@index([opportunityId])
+}
+
+model Document {
+  id         String   @id @default(uuid()) @db.Uuid
+  businessId String   @db.Uuid
+
+  fileName     String
+  fileUrl      String
+  documentType DocumentType
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+}
+
+model Notification {
+  id      String @id @default(uuid()) @db.Uuid
+  userId  String @db.Uuid
+
+  title   String
+  message String
+  isRead  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+```
+
+### Reglas obligatorias
+
+- No crear tablas manualmente en la base de datos.
+- Toda modificación del esquema debe originarse desde `schema.prisma`.
+- La creación de la estructura debe realizarse mediante migraciones oficiales del proyecto.
+
+---
+
+### Scripts de Seeding
+
+El proyecto contará con scripts de seeding para poblar la base de datos con información inicial necesaria para el desarrollo y pruebas.
+
+Los datos de prueba podrán incluir:
+
+- Usuarios administradores.
+- Inversionistas.
+- Empresas gastronómicas.
+- Oportunidades de inversión.
+- Reportes financieros.
+- Documentos de ejemplo.
+
+### Ejemplo de Script de Seeding
+
+El siguiente ejemplo muestra cómo poblar la base de datos con información inicial para desarrollo y pruebas.
+
+```ts
+import { PrismaClient, UserRole, RiskLevel, OpportunityStatus } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+async function main() {
+  // Crear usuario inversionista
+  const investorUser = await prisma.user.create({
+    data: {
+      firstName: 'Juan',
+      lastName: 'Pérez',
+      email: 'investor@jica.com',
+      role: UserRole.investor,
+      investor: {
+        create: {
+          phone: '8888-8888'
+        }
+      }
+    }
+  });
+
+  // Crear usuario empresa
+  const businessUser = await prisma.user.create({
+    data: {
+      firstName: 'María',
+      lastName: 'Gómez',
+      email: 'business@jica.com',
+      role: UserRole.business,
+      business: {
+        create: {
+          name: 'Café Tico',
+          description: 'Cafetería especializada en café artesanal.',
+          category: 'Coffee Shop',
+          location: 'San José, Costa Rica'
+        }
+      }
+    },
+    include: {
+      business: true
+    }
+  });
+
+  // Crear oportunidad de inversión
+  await prisma.investmentOpportunity.create({
+    data: {
+      businessId: businessUser.business!.id,
+      title: 'Expansión de sucursal',
+      description: 'Financiamiento para abrir una nueva sucursal.',
+      targetAmount: 50000,
+      currentAmount: 0,
+      riskLevel: RiskLevel.medium,
+      status: OpportunityStatus.open
+    }
+  });
+
+  console.log('Seed ejecutado correctamente.');
+}
+
+main()
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+```
+
+### Ejecución del Seed
+
+```bash
+npx prisma db seed
+```
+
+### Reglas obligatorias
+
+- Los scripts de seeding deben ser reproducibles.
+- La ejecución múltiple no debe generar inconsistencias.
+- Los datos utilizados para desarrollo no deben contener información sensible o real.
+
+---
+
+## Migraciones
+
+Las migraciones serán administradas mediante **Prisma Migrate**, permitiendo controlar la evolución del esquema de la base de datos.
+
+Cada cambio estructural deberá generar una nueva migración versionada.
+
+### Flujo esperado
+
+```txt
+Modificación del schema.prisma
+                ↓
+Generación de migración
+                ↓
+Aplicación a la base de datos
+```
+
+### Reglas obligatorias
+
+- Toda modificación del esquema debe generar una migración.
+- Las migraciones deben almacenarse dentro del repositorio del proyecto.
+- No se deben modificar migraciones ya aplicadas en otros entornos.
+- Cada migración debe representar un cambio específico y fácilmente identificable.
+
+---
+
+## Herramientas utilizadas
+
+| Herramienta | Propósito |
+|------------|-----------|
+| PostgreSQL | Motor de base de datos relacional. |
+| Prisma ORM | Mapeo objeto-relacional y acceso a datos. |
+| Prisma Migrate | Gestión y versionamiento de migraciones. |
+| Prisma Client | Generación del cliente para acceso tipado a la base de datos. |
+| Prisma ERD Generator *(opcional)* | Generación automática del diagrama entidad-relación a partir del modelo Prisma. |
+
+---
+
+## Estrategia de versionamiento
+
+El esquema de la base de datos será versionado junto con el código fuente mediante Git y Prisma Migrate.
+
+Cada modificación deberá generar una nueva migración con un nombre descriptivo que facilite su identificación.
+
+Ejemplos:
+
+```txt
+20260115_create_users
+
+20260120_add_business_table
+
+20260125_add_investment_status
+```
+
+### Reglas obligatorias
+
+- El historial de migraciones debe mantenerse dentro del repositorio.
+- No se deben eliminar migraciones previamente publicadas.
+- Todas las ramas deben sincronizar sus migraciones antes de integrarse a la rama principal.
+
+---
+
+## Estrategia de Rollback
+
+En caso de detectar errores durante una actualización, el sistema deberá permitir regresar a una versión estable del esquema utilizando el historial de migraciones.
+
+La recuperación deberá realizarse mediante los mecanismos proporcionados por Prisma y respaldos de la base de datos cuando sea necesario.
+
+### Reglas obligatorias
+
+- Antes de aplicar cambios en producción deberá existir un respaldo de la base de datos.
+- Toda migración debe ser validada previamente en un entorno de desarrollo o pruebas.
+- Los procedimientos de rollback deben estar documentados y ser reproducibles.
+- Ninguna modificación directa sobre producción debe realizarse sin un mecanismo de recuperación definido.
