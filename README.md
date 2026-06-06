@@ -24,8 +24,6 @@
 
 ### Hallazgos identificados
 
-### Comentarios relevantes de los participantes
-
 ## 1.3 Refinamiento del prototipo
 
 ### Correcciones aplicadas
