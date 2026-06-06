@@ -3888,3 +3888,91 @@ InvestmentsModule
 ├── dto/
 └── entities/
 ```
+---
+
+## 3.8 Optimización del artefacto de deployment
+ 
+El backend de JICA se despliega como código compilado directamente en Azure App Service. El artefacto de deployment es la carpeta `/dist` generada por TypeScript más las dependencias de producción de `node_modules`. Esta sección define las reglas para mantener ese artefacto reducido y eficiente.
+ 
+---
+ 
+## Compilación
+ 
+El compilador de TypeScript genera el artefacto en `/backend/dist`. La configuración de `tsconfig.json` debe asegurar que el output sea limpio y no incluya archivos innecesarios.
+ 
+### Configuración obligatoria en `tsconfig.json`
+ Ejemplo [tsconfig.json](./backend)
+
+ ## Dependencias
+ 
+La separación entre dependencias de producción y desarrollo es obligatoria. El artefacto de deployment solo incluye `dependencies`, nunca `devDependencies`.
+ 
+### Lo que debe estar en `devDependencies`
+ 
+- Todo lo relacionado a testing: `jest`, `supertest`, `@types/jest`, `@types/supertest`.
+- Todo lo relacionado a linting y formateo: `eslint`, `prettier`.
+- Tipos de TypeScript: `@types/node`, `@types/express`, `@types/compression`.
+- El compilador: `typescript`, `ts-node`, `ts-jest`.
+- NestJS CLI: `@nestjs/cli`, `@nestjs/schematics`.
+### Lo que debe estar en `dependencies`
+ 
+Solo librerías que el código en `/dist` necesita en runtime:
+ 
+```json
+{
+  "dependencies": {
+    "@nestjs/common": "...",
+    "@nestjs/core": "...",
+    "@nestjs/platform-express": "...",
+    "@nestjs/config": "...",
+    "@nestjs/bull": "...",
+    "@nestjs/cache-manager": "...",
+    "@nestjs/passport": "...",
+    "@nestjs/swagger": "...",
+    "@prisma/client": "...",
+    "passport": "...",
+    "passport-azure-ad": "...",
+    "bullmq": "...",
+    "helmet": "...",
+    "compression": "...",
+    "joi": "...",
+    "class-validator": "...",
+    "class-transformer": "..."
+  }
+}
+```
+
+# Archivos excluidos del artefacto
+ 
+El artefacto que sube a Azure App Service contiene únicamente:
+ 
+```
+/dist/           ← código TypeScript compilado
+/node_modules/   ← solo dependencias de producción
+/prisma/         ← schema y migraciones (Prisma las necesita en runtime)
+package.json
+package-lock.json
+nest-cli.json
+```
+
+# Cliente de Prisma
+ 
+`@prisma/client` genera su cliente en `node_modules/.prisma/client` durante `prisma generate`. Este paso debe ejecutarse después del build y antes del deploy para que el cliente esté disponible en runtime.
+ 
+```bash
+# Orden obligatorio en el pipeline antes del deploy
+npm run build       # compila TypeScript → /dist
+npx prisma generate # genera el cliente de Prisma en node_modules
+```
+ 
+Si `prisma generate` no se ejecuta, el backend arranca pero falla al intentar conectarse a la base de datos.
+ 
+---
+ 
+## Reglas generales
+ 
+- No importar librerías completas si solo se usa una parte. Aplicar imports específicos para evitar que TypeScript compile código innecesario.
+- No dejar código muerto (`noUnusedLocals` y `noUnusedParameters` en `tsconfig.json` lo bloquean en compilación).
+- No incluir archivos de configuración de desarrollo (`eslint.config.js`, `prettier.config.js`, `jest.config.ts`) en el artefacto de production.
+- El tamaño de `node_modules` en producción debe revisarse si supera **200MB**. En ese caso auditar dependencias con `npm ls --prod` para identificar librerías innecesarias en `dependencies`.
+ 
