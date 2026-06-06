@@ -4,13 +4,98 @@
 
 ## 1.1 Prototipo funcional
 
+El prototipo desarrollado representa el flujo principal del inversionista dentro de la plataforma JICA. Este flujo fue seleccionado a partir del Problem Statement definido por el equipo y validado durante la dinámica de Crazy 8s, donde se identificó la necesidad de que los inversionistas puedan analizar oportunidades de inversión de forma clara, confiable y sencilla antes de tomar una decisión.
+
+El prototipo fue implementado en Figma utilizando componentes interactivos y navegación entre pantallas para simular el comportamiento esperado del sistema.
+
 ### Flujo principal validado
+
+El flujo principal validado corresponde al proceso que realiza un inversionista para explorar oportunidades de inversión, analizar información financiera relevante y registrar una inversión dentro de la plataforma.
+
+```txt
+Registro de inversionista
+        ↓
+Dashboard
+        ↓
+Detalle de oportunidad de inversión
+        ↓
+Simulación de inversión
+        ↓
+Confirmación de inversión
+```
 
 ### Pantallas implementadas
 
+#### Registro de inversionista
+
+Permite al usuario crear una cuenta mediante el ingreso de información personal y datos básicos relacionados con su perfil de inversión.
+
+#### Dashboard
+
+Presenta un resumen de las oportunidades de inversión disponibles, indicadores generales de la plataforma y acceso a las funcionalidades principales.
+
+#### Detalle de oportunidad de inversión
+
+Muestra información financiera relevante de una pyme, incluyendo indicadores de rendimiento, métricas de crecimiento y nivel de riesgo.
+
+#### Simulación de inversión
+
+Permite ingresar un monto de inversión y visualizar el retorno estimado, la utilidad proyectada y otros indicadores financieros asociados.
+
+#### Confirmación de inversión
+
+Presenta un resumen de la operación realizada y confirma el registro de la inversión dentro de la plataforma.
+
 ### Componentes interactivos implementados
 
+- Navegación entre pantallas mediante botones.
+- Acceso al detalle de una oportunidad de inversión desde el dashboard.
+- Simulación de inversión mediante ingreso de un monto.
+- Confirmación de inversión.
+- Navegación de retorno al dashboard.
+- Menú lateral de navegación para acceso a las principales secciones del sistema.
+
 ### Evidencia del prototipo
+
+#### Figura 1. Pantalla de registro de inversionista
+
+> Pantalla utilizada para el registro de nuevos inversionistas dentro de la plataforma.
+
+![Registro de inversionista](./images/ux/registro.png)
+
+---
+
+#### Figura 2. Dashboard principal
+
+> Vista principal donde el inversionista puede consultar oportunidades de inversión y métricas generales de la plataforma.
+
+![Dashboard](./images/ux/dashboard.png)
+
+---
+
+#### Figura 3. Detalle de oportunidad de inversión
+
+> Pantalla que muestra información financiera, métricas de rendimiento y análisis de riesgo de una pyme.
+
+![Detalle de inversión](./images/ux/detalle-inversion.png)
+
+---
+
+#### Figura 4. Simulación de inversión
+
+> Pantalla utilizada para calcular retornos estimados según el monto ingresado por el inversionista.
+
+![Simulación de inversión](./images/ux/simulacion.png)
+
+---
+
+#### Figura 5. Confirmación de inversión
+
+> Pantalla de confirmación mostrada después de completar el proceso de inversión.
+
+![Confirmación de inversión](./images/ux/confirmacion.png)
+
+
 
 ## 1.2 UX Testing
 
