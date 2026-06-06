@@ -304,8 +304,6 @@ Se incrementó la prominencia visual del botón **"Confirmar inversión"** media
 Las modificaciones realizadas se enfocaron en fortalecer la jerarquía visual de las acciones principales del flujo de inversión sin alterar la estructura general del prototipo. Esto permitió conservar la familiaridad de la interfaz mientras se mejoraba la facilidad de navegación y la identificación de las acciones clave por parte de los usuarios.
 
 
-## 1.4 Conclusiones
-
 # Frontend
 
 ## 2.1 Stack de tecnologías del frontend
