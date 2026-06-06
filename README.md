@@ -99,21 +99,210 @@ Presenta un resumen de la operación realizada y confirma el registro de la inve
 
 ## 1.2 UX Testing
 
+Con el objetivo de validar la usabilidad del prototipo y evaluar la facilidad de navegación dentro de la plataforma, se realizaron sesiones de UX Testing utilizando Maze. Las pruebas fueron aplicadas a estudiantes del curso de Diseño de Software que no formaban parte del equipo de desarrollo.
+
 ### Participantes
+
+Las pruebas fueron realizadas por un total de 4 estudiantes externos al equipo, quienes completaron las tareas definidas para validar el flujo principal de inversión dentro de la plataforma JICA.
 
 ### Tareas evaluadas
 
+| Tarea                             | Objetivo                                                         |
+| --------------------------------- | ---------------------------------------------------------------- |
+| Crear una cuenta de inversionista | Completar el proceso de registro inicial                         |
+| Analizar información financiera   | Acceder y revisar la información de una oportunidad de inversión |
+| Simular una inversión             | Ingresar un monto y consultar el retorno estimado                |
+| Confirmar la inversión            | Completar el proceso de inversión                                |
+| Volver al dashboard               | Regresar a la pantalla principal del sistema                     |
+
+
 ### Resultados obtenidos
+
+### Resultados obtenidos
+
+| Tarea                             | Tiempo promedio | Success Rate | Misclick Rate |
+| --------------------------------- | --------------- | ------------ | ------------- |
+| Crear una cuenta de inversionista | 29.5 s          | 100%         | 93.0%         |
+| Analizar información financiera   | 20.4 s          | 100%         | 88.6%         |
+| Simular una inversión             | 18.8 s          | 75%          | 93.6%         |
+| Confirmar la inversión            | 10.2 s          | 100%         | 76.5%         |
+| Volver al dashboard               | 6.1 s           | 100%         | 69.2%         |
+
+Los resultados muestran que la mayoría de las tareas fueron completadas exitosamente por todos los participantes. La única tarea que presentó dificultades fue la simulación de inversión, donde uno de los participantes no logró completar el flujo esperado, obteniendo una tasa de éxito del 75%.
+
+Asimismo, se observó la presencia de clics erróneos en distintas tareas, lo que permitió identificar oportunidades de mejora relacionadas con la ubicación y visibilidad de algunos elementos interactivos del prototipo.
+
 
 ### Evidencias del UX Testing
 
+### Evidencias del UX Testing
+
+#### Heatmap - Crear una cuenta de inversionista
+
+> Distribución de clics realizados por los participantes durante la tarea de registro.
+
+![Heatmap Tarea 1](./images/ux/maze_screenshot_interaction.jpg)
+
+---
+
+#### Heatmap - Analizar información financiera
+
+> Distribución de clics realizados durante la exploración de información financiera.
+
+![Heatmap Tarea 2](./images/ux/maze_screenshot_interaction%20(1).jpg)
+
+---
+
+#### Heatmap - Simular una inversión
+
+> Interacciones realizadas por los participantes durante la simulación de inversión.
+
+![Heatmap Tarea 3](./images/ux/maze_screenshot_interaction%20(2).jpg)
+
+---
+
+#### Heatmap - Confirmar la inversión
+
+> Interacciones realizadas durante la confirmación de la inversión.
+
+![Heatmap Tarea 4](./images/ux/maze_screenshot_interaction%20(3).jpg)
+---
+
+#### Heatmap - Volver al dashboard
+
+> Distribución de clics observada durante el retorno al dashboard principal.
+
+![Heatmap Tarea 5](./images/ux/maze_screenshot_interaction%20(4).jpg)
+
+
 ### Hallazgos identificados
+
+A partir de las métricas obtenidas y del análisis de los mapas de calor generados por Maze, se identificaron los siguientes hallazgos:
+
+#### Hallazgo 1: El flujo principal fue comprendido por la mayoría de los participantes
+
+Las tareas evaluadas obtuvieron una tasa de éxito del 100% en la mayoría de los casos. Esto indica que los usuarios lograron comprender la navegación general del sistema y completar satisfactoriamente el flujo de inversión propuesto.
+
+#### Hallazgo 2: Existieron clics exploratorios antes de ejecutar algunas acciones
+
+Los mapas de calor muestran que varios participantes realizaron clics sobre elementos secundarios antes de seleccionar la acción esperada. Este comportamiento fue especialmente visible en las tareas de registro, análisis financiero y simulación de inversión, donde se observaron tasas elevadas de misclicks.
+
+Lo anterior sugiere que algunos usuarios exploraron la interfaz antes de continuar con el flujo principal.
+
+#### Hallazgo 3: La simulación de inversión presentó la mayor dificultad
+
+La tarea de simulación de inversión obtuvo una tasa de éxito del 75%, siendo la única actividad que no fue completada correctamente por todos los participantes.
+
+Este resultado sugiere una posible oportunidad de mejora en la visibilidad o comprensión de los elementos relacionados con la simulación de inversión.
+
+#### Hallazgo 4: La navegación fue más eficiente conforme avanzaba el flujo
+
+Los tiempos promedio disminuyeron progresivamente a medida que los usuarios avanzaban entre pantallas.
+
+| Tarea | Tiempo promedio |
+|---------|---------|
+| Crear cuenta | 29.5 s |
+| Analizar información financiera | 20.4 s |
+| Simular inversión | 18.8 s |
+| Confirmar inversión | 10.2 s |
+| Volver al dashboard | 6.1 s |
+
+Esto indica que, una vez comprendida la estructura de navegación de la plataforma, los participantes pudieron completar las tareas posteriores con mayor rapidez.
+
+#### Hallazgo 5: El retorno al dashboard fue una acción intuitiva
+
+La tarea de volver al dashboard obtuvo una tasa de éxito del 100% y el menor tiempo promedio de ejecución (6.1 segundos), lo que evidencia que los mecanismos de navegación implementados fueron fácilmente identificados por los participantes.
 
 ## 1.3 Refinamiento del prototipo
 
+Las sesiones de UX Testing permitieron identificar oportunidades de mejora relacionadas principalmente con la jerarquía visual de las acciones principales dentro del flujo de inversión. Aunque la mayoría de las tareas fueron completadas exitosamente, los mapas de calor evidenciaron clics exploratorios antes de que algunos participantes seleccionaran la acción esperada.
+
+Con base en estos hallazgos se realizaron las siguientes mejoras al prototipo.
+
+### Problemas identificados
+
+| Problema identificado | Categoría |
+|----------------------|-----------|
+| Algunos participantes realizaron clics exploratorios antes de seleccionar la acción principal en varias pantallas. | Comprensión visual |
+| La acción principal para avanzar en el flujo no destacaba suficientemente frente a otros elementos de la interfaz. | Usabilidad |
+| La pantalla de simulación presentó la menor tasa de éxito (75%), indicando posibles dificultades para identificar la acción requerida para continuar. | Navegación |
+| El indicador de riesgo competía visualmente con otros elementos informativos de la pantalla de detalle. | Comprensión visual |
+
 ### Correcciones aplicadas
 
+| Problema detectado | Corrección aplicada | Criterio de diseño |
+|-------------------|-------------------|-------------------|
+| La acción principal no destacaba visualmente en algunas pantallas. | Se incrementó el contraste visual y protagonismo de los botones principales mediante bordes destacados y mayor separación visual. | Mejorar la jerarquía visual y facilitar la identificación de la siguiente acción. |
+| Algunos usuarios realizaron clics exploratorios antes de avanzar en el flujo. | Se reforzó la visibilidad de los botones asociados al flujo principal de inversión. | Reducir la carga cognitiva y mejorar la navegación. |
+| La simulación de inversión presentó la menor tasa de éxito. | Se rediseñó visualmente el botón de confirmación para aumentar su prominencia dentro de la pantalla. | Facilitar la continuidad del flujo y reducir errores de interacción. |
+| El nivel de riesgo podía pasar desapercibido frente a otros elementos financieros. | Se reforzó visualmente la sección de análisis de riesgo mediante una presentación más destacada del indicador y su clasificación. | Facilitar la interpretación de información financiera relevante para la toma de decisiones. |
+
 ### Comparación antes y después
+
+#### Mejora 1. Dashboard principal
+
+**Problema identificado**
+
+Los mapas de calor mostraron clics exploratorios sobre distintos elementos antes de seleccionar la acción esperada para acceder al detalle de una oportunidad de inversión.
+
+**Corrección aplicada**
+
+Se aumentó la visibilidad del botón **"Ver detalles"**, resaltándolo visualmente para que los usuarios identificaran con mayor facilidad el punto de entrada al flujo principal.
+
+##### Antes
+
+![Dashboard Antes](./images/ux/dashboard.png)
+
+##### Después
+
+![Dashboard Después](./images/ux/dashboardNuevo.png)
+
+---
+
+#### Mejora 2. Detalle de oportunidad de inversión
+
+**Problema identificado**
+
+La información de riesgo competía visualmente con otros indicadores financieros presentes en la pantalla.
+
+**Corrección aplicada**
+
+Se reforzó la visibilidad del análisis de riesgo y del botón **"Simular inversión"**, destacando los elementos más relevantes para la toma de decisiones.
+
+##### Antes
+
+![Detalle Antes](./images/ux/detalle-inversion.png)
+
+##### Después
+
+![Detalle Después](./images/ux/simularNuevo.png)
+
+---
+
+#### Mejora 3. Simulación de inversión
+
+**Problema identificado**
+
+La tarea de simulación obtuvo la menor tasa de éxito durante las pruebas (75%), sugiriendo dificultades para identificar la acción necesaria para continuar el proceso.
+
+**Corrección aplicada**
+
+Se incrementó la prominencia visual del botón **"Confirmar inversión"** mediante mayor contraste y jerarquía visual dentro de la pantalla.
+
+##### Antes
+
+![Simulación Antes](./images/ux/simulacion.png)
+
+##### Después
+
+![Simulación Después](./images/ux/confirmarNuevo.png)
+
+---
+
+### Impacto de las mejoras
+
+Las modificaciones realizadas se enfocaron en fortalecer la jerarquía visual de las acciones principales del flujo de inversión sin alterar la estructura general del prototipo. Esto permitió conservar la familiaridad de la interfaz mientras se mejoraba la facilidad de navegación y la identificación de las acciones clave por parte de los usuarios.
+
 
 ## 1.4 Conclusiones
 
