@@ -826,6 +826,7 @@ dashboardContainer
 ```
 
 ---
+
 ## 2.5 Lineamientos de CSS y estilos
 
 Esta sección define las reglas visuales que debe seguir el frontend de JICA.
@@ -4164,6 +4165,142 @@ InvestmentsModule
 ├── investment.repository.ts
 ├── dto/
 └── entities/
+```
+
+## 3.8 Patrones de diseño orientados a objetos
+
+### Strategy Pattern
+
+#### Implementación
+
+Permite encapsular distintos algoritmos de evaluación de riesgo y seleccionar uno de forma dinámica durante una simulación.
+
+#### Reglas
+
+- Todas las estrategias deben implementar la interfaz `RiskStrategy`.
+- Cada estrategia debe implementar un único algoritmo.
+- El contexto debe depender de la interfaz y no de implementaciones concretas.
+
+#### Clases participantes
+
+```txt
+RiskStrategy
+LowRiskStrategy
+MediumRiskStrategy
+HighRiskStrategy
+RiskContextService
+```
+
+#### Caso de uso
+
+Calcular el nivel de riesgo de una oportunidad de inversión.
+
+#### Ejemplo de código
+
+Implementación de referencia:
+
+- [risk-strategy.interface.ts](./backend/src/simulation/strategies/risk-strategy.interface.ts)
+- [low-risk.strategy.ts](./backend/src/simulation/strategies/low-risk.strategy.ts)
+- [medium-risk.strategy.ts](./backend/src/simulation/strategies/medium-risk.strategy.ts)
+- [high-risk.strategy.ts](./backend/src/simulation/strategies/high-risk.strategy.ts)
+- [risk-context.service.ts](./backend/src/simulation/strategies/risk-context.service.ts)
+
+Ejemplo de uso:
+
+```typescript
+const context = new RiskContextService(
+  new MediumRiskStrategy()
+);
+
+const risk = context.calculate(75);
+```
+
+---
+
+### Factory Pattern
+
+#### Implementación
+
+Centraliza la creación de objetos relacionados con la evaluación de riesgo.
+
+#### Reglas
+
+- La creación de evaluaciones debe realizarse mediante la fábrica.
+- Los consumidores no deben instanciar implementaciones concretas.
+- La fábrica selecciona la implementación adecuada según los datos recibidos.
+
+#### Clases participantes
+
+```txt
+RiskAssessmentFactory
+LowRiskAssessment
+MediumRiskAssessment
+HighRiskAssessment
+```
+
+#### Caso de uso
+
+Generar una evaluación de riesgo a partir de un score financiero.
+
+#### Ejemplo de código
+
+Implementación de referencia:
+
+- [risk-assessment.factory.ts](./backend/src/investments/factories/risk-assessment.factory.ts)
+
+Ejemplo de uso:
+
+```typescript
+const assessment =
+  RiskAssessmentFactory.create(75);
+
+console.log(assessment.level);
+```
+
+---
+
+### Singleton Pattern
+
+#### Implementación
+
+Garantiza una única instancia del servicio de acceso a base de datos.
+
+#### Reglas
+
+- Debe existir una única instancia de `PrismaService`.
+- Todos los repositorios deben utilizar la misma instancia.
+- No se deben crear instancias manuales de `PrismaClient`.
+
+#### Clases participantes
+
+```txt
+PrismaService
+PrismaClient
+Repositories
+```
+
+#### Caso de uso
+
+Gestionar la conexión compartida a PostgreSQL utilizada por todos los módulos del sistema.
+
+#### Ejemplo de código
+
+Implementación de referencia:
+
+- [prisma.service.ts](./backend/src/prisma/prisma.service.ts)
+
+Ejemplo de uso:
+
+```typescript
+export class UserRepository {
+  constructor(
+    private readonly prisma: PrismaService
+  ) {}
+
+  findAll() {
+    return this.prisma.user.findMany();
+  }
+}
 ```
 
 
