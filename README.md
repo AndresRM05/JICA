@@ -3580,10 +3580,7 @@ Ejemplo de codigo Consumer [documents.processor.ts](./backend/src/documents/docu
 ### Configuración de Redis para BullMQ
 Ejemplo [documents.processor.ts](./backend/src/documents/documents.processor.ts)
 
-### Integración con IA
- 
-> **Pendiente de definición.** Esta sección será completada cuando se defina el alcance y el proveedor de IA a integrar en JICA.
- 
+
 ---
  
 ### Variables de entorno y configuración
