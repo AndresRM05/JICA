@@ -2993,6 +2993,8 @@ Todos los secrets deben estar configurados en **Settings → Secrets and variabl
 | `STAGE_BASE_URL` | stage | URL base de la app en stage para Playwright |
 --- 
 
+
+
 # 3. BACKEND
 ## 3.1 Stack de tecnologías y frameworks del backend
 
@@ -5169,6 +5171,295 @@ La recuperación deberá realizarse mediante los mecanismos proporcionados por P
 - Los procedimientos de rollback deben estar documentados y ser reproducibles.
 - Ninguna modificación directa sobre producción debe realizarse sin un mecanismo de recuperación definido.
 ---
+
+## 3.13 Estrategias de testing y validación
+
+### Unit Testing
+
+**Objetivo:** Validar de forma aislada la lógica de negocio implementada en servicios, estrategias, fábricas y utilidades.
+
+**Herramienta:** Jest
+
+**Alcance:**
+
+- Services
+- Strategies
+- Factories
+- Utils
+
+**Lineamientos:**
+
+- Utilizar mocks para dependencias externas.
+- No acceder a la base de datos.
+- Validar reglas de negocio y casos límite.
+
+---
+
+### Integration Testing
+
+**Objetivo:** Validar la interacción entre controladores, servicios, repositorios y base de datos.
+
+**Herramientas:**
+
+- Jest
+- Supertest
+
+**Alcance:**
+
+- Controllers
+- Services
+- Repositories
+- Prisma ORM
+
+**Lineamientos:**
+
+- Ejecutar pruebas sobre una base de datos de pruebas.
+- Validar flujos completos entre capas.
+- Verificar persistencia y recuperación de datos.
+
+---
+
+### API Testing
+
+**Objetivo:** Verificar el comportamiento de los endpoints REST expuestos por la aplicación.
+
+**Herramienta:** Supertest
+
+**Alcance:**
+
+- Endpoints públicos
+- Endpoints protegidos
+- Validación de DTOs
+- Respuestas HTTP
+
+**Lineamientos:**
+
+- Validar códigos de estado HTTP.
+- Validar estructura de respuestas.
+- Verificar escenarios exitosos y de error.
+
+---
+
+### Health Checks
+
+**Objetivo:** Verificar el estado operativo de los componentes críticos del sistema.
+
+**Endpoint:**
+
+```http
+GET /health
+```
+
+**Validaciones:**
+
+- Disponibilidad de la aplicación.
+- Conectividad con PostgreSQL.
+- Estado de servicios externos configurados.
+
+**Respuesta esperada:**
+
+```json
+{
+  "status": "ok"
+}
+```
+
+---
+
+### Contract Testing
+
+**Objetivo:** Garantizar la compatibilidad entre los contratos utilizados por frontend y backend.
+
+**Alcance:**
+
+- DTOs de entrada.
+- DTOs de salida.
+- Estructura de respuestas de la API.
+
+**Lineamientos:**
+
+- Mantener sincronizados los contratos TypeScript compartidos.
+- Detectar cambios incompatibles antes del despliegue.
+- Validar que las respuestas respeten la estructura definida en los DTOs.
+
+**Contratos principales:**
+
+```txt
+UserDto
+BusinessDto
+InvestmentDto
+SimulationDto
+```
+
+## 3.14 Reglas de negocio y procesos complejos
+
+Esta sección documenta los procesos del backend que no corresponden únicamente a operaciones CRUD.
+
+---
+
+### 1. Simulación de inversión
+
+#### Objetivo
+
+Calcular una proyección estimada antes de que el inversionista confirme una inversión.
+
+#### Entrada
+
+```txt
+businessId
+investorId
+amount
+```
+
+#### Flujo
+
+```txt
+1. Recibir el monto ingresado por el inversionista.
+2. Validar que el monto sea mayor a cero.
+3. Obtener la oportunidad de inversión asociada a la pyme.
+4. Verificar que la oportunidad esté activa.
+5. Obtener las métricas financieras de la pyme.
+6. Calcular el ROI proyectado.
+7. Calcular el retorno estimado.
+8. Calcular el nivel de riesgo.
+9. Retornar el resultado de la simulación.
+```
+
+#### Reglas
+
+- No se permite simular inversiones con monto menor o igual a cero.
+- Solo se pueden simular oportunidades activas.
+- El ROI debe calcularse usando las métricas financieras más recientes.
+- La simulación no registra una inversión real.
+
+#### Fórmula base
+
+```txt
+estimatedReturn = amount + (amount * projectedRoi)
+```
+
+#### Módulos involucrados
+
+```txt
+SimulationController
+SimulationService
+RiskContextService
+BusinessRepository
+InvestmentRepository
+```
+
+---
+
+### 2. Evaluación de riesgo
+
+#### Objetivo
+
+Clasificar una oportunidad de inversión según el comportamiento financiero de la pyme.
+
+#### Entrada
+
+```txt
+revenueGrowth
+profitMargin
+debtLevel
+businessAge
+```
+
+#### Flujo
+
+```txt
+1. Obtener métricas financieras de la pyme.
+2. Calcular un score financiero.
+3. Comparar el score contra rangos definidos.
+4. Seleccionar la estrategia de riesgo correspondiente.
+5. Retornar el nivel de riesgo.
+```
+
+#### Reglas
+
+```txt
+Score >= 80  → LOW
+Score >= 50  → MEDIUM
+Score < 50   → HIGH
+```
+
+#### Módulos involucrados
+
+```txt
+RiskStrategy
+LowRiskStrategy
+MediumRiskStrategy
+HighRiskStrategy
+RiskAssessmentFactory
+```
+
+#### Salida esperada
+
+```json
+{
+  "riskLevel": "MEDIUM",
+  "score": 75
+}
+```
+
+---
+
+### 3. Confirmación de inversión
+
+#### Objetivo
+
+Registrar una inversión confirmada por el inversionista después de revisar la simulación.
+
+#### Entrada
+
+```txt
+investorId
+businessId
+simulationId
+amount
+```
+
+#### Flujo
+
+```txt
+1. Validar que el usuario autenticado tenga rol investor.
+2. Buscar la simulación generada previamente.
+3. Verificar que la simulación pertenezca al inversionista autenticado.
+4. Verificar que la oportunidad siga activa.
+5. Validar que el monto confirmado coincida con el monto simulado.
+6. Registrar la inversión.
+7. Actualizar el monto disponible de la oportunidad.
+8. Registrar evento de auditoría.
+9. Retornar confirmación.
+```
+
+#### Reglas
+
+- Solo usuarios con rol `investor` pueden confirmar inversiones.
+- No se permite confirmar una inversión sin simulación previa.
+- La simulación debe pertenecer al inversionista autenticado.
+- No se puede invertir en oportunidades inactivas.
+- El monto confirmado debe coincidir con la simulación.
+- Toda inversión confirmada debe generar trazabilidad.
+
+#### Módulos involucrados
+
+```txt
+InvestmentController
+InvestmentService
+SimulationService
+InvestmentRepository
+AuditLogService
+```
+
+#### Salida esperada
+
+```json
+{
+  "investmentId": "inv_123",
+  "status": "CONFIRMED"
+}
+```
 
 ## 3.8 Optimización del artefacto de deployment
  
