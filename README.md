@@ -304,7 +304,7 @@ Se incrementó la prominencia visual del botón **"Confirmar inversión"** media
 Las modificaciones realizadas se enfocaron en fortalecer la jerarquía visual de las acciones principales del flujo de inversión sin alterar la estructura general del prototipo. Esto permitió conservar la familiaridad de la interfaz mientras se mejoraba la facilidad de navegación y la identificación de las acciones clave por parte de los usuarios.
 
 
-# Frontend
+# 2. Frontend
 
 ## 2.1 Stack de tecnologías del frontend
 
@@ -1224,7 +1224,7 @@ Esta sección define las reglas obligatorias de autenticación, autorización, m
  
 ---
  
-## Tecnologías y servicios de autenticación
+### Tecnologías y servicios de autenticación
  
 | Categoría | Tecnología / Servicio | Versión | Uso |
 |---|---|---|---|
@@ -1239,7 +1239,7 @@ Esta sección define las reglas obligatorias de autenticación, autorización, m
  
 ---
  
-## Autenticación
+### Autenticación
  
 JICA utiliza **Microsoft Entra ID** con **MSAL.js** como SDK cliente. El método de autenticación es email y contraseña. El frontend no gestiona tokens manualmente; MSAL se encarga de la emisión, almacenamiento y renovación del Access Token.
  
@@ -1289,7 +1289,7 @@ La sincronización entre MSAL y el store debe realizarse en `/src/hooks/useAuthL
 Ejemplo [useAuthListener.ts](./frontend/src/hooks/useAuthListener.ts)
 
 
-## Roles y autorización
+### Roles y autorización
  
 JICA maneja tres roles de usuario definidos como **App Roles en Microsoft Entra ID**. Los roles se asignan desde el portal de Azure y vienen incluidos en el Access Token como claim `roles`.
  
@@ -1330,14 +1330,14 @@ El componente `ProtectedRoute` debe ubicarse en `/src/routes/ProtectedRoute.tsx`
 Los elementos de UI condicionados por rol deben usar el componente `RoleGuard` en `/src/components/auth/RoleGuard.tsx`. No se deben usar condicionales inline `if (user.role === 'investor')` dispersos en los componentes. Ejemplo [RoleGuard.tsx](./frontend/src/components/auth/RoleGuard.tsx)
 
  
-## Interceptor HTTP
+### Interceptor HTTP
  
 Todo cliente HTTP debe obtener el Access Token desde MSAL y adjuntarlo en cada request al backend. El token debe obtenerse con `acquireTokenSilent` para garantizar que siempre esté vigente.
 
 Ejemplo [httpClient.ts](./frontend/src/services/httpClient.ts)
 
 
-## Manejo seguro de sesiones
+### Manejo seguro de sesiones
  
 ### Persistencia de sesión
  
@@ -1366,7 +1366,7 @@ VITE_INACTIVITY_TIMEOUT_MS=1800000  # configurable por ambiente en GitHub Action
  
 ---
  
-## Privacidad de datos
+### Privacidad de datos
  
 El masking de datos sensibles es responsabilidad del **backend**. El frontend renderiza únicamente lo que el backend entrega; nunca recibe datos sin masking para ocultarlos en el cliente.
  
@@ -1387,7 +1387,7 @@ El backend es responsable de filtrar qué datos se incluyen en cada respuesta se
 - `admin`: recibe datos completos únicamente en endpoints de `/admin/*`.
 ---
  
-## Cifrado y transmisión de datos
+### Cifrado y transmisión de datos
  
 - Toda comunicación con el backend debe realizarse exclusivamente por **HTTPS**. No se permiten requests HTTP en `stage` ni `production`.
 - `VITE_API_BASE_URL` debe comenzar con `https://` en ambientes distintos a `development`.
@@ -1413,7 +1413,7 @@ VITE_INACTIVITY_TIMEOUT_MS=1800000
  
 **stage y production** — sin archivos `.env`. Las variables se inyectan durante el `vite build` desde **GitHub Actions Secrets**:
 
-## Reglas generales de seguridad
+### Reglas generales de seguridad
  
 - Nunca llamar a MSAL directamente desde componentes o páginas. Usar exclusivamente `/src/services/authService.ts`.
 - Nunca almacenar el Access Token en Zustand ni en ninguna variable accesible desde el código de la aplicación. Siempre obtenerlo con `acquireTokenSilent()`.
@@ -1440,7 +1440,7 @@ Esta sección define las prácticas de seguridad obligatorias del frontend de JI
 
 ---
 
-## A01 — Control de acceso roto
+### A01 — Control de acceso roto
 
 OWASP identifica la falta de restricciones en rutas y funcionalidades como la vulnerabilidad más crítica.
 
@@ -1453,7 +1453,7 @@ OWASP identifica la falta de restricciones en rutas y funcionalidades como la vu
 
 ---
 
-## A02 — Fallas criptográficas
+### A02 — Fallas criptográficas
 
 Exposición de datos sensibles por transmisión o almacenamiento inseguro.
 
@@ -1466,7 +1466,7 @@ Exposición de datos sensibles por transmisión o almacenamiento inseguro.
 
 ---
 
-## A03 — Inyección (XSS)
+### A03 — Inyección (XSS)
 
 Cross-Site Scripting ocurre cuando contenido malicioso es ejecutado en el navegador del usuario.
 
@@ -1489,7 +1489,7 @@ import DOMPurify from 'dompurify';
 
 ---
 
-## A05 — Configuración de seguridad incorrecta
+### A05 — Configuración de seguridad incorrecta
 
 Configuraciones por defecto inseguras o información expuesta innecesariamente.
 
@@ -1503,7 +1503,7 @@ Configuraciones por defecto inseguras o información expuesta innecesariamente.
 
 ---
 
-## A06 — Componentes vulnerables y desactualizados
+### A06 — Componentes vulnerables y desactualizados
 
 Uso de dependencias con vulnerabilidades conocidas.
 
@@ -1516,7 +1516,7 @@ Uso de dependencias con vulnerabilidades conocidas.
 
 ---
 
-## A07 — Fallas de identificación y autenticación
+### A07 — Fallas de identificación y autenticación
 
 Implementación incorrecta de autenticación que permite accesos no autorizados.
 
@@ -1530,7 +1530,7 @@ Implementación incorrecta de autenticación que permite accesos no autorizados.
 
 ---
 
-## A09 — Fallas en el registro y monitoreo de seguridad
+### A09 — Fallas en el registro y monitoreo de seguridad
 
 Ausencia de trazabilidad ante incidentes de seguridad.
 
@@ -1554,7 +1554,7 @@ Sentry.init({
 
 ---
 
-## Reglas generales OWASP para el frontend
+### Reglas generales OWASP para el frontend
 
 - No confiar en validaciones del lado del cliente como única barrera. Zod valida en el frontend para UX; el backend valida para seguridad.
 - No almacenar información sensible en `localStorage`, `sessionStorage`, cookies accesibles desde JS ni en el estado global más allá de lo estrictamente necesario para la sesión activa.
@@ -1747,7 +1747,7 @@ Esta sección define las reglas obligatorias para el manejo de almacenamiento en
  
 ---
  
-## Tecnologías incorporadas en esta sección
+### Tecnologías incorporadas en esta sección
  
 Las siguientes tecnologías se suman al stack definido en la sección 2.1:
  
@@ -1761,7 +1761,7 @@ Las siguientes tecnologías se suman al stack definido en la sección 2.1:
  
 ---
  
-## Session Storage y Local Storage
+### Session Storage y Local Storage
  
 ### Regla general
  
@@ -1787,7 +1787,7 @@ Las funciones de acceso a storage deben centralizarse en `/src/utils/storage.ts`
 
 Todas las keys de storage deben usar el prefijo `jica:` para evitar colisiones con otras aplicaciones en el mismo dominio.
 
-## Comunicación asíncrona con el backend
+### Comunicación asíncrona con el backend
  
 ### Cliente HTTP
  
@@ -1808,7 +1808,7 @@ Todas las query keys deben definirse como constantes en el mismo archivo del hoo
  
 ---
  
-## Web Sockets — Notificaciones en tiempo real
+### Web Sockets — Notificaciones en tiempo real
  
 JICA utiliza **Socket.io** para notificaciones en tiempo real. El uso de Web Sockets está limitado exclusivamente a eventos de notificación; la carga de datos sigue siendo responsabilidad de TanStack Query.
  
@@ -1834,7 +1834,7 @@ Los componentes no deben suscribirse directamente a eventos del socket. Deben us
 Las notificaciones recibidas deben almacenarse en `/src/store/notificationStore.ts`: Ejemplo [notificationStore.ts](./frontend/src/store/notificationStore.ts) 
 
 
-## Manejo de procesos largos
+### Manejo de procesos largos
  
 Los siguientes procesos en JICA pueden tomar tiempo considerable y requieren feedback visual al usuario:
  
@@ -1851,9 +1851,11 @@ Los siguientes procesos en JICA pueden tomar tiempo considerable y requieren fee
 - Si un proceso falla, debe mostrarse el error con una opción de reintento visible.
 - Los procesos asíncronos que el backend resuelve en background (como aprobación de pyme) deben notificarse via Socket.io cuando se completen. El frontend no debe hacer polling para verificar el resultado.
 ### Implementación con TanStack Query mutations
+
 Ejemplo [useUploadFinancialDocument.ts](./frontend/src/features/documents/hooks/useUploadFinancialDocument.ts) 
+
 ---
-## Manejo de eventos del navegador
+### Manejo de eventos del navegador
  
 Los eventos del navegador (`resize`, `scroll`, `visibilitychange`, etc.) deben manejarse exclusivamente a través de custom hooks. No se deben agregar `addEventListener` directamente en componentes.
 Ejemplo [useWindowSize.ts](./frontend/src/hooks/useWindowSize.ts) 
@@ -1862,7 +1864,7 @@ Todo `addEventListener` dentro de un `useEffect` debe tener su correspondiente `
 ---
 
  
-## Observabilidad y monitoreo
+### Observabilidad y monitoreo
  
 ### Sentry
  
@@ -1885,7 +1887,7 @@ Sentry es el único sistema de monitoreo de errores del frontend. Debe inicializ
  
 Los errores globales de queries deben capturarse en el `QueryClient` y reportarse a Sentry:
  
-## Manejo de errores
+### Manejo de errores
  
 ### Clasificación de errores
  
@@ -1911,7 +1913,7 @@ Ejemplo en [errorMessages.ts](./frontend/src/utils/errorMessages.ts)
 
 ---
  
-## Manejo de estado
+### Manejo de estado
  
 ### Separación de responsabilidades
  
@@ -1937,7 +1939,7 @@ No se deben crear stores adicionales sin justificación documentada.
  
 ---
  
-## Caché
+### Caché
  
 El caché en JICA es gestionado exclusivamente por TanStack Query. No se debe implementar caché manual con variables, refs o `localStorage`.
  
@@ -1974,7 +1976,7 @@ queryClient.invalidateQueries({ queryKey: investmentKeys.all });
  
 ---
  
-## Reintentos
+### Reintentos
  
 ### Queries (lectura de datos)
  
@@ -2015,7 +2017,7 @@ Esta sección define las reglas obligatorias de testing para el frontend de JICA
  
 
  
-## Tecnologías de testing
+### Tecnologías de testing
  
 | Categoría | Tecnología | Versión | Uso |
 |---|---|---|---|
@@ -2027,7 +2029,7 @@ Esta sección define las reglas obligatorias de testing para el frontend de JICA
  
 ---
  
-## Estructura de archivos de prueba
+### Estructura de archivos de prueba
  
 Las pruebas unitarias y de integración de componentes se ubican en `/tests/unit/`, espejando la estructura de `/src/`. Las pruebas E2E se ubican en `/tests/e2e/`.
  Ejemplo de estructura de carpetas 
@@ -2065,7 +2067,7 @@ Las pruebas unitarias y de integración de componentes se ubican en `/tests/unit
  
 ---
 
-## Unit Testing
+### Unit Testing
  
 Las pruebas unitarias validan funciones, hooks y servicios de forma aislada, sin dependencias externas reales. Todas las dependencias externas deben ser mockeadas.
  
@@ -2121,7 +2123,7 @@ Las pruebas de servicios que llamen al backend deben mockear `httpClient`, no in
 
 ---
  
-## Integration Testing (componentes)
+### Integration Testing (componentes)
  
 Las pruebas de integración validan que los componentes rendericen correctamente y respondan a interacciones del usuario. Se usan con React Testing Library sobre Vitest.
  
@@ -2158,7 +2160,7 @@ const button = document.querySelector('.btn-primary');
 
 [ProtectedRoute.test.ts](./frontend/tests/unit/routes/ProtectedRoute.test.tsx)
 
-# UI Testing — End to End con Playwright
+### UI Testing — End to End con Playwright
  
 Las pruebas E2E validan flujos completos del usuario desde el navegador real. No mockean servicios ni el backend; se ejecutan contra el ambiente `stage`.
  
@@ -2193,7 +2195,7 @@ Las pruebas E2E validan flujos completos del usuario desde el navegador real. No
 
 [simulate.spec.ts](./frontend/tests/e2e/simulation/simulate.spec.ts)
 
-## Cobertura mínima esperada
+### Cobertura mínima esperada
  
 La cobertura se mide con `@vitest/coverage-v8` y se reporta en cada ejecución del pipeline de CI/CD. Un build con cobertura por debajo del mínimo definido debe **bloquear el merge**.
  
@@ -2239,7 +2241,7 @@ El pipeline de GitHub Actions debe ejecutar en orden:
 Las pruebas E2E solo se ejecutan en el pipeline de `stage`. No se ejecutan en `production`; el deploy a production depende de que el pipeline de stage haya pasado completamente.
 
 
- ## 2.11 Consumo de APIs y contratos de datos
+## 2.11 Consumo de APIs y contratos de datos
 
 Esta sección define cómo el frontend de JICA debe comunicarse con el backend y cómo se deben manejar los contratos de datos entre ambas capas.
 
@@ -2676,7 +2678,7 @@ Antes de consumir un nuevo endpoint desde el frontend, se debe completar esta li
 Esta sección define las estrategias obligatorias de rendimiento para el frontend de JICA. Al ser una aplicación CSR con datos financieros, la percepción de velocidad es crítica para la confianza del inversionista. Cada técnica aquí definida debe aplicarse en el contexto específico que se indica; no deben aplicarse de forma generalizada sin justificación.
  
  
-## Lazy Loading y Code Splitting
+### Lazy Loading y Code Splitting
  
 Vite aplica code splitting automáticamente por punto de entrada. El frontend de JICA debe complementar esto con lazy loading manual de páginas y componentes pesados usando `React.lazy` y `Suspense`.
  
@@ -2708,7 +2710,7 @@ import SimulationModal from '@/features/simulation/components/SimulationModal';
  
 ---
 
-## Reducción de bundles
+### Reducción de bundles
  
 El tamaño del bundle afecta directamente el tiempo de carga inicial. Las siguientes reglas son obligatorias para mantener el bundle bajo control.
  
@@ -2733,7 +2735,7 @@ Usar `rollup-plugin-visualizer` para analizar el bundle antes de cada deploy a p
 Ejemplo  [vite.config.ts](vite.config.ts)
 
 
-## Manejo eficiente de imágenes
+### Manejo eficiente de imágenes
  
 ### Formatos permitidos
  
@@ -2771,7 +2773,7 @@ Las imágenes subidas por pymes (fotos del negocio, documentos escaneados) deben
  
 ---
  
-## Memoization
+### Memoization
  
 La memoization debe aplicarse únicamente cuando existe un problema de rendimiento identificado. No debe usarse de forma preventiva en todos los componentes.
  
@@ -2832,7 +2834,7 @@ const handleViewDetail = useCallback((id: string) => {
  
 ---
  
-## Virtualización
+### Virtualización
  
 La virtualización debe aplicarse en listas que rendericen más de **50 elementos simultáneamente**. Renderizar cientos de tarjetas o filas de tabla sin virtualización degrada significativamente el rendimiento en dispositivos de gama baja.
  
@@ -2856,7 +2858,7 @@ npm install @tanstack/react-virtual
 [InvestmentList.tsx](./frontend/src/features/investments/components/InvestmentList/InvestmentList.tsx)
 Si la lista tiene menos de 50 elementos, usar un `map` estándar sin virtualización.
 
-## Reglas generales de rendimiento
+### Reglas generales de rendimiento
  
 - No aplicar `React.memo`, `useMemo` ni `useCallback` de forma preventiva. Aplicarlos solo cuando se identifica un problema concreto de rendimiento.
 - No bloquear el hilo principal con cálculos síncronos pesados. Si un cálculo financiero tarda más de 50ms, debe moverse a un Web Worker.
@@ -2869,7 +2871,7 @@ Si la lista tiene menos de 50 elementos, usar un `map` estándar sin virtualizac
 Esta sección define los pipelines, scripts de deployment, validaciones automáticas, análisis estático y acciones automáticas de código del frontend de JICA. Todo lo definido aquí es obligatorio; ningún deploy puede realizarse fuera de este flujo.
  
  
-## Ambientes y flujo de promoción
+### Ambientes y flujo de promoción
  
 ```
 feature branch → develop → stage → production
@@ -2885,7 +2887,7 @@ Ningún push directo a `main` está permitido. El único camino a production es 
  
 ---
  
-## Validaciones locales antes del commit (Husky)
+### Validaciones locales antes del commit (Husky)
  
 Husky ejecuta validaciones automáticas antes de cada commit. Si alguna falla, el commit es bloqueado.
  
@@ -2896,19 +2898,19 @@ Ejemplo
 Ejemplo 
 [pre-push](./frontend/.husky/pre-push)
 
-## Pipeline de stage
+### Pipeline de stage
  
 Se ejecuta en cada push a la rama `develop`. Ubicación: `.github/workflows/deploy-stage.yml`.
 Ejemplo [deploy-stage.](.github/workflows/deploy-stage.yml)
 
-## Pipeline de production
+### Pipeline de production
  
 Se ejecuta cuando un Pull Request es mergeado a `main`. No ejecuta E2E nuevamente; confía en que el pipeline de stage ya los pasó. Solo revalida, construye y despliega.
  
 Ubicación: `.github/workflows/deploy-production.yml`.
 Ejemplo [deploy-production.](.github/workflows/deploy-production.yml)
 
-## Análisis estático
+### Análisis estático
  
 El análisis estático se ejecuta en cada pipeline como paso obligatorio antes del build. Nunca debe omitirse.
  
@@ -2934,7 +2936,7 @@ Prettier verifica que todos los archivos estén formateados. Si un archivo no es
  
 ---
  
-## Acciones automáticas de código
+### Acciones automáticas de código
  
 ### Dependabot
  
@@ -2990,7 +2992,7 @@ Todos los secrets deben estar configurados en **Settings → Secrets and variabl
 | `STAGE_BASE_URL` | stage | URL base de la app en stage para Playwright |
 --- 
 
-# BACKEND
+# 3. BACKEND
 ## 3.1 Stack de tecnologías y frameworks del backend
 
 El backend de JICA será desarrollado utilizando un stack basado en **Node.js, TypeScript, NestJS, PostgreSQL y Microsoft Entra ID**, manteniendo coherencia con la infraestructura cloud seleccionada en Azure y con la seguridad definida en el frontend.
@@ -3145,7 +3147,7 @@ El backend de JICA sigue una arquitectura en capas estricta. Cada capa tiene res
  
 ---
  
-## Capas del sistema
+### Capas del sistema
  
 ```
 Request HTTP
@@ -3178,7 +3180,7 @@ La comunicación entre capas es **unidireccional y descendente**. Una capa solo 
  
 ---
  
-## Capa 1 — Controllers
+### Capa 1 — Controllers
  
 ### Responsabilidades
  
@@ -3208,7 +3210,7 @@ La comunicación entre capas es **unidireccional y descendente**. Una capa solo 
 ### Referencia de implementación
 [investments.controller.ts](./backend/src/investments/investments.controller.ts)
 
-## Capa 2 — Services
+### Capa 2 — Services
  
 ### Responsabilidades
  
@@ -3238,7 +3240,7 @@ La comunicación entre capas es **unidireccional y descendente**. Una capa solo 
 ### Referencia de implementación
 [investments.service.ts](./backend/src/investments/investments.service.ts)
 
-## Capa 3 — Repositories
+### Capa 3 — Repositories
  
 ### Responsabilidades
  
@@ -3273,7 +3275,7 @@ El masking se aplica en `/backend/src/common/utils/maskData.ts` y se llama desde
 Ejemplo [investments.repository.ts](./backend/src/common/utils/maskData.ts)
 
 
-## Capa 4 — Prisma
+### Capa 4 — Prisma
  
 ### Responsabilidades
  
@@ -3297,7 +3299,7 @@ Ejemplo [investments.repository.ts](./backend/src/prisma/prisma.service.ts)
 `PrismaService` debe registrarse como global en `/backend/src/prisma/prisma.module.ts` para estar disponible en todos los módulos sin necesidad de importarlo en cada uno.
 
 
-## Flujo de comunicación entre capas
+### Flujo de comunicación entre capas
  
 Ejemplo completo con una operación real: un inversionista registra interés en una inversión.
  
@@ -3336,7 +3338,7 @@ Ejemplo completo con una operación real: un inversionista registra interés en 
  
 ---
  
-## Resumen de restricciones por capa
+### Resumen de restricciones por capa
  
 | Capa | Puede inyectar | No puede inyectar | Excepciones que lanza |
 |---|---|---|---|
@@ -3350,7 +3352,7 @@ Ejemplo completo con una operación real: un inversionista registra interés en 
  
 Esta sección define las reglas obligatorias para middlewares, autenticación, autorización, manejo de errores, observabilidad, procesos largos, comunicación asíncrona, variables de entorno, caché, queues, conexiones y validación de datos. 
   
-## Middlewares
+### Middlewares
  
 Los middlewares en JICA se usan exclusivamente para lógica transversal que debe ejecutarse en todas las rutas o en un conjunto de rutas antes de llegar al Controller. No deben contener lógica de negocio.
  
@@ -3374,7 +3376,7 @@ Ejemplo de codigo [main.ts](./backend/src/main.ts)
 - No se deben crear middlewares custom para lógica que pertenece a un Guard o un Interceptor.
 ---
  
-## Autenticación
+### Autenticación
  
 JICA utiliza **Microsoft Entra ID** para autenticación. El backend valida el Access Token JWT emitido por Entra ID en cada request. No se implementa autenticación propia.
  
@@ -3409,10 +3411,12 @@ El usuario autenticado debe extraerse del Request usando el decorador `@CurrentU
 Ejemplo de codigo [current-user.decorator.ts](./backend/src/auth/decorators/current-user.decorator.ts)
 
 ### Tipo del usuario autenticado
+
 Ejemplo de codigo [auth.types.ts](./backend/src/auth/auth.types.ts)
+
 ---
  
-## Autorización
+### Autorización
  
 La autorización se basa en roles definidos como **App Roles en Microsoft Entra ID**. El rol viene en el claim `roles` del Access Token.
  
@@ -3450,7 +3454,7 @@ Ejemplo de codigo [public.decorator.ts](./backend/src/auth/decorators/public.dec
  
 ---
  
-## Manejo de errores
+### Manejo de errores
  
 Todos los errores del backend deben pasar por un filtro global de excepciones. Ningún Controller ni Service debe formatear manualmente las respuestas de error.
  
@@ -3496,7 +3500,7 @@ Todas las respuestas de error deben seguir esta estructura:
 ---
 
 
-## Observabilidad y monitoreo
+### Observabilidad y monitoreo
  
 JICA utiliza **Azure Application Insights** para monitoreo en `stage` y `production`. Está definido en el stack (sección 3.1).
  
@@ -3528,7 +3532,7 @@ this.logger.error('Error al registrar interés', error.stack);
  
 ---
  
-## Procesos largos
+### Procesos largos
  
 Los siguientes procesos en JICA se consideran largos y no deben ejecutarse sincrónicamente en el ciclo de request/response:
  
@@ -3543,7 +3547,7 @@ Ningún proceso largo debe bloquear el response HTTP. El endpoint debe retornar 
  
 ---
  
-## Comunicación asíncrona — Queues con BullMQ
+### Comunicación asíncrona — Queues con BullMQ
  
 ### Tecnologías
  
@@ -3573,13 +3577,13 @@ Ejemplo de codigo Consumer [documents.processor.ts](./backend/src/documents/docu
 ### Configuración de Redis para BullMQ
 Ejemplo [documents.processor.ts](./backend/src/documents/documents.processor.ts)
 
-## Integración con IA
+### Integración con IA
  
 > **Pendiente de definición.** Esta sección será completada cuando se defina el alcance y el proveedor de IA a integrar en JICA.
  
 ---
  
-## Variables de entorno y configuración
+### Variables de entorno y configuración
  
 La configuración del backend se gestiona con `@nestjs/config`. Ningún valor de configuración debe estar hardcodeado en el código.
  
@@ -3613,7 +3617,7 @@ El backend debe validar que todas las variables requeridas estén presentes al i
 
 ---
  
-## Caché
+### Caché
  
 JICA usa `CacheModule` de NestJS con almacenamiento en memoria.
 
@@ -3662,7 +3666,7 @@ async create(dto: CreateInvestmentDto): Promise<void> {
 ---
 
 
-## Manejo de conexiones y Connection Pooling
+### Manejo de conexiones y Connection Pooling
  
 ### PostgreSQL — Connection Pooling con Prisma
  
@@ -3689,7 +3693,7 @@ La conexión con Redis se gestiona a través de BullMQ. En caso de pérdida de c
 - `PrismaService` debe ser el único punto de acceso a la base de datos en toda la aplicación.
 ---
  
-## Threading
+### Threading
  
 Node.js es **single-threaded** por diseño. NestJS no requiere configuración de threads para operaciones normales. Los procesos que podrían bloquear el event loop deben delegarse a queues con BullMQ (ver sección de Queues).
  
@@ -3697,7 +3701,7 @@ No se deben usar Worker Threads en el MVP. Si en el futuro un cálculo financier
  
 ---
  
-## DTOs
+### DTOs
  
 Los DTOs definen el contrato de entrada y salida de cada endpoint. Todo dato que entra o sale del sistema debe estar tipado con un DTO.
  
@@ -3722,7 +3726,7 @@ Ejemplo [create-investment.dto.ts](./backend/src/investments/dto/create-investme
 
 ---
  
-## Validación de datos
+### Validación de datos
  
 ### ValidationPipe global
  
@@ -3739,9 +3743,10 @@ Ejemplo [main.ts](./backend/src/main.ts)
 ## 3.6 Organización del código
  
 Esta sección define cómo debe organizarse el código del backend para facilitar mantenimiento, navegación y escalabilidad.
+
 ---
  
-## Estructura del monorepo
+### Estructura del monorepo
  
 El repositorio de JICA es un monorepo que contiene frontend y backend como proyectos independientes. Cada uno tiene su propio `package.json`, sus propias dependencias y su propio pipeline de CI/CD.
  
@@ -3772,7 +3777,7 @@ El repositorio de JICA es un monorepo que contiene frontend y backend como proye
 - Los cambios en `/frontend` no deben disparar el pipeline del backend y viceversa. Los workflows de GitHub Actions deben usar `paths` para filtrar por carpeta.
 - Cada proyecto tiene su propio `.env.example` dentro de su carpeta.
 
-# Organización interna del backend
+### Organización interna del backend
  
 ### Principio general
  
@@ -3811,7 +3816,7 @@ Los siguientes módulos deben registrarse como globales en `app.module.ts` para 
  
 ---
  
-## Organización dentro de cada módulo
+### Organización dentro de cada módulo
  
 Cada módulo sigue esta estructura interna sin excepción:
  
@@ -3843,7 +3848,7 @@ Cada módulo sigue esta estructura interna sin excepción:
  
 ---
  
-## Código compartido
+### Código compartido
  
 El código que se usa en más de un módulo debe vivir en `/backend/src/common/`. Nada debe duplicarse entre módulos.
  
@@ -3874,7 +3879,7 @@ export async function validateInvestmentLimit(investorId: string) {
  
 ---
  
-## Escalabilidad
+### Escalabilidad
  
 ### Agregar un nuevo módulo
  
@@ -3911,7 +3916,7 @@ No se debe agregar lógica de una nueva funcionalidad dentro de un módulo exist
  
 ---
  
-## Convenciones de nomenclatura
+### Convenciones de nomenclatura
  
 ### Archivos
  
@@ -4161,7 +4166,8 @@ InvestmentsModule
 └── entities/
 ```
 
-## 3.8 Especificaciones de Diseño de la Base de Datos
+
+## 3.9 Especificaciones de Diseño de la Base de Datos
 
 ---
 
@@ -4171,7 +4177,7 @@ El sistema utilizará **PostgreSQL** como motor de base de datos y **Prisma ORM*
 
 ---
 
-## Modelo de datos
+### Modelo de datos
 
 La base de datos debe seguir un modelo relacional, donde cada entidad del dominio represente una responsabilidad específica y las relaciones entre ellas se implementen mediante claves foráneas.
 
@@ -4191,7 +4197,7 @@ Cada entidad debe representar un concepto del negocio y evitar almacenar informa
 
 ---
 
-## Normalización
+### Normalización
 
 El diseño deberá mantener un nivel adecuado de normalización para reducir duplicidad de información y garantizar consistencia.
 
@@ -4204,7 +4210,7 @@ Como regla general:
 
 ---
 
-## Claves primarias
+### Claves primarias
 
 Toda tabla debe poseer una clave primaria única.
 
@@ -4225,7 +4231,7 @@ email
 
 ---
 
-## Relaciones
+### Relaciones
 
 Las relaciones entre entidades deben implementarse mediante claves foráneas y restricciones de integridad referencial.
 
@@ -4253,7 +4259,7 @@ InvestmentOpportunity
 
 ---
 
-## Convenciones de nombres
+### Convenciones de nombres
 
 Para mantener consistencia, deberán seguirse las siguientes convenciones:
 
@@ -4274,7 +4280,7 @@ investmentId
 
 ---
 
-## Auditoría
+### Auditoría
 
 Las entidades persistentes deben incluir información de auditoría cuando sea aplicable.
 
@@ -4292,7 +4298,7 @@ Estos campos permiten trazabilidad y recuperación de información histórica.
 
 ---
 
-## Soft Delete
+### Soft Delete
 
 Cuando una entidad requiera eliminación lógica, no deberá eliminarse físicamente de la base de datos.
 
@@ -4306,7 +4312,7 @@ Una entidad con este campo distinto de `NULL` será considerada eliminada para e
 
 ---
 
-## Integridad de datos
+### Integridad de datos
 
 La base de datos debe garantizar la consistencia mediante restricciones apropiadas, incluyendo:
 
@@ -4318,7 +4324,7 @@ La base de datos debe garantizar la consistencia mediante restricciones apropiad
 
 ---
 
-## Acceso a datos
+### Acceso a datos
 
 El acceso a la base de datos debe realizarse exclusivamente mediante Prisma y la capa Repository.
 
@@ -4340,7 +4346,7 @@ Ninguna otra capa del sistema debe realizar consultas directas a la base de dato
 
 ---
 
-## Migraciones
+### Migraciones
 
 Toda modificación del esquema deberá gestionarse mediante migraciones de Prisma.
 
@@ -4352,10 +4358,10 @@ Cada migración debe:
 - Ser reproducible.
 - Mantener la consistencia del esquema entre ambientes.
 
-## 3.9 Agentes o herramientas automatizadas de revisión
+## 3.10 Agentes o herramientas automatizadas de revisión
 > **Pendiente de definición.** Esta sección será completada cuando se defina el alcance y el proveedor de IA a integrar en JICA.
  
- ## 3.10 Diseño de la Base de Datos
+## 3.11 Diseño de la Base de Datos
 
  ### Diseño de la Base de Datos (DBML)
 
@@ -4580,7 +4586,7 @@ Ref: Notification.userId > User.id
 ![Back-end Prisma ERD](media/backend_prisma-ERD.png)
 
 ---
-## 3.11 Gestión de la Base de Datos
+## 3.12 Gestión de la Base de Datos
 
 Esta sección define la estrategia para la creación, evolución y mantenimiento de la base de datos del proyecto JICA. Todas las modificaciones del esquema deberán realizarse de forma controlada y versionada para garantizar la consistencia entre los diferentes entornos de desarrollo, pruebas y producción.
 
@@ -4952,7 +4958,7 @@ npx prisma db seed
 
 ---
 
-## Migraciones
+### Migraciones
 
 Las migraciones serán administradas mediante **Prisma Migrate**, permitiendo controlar la evolución del esquema de la base de datos.
 
@@ -4977,7 +4983,7 @@ Aplicación a la base de datos
 
 ---
 
-## Herramientas utilizadas
+### Herramientas utilizadas
 
 | Herramienta | Propósito |
 |------------|-----------|
@@ -4989,7 +4995,7 @@ Aplicación a la base de datos
 
 ---
 
-## Estrategia de versionamiento
+### Estrategia de versionamiento
 
 El esquema de la base de datos será versionado junto con el código fuente mediante Git y Prisma Migrate.
 
@@ -5013,7 +5019,7 @@ Ejemplos:
 
 ---
 
-## Estrategia de Rollback
+### Estrategia de Rollback
 
 En caso de detectar errores durante una actualización, el sistema deberá permitir regresar a una versión estable del esquema utilizando el historial de migraciones.
 
@@ -5033,14 +5039,14 @@ El backend de JICA se despliega como código compilado directamente en Azure App
  
 ---
  
-## Compilación
+### Compilación
  
 El compilador de TypeScript genera el artefacto en `/backend/dist`. La configuración de `tsconfig.json` debe asegurar que el output sea limpio y no incluya archivos innecesarios.
  
 ### Configuración obligatoria en `tsconfig.json`
  Ejemplo [tsconfig.json](./backend)
 
- ## Dependencias
+ ### Dependencias
  
 La separación entre dependencias de producción y desarrollo es obligatoria. El artefacto de deployment solo incluye `dependencies`, nunca `devDependencies`.
  
