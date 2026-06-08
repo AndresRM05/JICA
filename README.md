@@ -5544,3 +5544,395 @@ Si `prisma generate` no se ejecuta, el backend arranca pero falla al intentar co
 - No incluir archivos de configuración de desarrollo (`eslint.config.js`, `prettier.config.js`, `jest.config.ts`) en el artefacto de production.
 - El tamaño de `node_modules` en producción debe revisarse si supera **200MB**. En ese caso auditar dependencias con `npm ls --prod` para identificar librerías innecesarias en `dependencies`.
  
+## 3.14 Estrategias de seguridad de datos del backend
+
+Esta sección define las estrategias de seguridad de datos para el backend de JICA, considerando cifrado, auditoría, trazabilidad, manejo de secretos, backups y recuperación ante fallos. Estas estrategias son especialmente importantes porque JICA maneja información financiera, datos de inversionistas, datos de pymes gastronómicas, documentos financieros y operaciones relacionadas con oportunidades de inversión.
+
+La seguridad de datos debe aplicarse desde el diseño del backend, no únicamente desde la infraestructura. Por eso, cada estrategia se vincula con archivos reales ubicados en `backend/src`.
+
+---
+
+### Objetivos de seguridad de datos
+
+Los objetivos principales son:
+
+- Proteger la información sensible de inversionistas y pymes.
+- Evitar exposición accidental de datos financieros internos.
+- Garantizar que solo usuarios autenticados y autorizados accedan a la información correspondiente.
+- Mantener trazabilidad de errores, accesos y procesos críticos.
+- Asegurar que los secretos no estén hardcodeados en el código fuente.
+- Permitir recuperación del sistema ante fallos de base de datos, despliegue o procesamiento asíncrono.
+
+Referencias en `/src`:
+
+- [`backend/src/auth/strategies/jwt.strategy.ts`](./backend/src/auth/strategies/jwt.strategy.ts): valida tokens emitidos por Microsoft Entra ID.
+- [`backend/src/auth/guards/roles.guard.ts`](./backend/src/auth/guards/roles.guard.ts): aplica autorización por roles.
+- [`backend/src/investments/investments.repository.ts`](./backend/src/investments/investments.repository.ts): usa `select` explícito para evitar retornar datos sensibles innecesarios.
+- [`backend/src/common/utils/maskData.ts`](./backend/src/common/utils/maskData.ts): contiene funciones de masking para datos sensibles.
+- [`backend/src/config/configuration.ts`](./backend/src/config/configuration.ts): centraliza variables de entorno y secretos externos.
+
+---
+
+### Clasificación de datos
+
+Antes de aplicar controles de seguridad, los datos del backend deben clasificarse según su sensibilidad.
+
+| Tipo de dato | Ejemplos | Nivel de sensibilidad | Estrategia |
+|---|---|---|---|
+| Datos públicos | Nombre de pyme, categoría, descripción pública | Bajo | Acceso controlado por endpoints públicos o autenticados. |
+| Datos de usuario | Nombre, apellido, email, rol | Medio | Acceso autenticado, masking cuando aplique. |
+| Datos financieros | ROI, reportes, ingresos, gastos, ganancias | Alto | Acceso por rol, cifrado en tránsito y protección en base de datos. |
+| Datos bancarios o fiscales | Cuenta bancaria, cédula, documentos legales | Crítico | Masking, mínima exposición, almacenamiento seguro y auditoría. |
+| Secretos técnicos | `DATABASE_URL`, credenciales de Azure, Redis, Key Vault | Crítico | Azure Key Vault / App Settings, nunca en repositorio. |
+
+Ejemplos relacionados:
+
+- [`backend/src/common/utils/maskData.ts`](./backend/src/common/utils/maskData.ts): aplica masking a cédula, cuenta bancaria y email.
+- [`backend/src/investments/investments.repository.ts`](./backend/src/investments/investments.repository.ts): evita seleccionar campos internos como `accountNumber`, `taxId` o documentos internos.
+
+---
+
+### Cifrado de datos
+
+El cifrado debe aplicarse en tránsito, en reposo y en el manejo de credenciales.
+
+#### Cifrado en tránsito
+
+Toda comunicación entre frontend, backend y servicios cloud debe realizarse por HTTPS. El backend debe aceptar solicitudes únicamente desde orígenes autorizados.
+
+Referencia en `/src`:
+
+- [`backend/src/main.ts`](./backend/src/main.ts): configura CORS mediante `ALLOWED_ORIGINS`, limita métodos HTTP permitidos y exige headers controlados como `Authorization` y `Content-Type`.
+
+Reglas obligatorias:
+
+- En `staging` y `production`, no se permite consumir la API por HTTP.
+- `ALLOWED_ORIGINS` debe contener únicamente las URLs oficiales del frontend.
+- No se deben enviar tokens ni datos sensibles en query parameters.
+- Toda solicitud protegida debe enviar `Authorization: Bearer <accessToken>`.
+
+#### Cifrado asociado a autenticación
+
+El backend no debe implementar autenticación propia ni manejar contraseñas directamente. La autenticación se delega a Microsoft Entra ID y el backend valida el Access Token JWT.
+
+Referencias en `/src`:
+
+- [`backend/src/auth/strategies/jwt.strategy.ts`](./backend/src/auth/strategies/jwt.strategy.ts): configura validación de token contra el tenant de Entra ID.
+- [`backend/src/auth/guards/entra-id.guard.ts`](./backend/src/auth/guards/entra-id.guard.ts): protege endpoints que requieren autenticación.
+- [`backend/src/auth/auth.types.ts`](./backend/src/auth/auth.types.ts): define el usuario autenticado y sus roles.
+
+#### Cifrado en reposo
+
+Los datos persistidos deben almacenarse en servicios administrados con cifrado en reposo habilitado:
+
+- PostgreSQL en Azure Database for PostgreSQL.
+- Documentos financieros en Azure Blob Storage.
+- Secretos en Azure Key Vault.
+- Redis en Azure Cache for Redis para colas y procesos asíncronos.
+
+Referencias en `/src`:
+
+- [`backend/src/prisma/prisma.service.ts`](./backend/src/prisma/prisma.service.ts): centraliza la conexión a PostgreSQL mediante Prisma.
+- [`backend/src/documents/documents.processor.ts`](./backend/src/documents/documents.processor.ts): representa el punto donde se procesan y suben documentos a Azure Blob Storage.
+- [`backend/src/config/configuration.ts`](./backend/src/config/configuration.ts): incluye `AZURE_BLOB_CONNECTION_STRING`, `AZURE_KEY_VAULT_URL`, `DATABASE_URL` y configuración de Redis.
+
+---
+
+### Auditoría
+
+La auditoría permite reconstruir eventos importantes del sistema, revisar errores y detectar comportamientos inesperados.
+
+#### Eventos que deben auditarse
+
+| Evento | Qué registrar | Dónde se relaciona en código |
+|---|---|---|
+| Login o validación de token fallida | Fecha, ruta, status, sin guardar token | [`backend/src/auth/strategies/jwt.strategy.ts`](./backend/src/auth/strategies/jwt.strategy.ts) |
+| Acceso denegado por rol | Usuario, rol requerido, ruta, fecha | [`backend/src/auth/guards/roles.guard.ts`](./backend/src/auth/guards/roles.guard.ts) |
+| Registro de interés de inversión | Usuario, inversión, fecha, resultado | [`backend/src/investments/investments.controller.ts`](./backend/src/investments/investments.controller.ts), [`backend/src/investments/investments.service.ts`](./backend/src/investments/investments.service.ts) |
+| Error inesperado 5xx | Método, ruta, timestamp, error controlado | [`backend/src/common/filters/http-exception.filter.ts`](./backend/src/common/filters/http-exception.filter.ts) |
+| Procesamiento de documentos | Nombre de archivo, negocio asociado, resultado | [`backend/src/documents/documents.processor.ts`](./backend/src/documents/documents.processor.ts) |
+
+#### Reglas de auditoría
+
+- No registrar Access Tokens, contraseñas, cuentas bancarias, cédulas completas ni documentos completos en logs.
+- Los logs deben incluir información suficiente para investigar incidentes sin exponer datos sensibles.
+- Los errores 5xx deben registrarse en Application Insights o el sistema de observabilidad definido.
+- Los errores 4xx deben monitorearse para detectar intentos repetidos de acceso no autorizado.
+
+Referencia principal:
+
+- [`backend/src/common/filters/http-exception.filter.ts`](./backend/src/common/filters/http-exception.filter.ts): normaliza errores, incluye `timestamp` y `path`, y registra errores de servidor.
+
+---
+
+### Trazabilidad
+
+La trazabilidad permite seguir una operación desde el request inicial hasta la capa de datos o el proceso asíncrono.
+
+#### Flujo trazable recomendado
+
+```txt
+Request HTTP
+    ↓
+main.ts / middlewares
+    ↓
+EntraIdGuard + RolesGuard
+    ↓
+Controller
+    ↓
+Service
+    ↓
+Repository
+    ↓
+Prisma / PostgreSQL
+```
+
+Ejemplo real para registrar interés en una inversión:
+
+- [`backend/src/investments/investments.controller.ts`](./backend/src/investments/investments.controller.ts): recibe `POST /investments/:id/interest`, obtiene el usuario con `@CurrentUser()` y llama al service.
+- [`backend/src/auth/decorators/current-user.decorator.ts`](./backend/src/auth/decorators/current-user.decorator.ts): extrae el usuario autenticado del request.
+- [`backend/src/investments/investments.service.ts`](./backend/src/investments/investments.service.ts): valida reglas de negocio antes de registrar interés.
+- [`backend/src/investments/investments.repository.ts`](./backend/src/investments/investments.repository.ts): ejecuta la operación de persistencia con Prisma.
+
+#### Correlation ID
+
+Se recomienda agregar un `CorrelationIdInterceptor` en `backend/src/common/interceptors/` para que cada request tenga un identificador único. Ese ID debe propagarse en logs, errores y procesos asíncronos.
+
+Ubicación recomendada:
+
+```txt
+backend/src/common/interceptors/correlation-id.interceptor.ts
+```
+
+Este interceptor permitiría relacionar errores del [`HttpExceptionFilter`](./backend/src/common/filters/http-exception.filter.ts) con acciones ejecutadas en controllers como [`InvestmentsController`](./backend/src/investments/investments.controller.ts).
+
+---
+
+### Manejo de secretos
+
+Los secretos del backend no deben almacenarse en el repositorio. Deben gestionarse mediante variables de entorno, GitHub Actions Secrets, Azure App Service Application Settings y Azure Key Vault.
+
+#### Secretos principales
+
+| Secreto | Uso | Referencia en código |
+|---|---|---|
+| `DATABASE_URL` | Conexión a PostgreSQL | [`backend/src/config/configuration.ts`](./backend/src/config/configuration.ts), [`backend/src/prisma/prisma.service.ts`](./backend/src/prisma/prisma.service.ts) |
+| `AZURE_TENANT_ID` | Validación del tenant de Entra ID | [`backend/src/auth/strategies/jwt.strategy.ts`](./backend/src/auth/strategies/jwt.strategy.ts) |
+| `AZURE_CLIENT_ID` | Validación de audiencia del token | [`backend/src/auth/strategies/jwt.strategy.ts`](./backend/src/auth/strategies/jwt.strategy.ts) |
+| `AZURE_BLOB_CONNECTION_STRING` | Acceso a Blob Storage | [`backend/src/config/configuration.ts`](./backend/src/config/configuration.ts), [`backend/src/documents/documents.processor.ts`](./backend/src/documents/documents.processor.ts) |
+| `AZURE_KEY_VAULT_URL` | Acceso a secretos centralizados | [`backend/src/config/configuration.ts`](./backend/src/config/configuration.ts) |
+| `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` | Conexión con Redis/BullMQ | [`backend/src/config/configuration.ts`](./backend/src/config/configuration.ts), [`backend/src/documents/documents.service.ts`](./backend/src/documents/documents.service.ts) |
+| `ALLOWED_ORIGINS` | Control de CORS | [`backend/src/main.ts`](./backend/src/main.ts) |
+
+#### Reglas obligatorias
+
+- No subir archivos `.env` al repositorio.
+- No escribir secretos directamente en controllers, services, repositories ni módulos.
+- No imprimir secretos con `console.log` ni con `Logger`.
+- Rotar secretos cuando un miembro del equipo deja de tener acceso al proyecto.
+- Usar secretos separados para `staging` y `production`.
+- Limitar permisos de cada secreto según el ambiente.
+
+La referencia central para esta estrategia es [`backend/src/config/configuration.ts`](./backend/src/config/configuration.ts), porque ahí se concentra la lectura de variables externas.
+
+---
+
+### Backups
+
+Los backups deben cubrir base de datos, documentos y configuración crítica. La estrategia no debe depender únicamente del código fuente.
+
+#### Backup de PostgreSQL
+
+La base de datos debe usar backups automáticos del servicio administrado de Azure Database for PostgreSQL. Además, antes de ejecutar migraciones en producción, se debe generar o verificar un respaldo reciente.
+
+Reglas:
+
+- Activar backups automáticos diarios.
+- Mantener retención suficiente para cubrir errores detectados tarde.
+- Verificar restauración periódicamente en un ambiente no productivo.
+- Ejecutar `prisma migrate deploy` solo después de validar que existe backup reciente.
+
+Referencias en `/src`:
+
+- [`backend/src/prisma/prisma.service.ts`](./backend/src/prisma/prisma.service.ts): punto único de conexión con PostgreSQL.
+- [`backend/src/investments/investments.repository.ts`](./backend/src/investments/investments.repository.ts): ejemplo de acceso a datos mediante Prisma y repositorios.
+
+#### Backup de documentos financieros
+
+Los documentos almacenados en Azure Blob Storage deben protegerse con versioning, soft delete y políticas de retención.
+
+Reglas:
+
+- Activar versioning en el contenedor de documentos.
+- Activar soft delete para blobs.
+- Separar contenedores por ambiente.
+- No guardar documentos financieros directamente en PostgreSQL; guardar metadata y URL segura.
+
+Referencias:
+
+- [`backend/src/documents/documents.service.ts`](./backend/src/documents/documents.service.ts): encola la carga/procesamiento de documentos.
+- [`backend/src/documents/documents.processor.ts`](./backend/src/documents/documents.processor.ts): procesa documentos en background y representa el punto de integración con Blob Storage.
+
+#### Backup de configuración
+
+La configuración crítica debe poder reconstruirse desde:
+
+- GitHub repository.
+- GitHub Actions Secrets.
+- Azure App Service Application Settings.
+- Azure Key Vault.
+
+Referencia:
+
+- [`backend/src/config/configuration.ts`](./backend/src/config/configuration.ts): define las variables necesarias para reconstruir el ambiente.
+
+---
+
+### Recuperación ante fallos
+
+La recuperación ante fallos debe contemplar errores en despliegue, base de datos, Redis, Blob Storage y procesamiento asíncrono.
+
+#### Escenarios de fallo y respuesta
+
+| Escenario | Respuesta esperada | Referencia en código |
+|---|---|---|
+| Fallo en despliegue | Revertir a último artefacto estable en Azure App Service. | [`backend/src/main.ts`](./backend/src/main.ts) |
+| Migración fallida | Detener deploy, restaurar backup si hubo cambios parciales. | [`backend/src/prisma/prisma.service.ts`](./backend/src/prisma/prisma.service.ts) |
+| Error 5xx inesperado | Registrar error, retornar respuesta estándar y monitorear. | [`backend/src/common/filters/http-exception.filter.ts`](./backend/src/common/filters/http-exception.filter.ts) |
+| Redis no disponible | Evitar bloquear toda la API; reintentar procesos en cola. | [`backend/src/documents/documents.service.ts`](./backend/src/documents/documents.service.ts) |
+| Error procesando documento | Registrar error, marcar proceso fallido y permitir reintento. | [`backend/src/documents/documents.processor.ts`](./backend/src/documents/documents.processor.ts) |
+| Acceso no autorizado | Retornar 401 o 403 sin exponer información interna. | [`backend/src/auth/guards/entra-id.guard.ts`](./backend/src/auth/guards/entra-id.guard.ts), [`backend/src/auth/guards/roles.guard.ts`](./backend/src/auth/guards/roles.guard.ts) |
+
+#### Procedimiento mínimo de recuperación
+
+```txt
+1. Detectar el fallo mediante Application Insights, logs o error del pipeline.
+2. Detener despliegues adicionales hacia el ambiente afectado.
+3. Revisar logs normalizados del backend.
+4. Si el fallo es de aplicación, revertir al último commit estable.
+5. Si el fallo es de base de datos, validar backup y restaurar en ambiente controlado.
+6. Si el fallo es de documentos, recuperar desde Blob Storage versioning o soft delete.
+7. Ejecutar smoke tests sobre /api/v1.
+8. Documentar la causa y el ajuste aplicado.
+```
+
+Referencias en `/src`:
+
+- [`backend/src/common/filters/http-exception.filter.ts`](./backend/src/common/filters/http-exception.filter.ts): base para detectar y estandarizar errores.
+- [`backend/src/documents/documents.processor.ts`](./backend/src/documents/documents.processor.ts): punto para registrar errores de procesos en background.
+- [`backend/src/investments/investments.service.ts`](./backend/src/investments/investments.service.ts): ejemplo de reglas de negocio que deben mantenerse consistentes tras una recuperación.
+
+---
+
+### Control de acceso a datos
+
+La seguridad de datos también depende de controlar quién puede ejecutar cada operación.
+
+#### Autenticación
+
+El backend valida tokens de Microsoft Entra ID mediante:
+
+- [`backend/src/auth/strategies/jwt.strategy.ts`](./backend/src/auth/strategies/jwt.strategy.ts)
+- [`backend/src/auth/guards/entra-id.guard.ts`](./backend/src/auth/guards/entra-id.guard.ts)
+
+#### Autorización
+
+Los roles permitidos se validan con:
+
+- [`backend/src/auth/guards/roles.guard.ts`](./backend/src/auth/guards/roles.guard.ts)
+- [`backend/src/auth/decorators/roles.decorator.ts`](./backend/src/auth/decorators/roles.decorator.ts)
+- [`backend/src/auth/auth.types.ts`](./backend/src/auth/auth.types.ts)
+
+Ejemplo aplicado:
+
+- [`backend/src/investments/investments.controller.ts`](./backend/src/investments/investments.controller.ts): protege endpoints de inversiones con `@UseGuards(EntraIdGuard, RolesGuard)` y restringe acciones mediante `@Roles('investor', 'admin')` o `@Roles('investor')`.
+
+Reglas obligatorias:
+
+- Todo endpoint privado debe usar `EntraIdGuard`.
+- Todo endpoint sensible debe usar `RolesGuard`.
+- Ningún controller debe leer directamente datos sensibles si el usuario no tiene el rol adecuado.
+- El repository debe usar `select` explícito para evitar exposición accidental.
+
+---
+
+### Minimización y masking de datos
+
+El backend debe retornar únicamente los campos necesarios para la operación solicitada. La UI no debe recibir datos sensibles para ocultarlos después; el backend debe filtrar y aplicar masking antes de responder.
+
+Referencias:
+
+- [`backend/src/investments/investments.repository.ts`](./backend/src/investments/investments.repository.ts): usa `select` explícito para retornar solo `id`, `businessName`, `roi`, `riskLevel`, `minAmount` y `status`.
+- [`backend/src/common/utils/maskData.ts`](./backend/src/common/utils/maskData.ts): define `maskTaxId`, `maskAccountNumber` y `maskEmail`.
+
+Reglas obligatorias:
+
+- No retornar modelos completos de Prisma si contienen datos sensibles.
+- Usar `select` explícito en repositories.
+- Aplicar masking antes de retornar datos administrativos o listados.
+- No registrar datos sensibles en logs.
+- No enviar documentos financieros completos en respuestas de listados.
+
+---
+
+### Seguridad en procesos asíncronos
+
+Los procesos largos, como validación de documentos financieros, deben ejecutarse en background para evitar bloquear solicitudes HTTP. Sin embargo, también deben protegerse.
+
+Referencias:
+
+- [`backend/src/documents/documents.service.ts`](./backend/src/documents/documents.service.ts): encola trabajos con BullMQ.
+- [`backend/src/documents/documents.processor.ts`](./backend/src/documents/documents.processor.ts): procesa documentos en background.
+
+Reglas obligatorias:
+
+- Validar que el usuario tenga permiso para subir documentos de la pyme correspondiente antes de encolar el trabajo.
+- No incluir tokens ni secretos dentro del payload de la cola.
+- No guardar archivos sensibles en logs.
+- Registrar solo metadata necesaria: `fileName`, `businessId`, estado y timestamp.
+- Configurar reintentos controlados y dead-letter handling para trabajos fallidos.
+
+---
+
+### Checklist de seguridad de datos
+
+Antes de publicar cambios de backend, se debe validar:
+
+```txt
+[ ] Los endpoints privados usan EntraIdGuard.
+[ ] Los endpoints sensibles usan RolesGuard y @Roles.
+[ ] Los DTOs validan datos de entrada con class-validator.
+[ ] Los repositories usan select explícito.
+[ ] Los datos sensibles se retornan con masking o no se retornan.
+[ ] No hay secretos hardcodeados en /src.
+[ ] Las variables se leen desde configuration.ts.
+[ ] Los logs no contienen tokens, contraseñas ni datos financieros sensibles.
+[ ] Existe backup reciente antes de migraciones productivas.
+[ ] Los documentos usan Blob Storage con versioning/soft delete.
+[ ] Los errores se normalizan con HttpExceptionFilter.
+[ ] Los procesos asíncronos no guardan información sensible en colas.
+```
+
+---
+
+### Referencias del ZIP utilizadas
+
+Archivos en `/src`:
+
+- [`backend/src/main.ts`](./backend/src/main.ts)
+- [`backend/src/config/configuration.ts`](./backend/src/config/configuration.ts)
+- [`backend/src/auth/strategies/jwt.strategy.ts`](./backend/src/auth/strategies/jwt.strategy.ts)
+- [`backend/src/auth/guards/entra-id.guard.ts`](./backend/src/auth/guards/entra-id.guard.ts)
+- [`backend/src/auth/guards/roles.guard.ts`](./backend/src/auth/guards/roles.guard.ts)
+- [`backend/src/auth/decorators/current-user.decorator.ts`](./backend/src/auth/decorators/current-user.decorator.ts)
+- [`backend/src/auth/decorators/roles.decorator.ts`](./backend/src/auth/decorators/roles.decorator.ts)
+- [`backend/src/auth/auth.types.ts`](./backend/src/auth/auth.types.ts)
+- [`backend/src/common/filters/http-exception.filter.ts`](./backend/src/common/filters/http-exception.filter.ts)
+- [`backend/src/common/utils/maskData.ts`](./backend/src/common/utils/maskData.ts)
+- [`backend/src/documents/documents.service.ts`](./backend/src/documents/documents.service.ts)
+- [`backend/src/documents/documents.processor.ts`](./backend/src/documents/documents.processor.ts)
+- [`backend/src/investments/investments.controller.ts`](./backend/src/investments/investments.controller.ts)
+- [`backend/src/investments/investments.service.ts`](./backend/src/investments/investments.service.ts)
+- [`backend/src/investments/investments.repository.ts`](./backend/src/investments/investments.repository.ts)
+- [`backend/src/investments/dto/create-investment.dto.ts`](./backend/src/investments/dto/create-investment.dto.ts)
+- [`backend/src/prisma/prisma.service.ts`](./backend/src/prisma/prisma.service.ts)
