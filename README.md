@@ -4003,8 +4003,442 @@ ALLOWED_ORIGINS
  
 ---
 
+## 3.7 Estrategia de CI/CD, scripts y configuración de ambientes del backend
 
-## 3.7 Técnicas y patrones arquitectónicos implementados
+Esta sección define la estrategia de integración continua, despliegue continuo, scripts, automatizaciones, validaciones automáticas, análisis estático y quality gates para el backend de JICA. El objetivo es que ningún cambio llegue a `staging` o `production` sin haber pasado por validaciones técnicas, pruebas, revisión de seguridad básica y construcción correcta del artefacto.
+
+La estrategia se alinea con la arquitectura backend definida para JICA: una API desarrollada con NestJS y TypeScript, desplegada en Azure App Service, conectada a PostgreSQL mediante Prisma, autenticada con Microsoft Entra ID y configurada mediante variables de entorno centralizadas.
+
+---
+
+### Scripts obligatorios del backend
+
+Los scripts deben ubicarse en `backend/package.json` y deben permitir ejecutar el proyecto de forma consistente en desarrollo, validación, pruebas, build y producción.
+
+| Script | Comando | Propósito |
+|---|---|---|
+| `start:dev` | `nest start --watch` | Ejecuta el backend localmente con recarga automática. |
+| `build` | `nest build` | Compila el código TypeScript desde `backend/src` hacia `backend/dist`. |
+| `start:prod` | `node dist/main` | Ejecuta el artefacto compilado en ambientes productivos. |
+| `lint` | `eslint "{src,apps,libs,test}/**/*.ts"` | Ejecuta análisis estático sobre el código TypeScript. |
+| `format` | `prettier --write "src/**/*.ts" "test/**/*.ts"` | Formatea el código del backend. |
+| `format:check` | `prettier --check "src/**/*.ts" "test/**/*.ts"` | Valida formato sin modificar archivos. |
+| `test` | `jest` | Ejecuta pruebas unitarias. |
+| `test:cov` | `jest --coverage` | Ejecuta pruebas unitarias y genera cobertura. |
+| `test:e2e` | `jest --config ./test/jest-e2e.json` | Ejecuta pruebas de integración/API. |
+| `type-check` | `tsc --noEmit` | Valida tipos sin generar archivos. |
+| `prisma:generate` | `prisma generate` | Genera el cliente de Prisma antes del despliegue. |
+| `prisma:migrate:deploy` | `prisma migrate deploy` | Aplica migraciones pendientes en `staging` y `production`. |
+
+Referencias reales en `/src` relacionadas con estos scripts:
+
+- [`backend/src/main.ts`](./backend/src/main.ts): punto de entrada que configura CORS, prefijo global de API y arranque del servidor.
+- [`backend/src/config/configuration.ts`](./backend/src/config/configuration.ts): centraliza variables de entorno como `PORT`, `DATABASE_URL`, credenciales de Azure, Redis y orígenes permitidos.
+- [`backend/src/investments/dto/create-investment.dto.ts`](./backend/src/investments/dto/create-investment.dto.ts): ejemplo de validación automática con `class-validator`.
+- [`backend/src/prisma/prisma.service.ts`](./backend/src/prisma/prisma.service.ts): conexión centralizada con PostgreSQL mediante Prisma.
+
+> Nota importante: el script `lint` usado en CI no debe usar `--fix`, porque el pipeline no debe modificar código automáticamente. El `--fix` puede mantenerse solo para uso local mediante un script separado como `lint:fix`.
+
+---
+
+### Flujo de ramas y deployments
+
+El backend debe seguir el mismo flujo general de promoción del proyecto:
+
+```txt
+feature/* o fix/* → develop → main
+```
+
+| Ambiente | Rama / trigger | Acción | Destino |
+|---|---|---|---|
+| `development` | Máquina local del desarrollador | Ejecución manual con `npm run start:dev` | Entorno local |
+| `staging` | Push o merge hacia `develop` | Validación, pruebas, build, migración y despliegue | Azure App Service - Staging |
+| `production` | Merge aprobado hacia `main` | Revalidación, build, migración controlada y despliegue | Azure App Service - Production |
+
+La API debe iniciar siempre desde [`backend/src/main.ts`](./backend/src/main.ts), donde se configura el servidor NestJS, los middlewares principales y el prefijo global `api/v1`. La configuración por ambiente se obtiene desde [`backend/src/config/configuration.ts`](./backend/src/config/configuration.ts), evitando valores hardcodeados dentro del código.
+
+---
+
+### Pipeline de CI/CD para staging
+
+El pipeline de `staging` debe ejecutarse cuando se integre código a `develop`. Su objetivo es validar que la API funciona correctamente antes de promover cambios a producción.
+
+Ubicación recomendada:
+
+```txt
+.github/workflows/deploy-backend-stage.yml
+```
+
+Flujo requerido:
+
+```txt
+1. validate
+   - npm ci
+   - npm run type-check
+   - npm run lint
+   - npm run format:check
+
+2. test
+   - npm run test:cov
+   - npm run test:e2e
+
+3. security-check
+   - npm audit --audit-level=high
+   - revisión de dependencias mediante Dependabot
+
+4. build
+   - npm run build
+   - npx prisma generate
+
+5. database
+   - npx prisma migrate deploy
+
+6. deploy
+   - despliegue hacia Azure App Service staging
+
+7. smoke-test
+   - validar que /api/v1 responda correctamente
+```
+
+Ejemplo de pipeline para staging:
+
+```yaml
+name: Deploy Backend Stage
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-backend-stage.yml"
+
+jobs:
+  validate:
+    name: Validación y análisis estático
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Verificar formato
+        run: npm run format:check
+
+  test:
+    name: Pruebas y cobertura
+    runs-on: ubuntu-latest
+    needs: validate
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Pruebas unitarias con cobertura
+        run: npm run test:cov
+
+      - name: Pruebas e2e
+        run: npm run test:e2e
+        env:
+          NODE_ENV: test
+          DATABASE_URL: ${{ secrets.STAGE_DATABASE_URL }}
+
+  build-and-deploy:
+    name: Build y deploy a staging
+    runs-on: ubuntu-latest
+    needs: test
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Audit de dependencias
+        run: npm audit --audit-level=high
+
+      - name: Build
+        run: npm run build
+
+      - name: Generar cliente Prisma
+        run: npx prisma generate
+
+      - name: Aplicar migraciones
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.STAGE_DATABASE_URL }}
+
+      - name: Deploy a Azure App Service - staging
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.STAGE_BACKEND_APP_NAME }}
+          publish-profile: ${{ secrets.STAGE_AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: backend
+```
+
+Referencias reales en `/src` relacionadas con el pipeline:
+
+- [`backend/src/main.ts`](./backend/src/main.ts): archivo que debe compilar correctamente para generar el artefacto `/dist`.
+- [`backend/src/config/configuration.ts`](./backend/src/config/configuration.ts): archivo que consume las variables inyectadas por GitHub Actions/Azure App Service.
+- [`backend/src/prisma/prisma.service.ts`](./backend/src/prisma/prisma.service.ts): dependencia crítica para validar que el backend puede conectarse a PostgreSQL.
+- [`backend/src/common/filters/http-exception.filter.ts`](./backend/src/common/filters/http-exception.filter.ts): referencia para validar manejo estándar de errores durante pruebas de API.
+
+---
+
+### Pipeline de CI/CD para production
+
+El pipeline de `production` debe ejecutarse únicamente cuando los cambios lleguen a `main` mediante Pull Request aprobado. No se debe permitir push directo a `main`.
+
+Ubicación recomendada:
+
+```txt
+.github/workflows/deploy-backend-production.yml
+```
+
+Flujo requerido:
+
+```txt
+1. validate
+   - npm ci
+   - npm run type-check
+   - npm run lint
+   - npm run format:check
+
+2. test
+   - npm run test:cov
+
+3. build
+   - npm run build
+   - npx prisma generate
+
+4. database
+   - npx prisma migrate deploy
+
+5. deploy
+   - despliegue hacia Azure App Service production
+
+6. post-deploy check
+   - validación de disponibilidad de la API
+```
+
+Production no debe ejecutar cambios experimentales ni pruebas contra datos reales. Las pruebas completas, incluyendo e2e, deben haberse ejecutado previamente en `staging`.
+
+---
+
+### Automatizaciones requeridas
+
+Las automatizaciones del backend deben cubrir despliegue, validaciones, control de dependencias, procesos asíncronos y monitoreo.
+
+| Automatización | Descripción | Referencia en código |
+|---|---|---|
+| Build automático | Compila el backend desde `src` hacia `dist`. | [`backend/src/main.ts`](./backend/src/main.ts) |
+| Validación automática de DTOs | Rechaza datos inválidos antes de llegar a los services. | [`backend/src/investments/dto/create-investment.dto.ts`](./backend/src/investments/dto/create-investment.dto.ts) |
+| Validación de autenticación | Rechaza requests sin token válido de Entra ID. | [`backend/src/auth/guards/entra-id.guard.ts`](./backend/src/auth/guards/entra-id.guard.ts), [`backend/src/auth/strategies/jwt.strategy.ts`](./backend/src/auth/strategies/jwt.strategy.ts) |
+| Validación de autorización | Verifica roles antes de ejecutar acciones protegidas. | [`backend/src/auth/guards/roles.guard.ts`](./backend/src/auth/guards/roles.guard.ts), [`backend/src/auth/decorators/roles.decorator.ts`](./backend/src/auth/decorators/roles.decorator.ts) |
+| Procesos en background | Procesa documentos financieros sin bloquear el request HTTP. | [`backend/src/documents/documents.service.ts`](./backend/src/documents/documents.service.ts), [`backend/src/documents/documents.processor.ts`](./backend/src/documents/documents.processor.ts) |
+| Manejo estándar de errores | Normaliza respuestas de error y registra errores 5xx. | [`backend/src/common/filters/http-exception.filter.ts`](./backend/src/common/filters/http-exception.filter.ts) |
+| Configuración por ambiente | Lee variables externas según ambiente. | [`backend/src/config/configuration.ts`](./backend/src/config/configuration.ts) |
+
+---
+
+### Validaciones automáticas
+
+Las validaciones automáticas deben ejecutarse en dos niveles: pipeline y runtime.
+
+#### Validaciones en pipeline
+
+- `npm run type-check`: evita errores de tipos antes del build.
+- `npm run lint`: valida estándares de código.
+- `npm run format:check`: valida formato consistente.
+- `npm run test:cov`: valida pruebas unitarias y cobertura mínima.
+- `npm run test:e2e`: valida endpoints principales.
+- `npm audit --audit-level=high`: bloquea dependencias con vulnerabilidades altas o críticas.
+- `npx prisma migrate deploy`: valida que el esquema de base de datos pueda actualizarse de forma controlada.
+
+#### Validaciones en runtime
+
+- [`backend/src/main.ts`](./backend/src/main.ts): debe registrar `ValidationPipe` con `whitelist`, `forbidNonWhitelisted` y `transform` para impedir campos inesperados.
+- [`backend/src/investments/dto/create-investment.dto.ts`](./backend/src/investments/dto/create-investment.dto.ts): valida campos de entrada como `businessName`, `roi`, `riskLevel` y `minAmount`.
+- [`backend/src/auth/guards/roles.guard.ts`](./backend/src/auth/guards/roles.guard.ts): valida si el usuario posee el rol requerido antes de permitir la acción.
+- [`backend/src/investments/investments.service.ts`](./backend/src/investments/investments.service.ts): aplica reglas de negocio, por ejemplo impedir registrar interés en inversiones que no estén disponibles.
+
+---
+
+### Análisis estático
+
+El análisis estático del backend debe validar calidad, tipado, formato y errores comunes antes de compilar o desplegar.
+
+| Herramienta | Uso | Quality gate |
+|---|---|---|
+| TypeScript | Validación estricta de tipos. | No se permite ningún error de compilación. |
+| ESLint | Reglas de calidad y estilo. | No se permiten errores ni warnings en CI. |
+| Prettier | Formato consistente. | El pipeline falla si existen archivos sin formato. |
+| Jest Coverage | Cobertura de pruebas. | El build se bloquea si no alcanza el mínimo definido. |
+| npm audit | Revisión de vulnerabilidades. | Vulnerabilidades altas o críticas bloquean el despliegue. |
+
+El análisis estático debe revisar código ubicado en `backend/src`, especialmente controladores, servicios, repositorios, guards, DTOs y configuración. Ejemplos reales de código que deben pasar estas validaciones:
+
+- [`backend/src/investments/investments.controller.ts`](./backend/src/investments/investments.controller.ts)
+- [`backend/src/investments/investments.service.ts`](./backend/src/investments/investments.service.ts)
+- [`backend/src/investments/investments.repository.ts`](./backend/src/investments/investments.repository.ts)
+- [`backend/src/auth/strategies/jwt.strategy.ts`](./backend/src/auth/strategies/jwt.strategy.ts)
+- [`backend/src/common/filters/http-exception.filter.ts`](./backend/src/common/filters/http-exception.filter.ts)
+
+---
+
+### Quality gates del backend
+
+Los quality gates son condiciones obligatorias para permitir merge o deploy.
+
+| Quality gate | Condición requerida | Resultado si falla |
+|---|---|---|
+| Tipado | `npm run type-check` sin errores. | Bloquea merge y deploy. |
+| Lint | ESLint sin errores ni warnings. | Bloquea merge y deploy. |
+| Formato | `npm run format:check` exitoso. | Bloquea merge y deploy. |
+| Pruebas unitarias | `npm run test:cov` exitoso. | Bloquea deploy. |
+| Pruebas e2e/API | `npm run test:e2e` exitoso en staging. | Bloquea promoción a production. |
+| Seguridad de dependencias | Sin vulnerabilidades altas/críticas. | Bloquea deploy. |
+| Migraciones | `prisma migrate deploy` exitoso. | Bloquea deploy. |
+| Autenticación | Endpoints protegidos requieren token válido. | Bloquea release si falla la prueba. |
+| Autorización | Roles correctos por endpoint. | Bloquea release si falla la prueba. |
+| No secretos hardcodeados | Variables deben venir de entorno o Key Vault. | Bloquea merge. |
+
+Ejemplos en `/src` asociados a estos gates:
+
+- Autenticación: [`backend/src/auth/strategies/jwt.strategy.ts`](./backend/src/auth/strategies/jwt.strategy.ts)
+- Autorización: [`backend/src/auth/guards/roles.guard.ts`](./backend/src/auth/guards/roles.guard.ts)
+- Validación de datos: [`backend/src/investments/dto/create-investment.dto.ts`](./backend/src/investments/dto/create-investment.dto.ts)
+- Reglas de negocio: [`backend/src/investments/investments.service.ts`](./backend/src/investments/investments.service.ts)
+- Acceso controlado a datos: [`backend/src/investments/investments.repository.ts`](./backend/src/investments/investments.repository.ts)
+
+---
+
+### Configuración por ambientes
+
+La configuración del backend debe manejarse mediante variables de entorno y nunca mediante valores hardcodeados. La lectura centralizada se realiza desde [`backend/src/config/configuration.ts`](./backend/src/config/configuration.ts).
+
+| Variable | Development | Staging | Production |
+|---|---|---|---|
+| `NODE_ENV` | `development` | `staging` | `production` |
+| `PORT` | `3000` | Inyectado por Azure App Service | Inyectado por Azure App Service |
+| `DATABASE_URL` | PostgreSQL local o base de desarrollo | Secret `STAGE_DATABASE_URL` | Secret `PROD_DATABASE_URL` |
+| `AZURE_TENANT_ID` | Tenant de desarrollo | Tenant de staging | Tenant productivo |
+| `AZURE_CLIENT_ID` | App registration de desarrollo | App registration de staging | App registration productiva |
+| `AZURE_BLOB_CONNECTION_STRING` | Storage de desarrollo | Storage de staging | Storage productivo |
+| `AZURE_KEY_VAULT_URL` | Opcional en local | Key Vault de staging | Key Vault productivo |
+| `REDIS_HOST` | Redis local o contenedor | Azure Cache for Redis staging | Azure Cache for Redis production |
+| `REDIS_PORT` | `6379` | Puerto del servicio administrado | Puerto del servicio administrado |
+| `REDIS_PASSWORD` | Local o vacío | Secret de staging | Secret productivo |
+| `ALLOWED_ORIGINS` | `http://localhost:5173` | URL del frontend staging | URL del frontend production |
+
+#### Ambiente development
+
+En desarrollo se utiliza un archivo `backend/.env` local, excluido del repositorio. Este ambiente permite ejecutar la API con:
+
+```bash
+cd backend
+npm ci
+npm run start:dev
+```
+
+Archivos relacionados:
+
+- [`backend/src/main.ts`](./backend/src/main.ts): usa `PORT` y `ALLOWED_ORIGINS`.
+- [`backend/src/config/configuration.ts`](./backend/src/config/configuration.ts): centraliza la lectura de variables.
+- [`backend/src/prisma/prisma.service.ts`](./backend/src/prisma/prisma.service.ts): usa la conexión definida por `DATABASE_URL` a través de Prisma.
+
+#### Ambiente staging
+
+En staging las variables se inyectan desde GitHub Actions Secrets y Azure App Service Application Settings. Este ambiente se utiliza para validar integraciones reales antes de producción.
+
+Validaciones mínimas:
+
+- La API debe iniciar correctamente.
+- Las migraciones deben aplicarse sin errores.
+- Los endpoints protegidos deben requerir token válido.
+- Las rutas por rol deben respetar `investor`, `business` y `admin`.
+- Los procesos asíncronos deben encolar trabajos en Redis.
+
+Referencias:
+
+- [`backend/src/auth/guards/entra-id.guard.ts`](./backend/src/auth/guards/entra-id.guard.ts)
+- [`backend/src/auth/guards/roles.guard.ts`](./backend/src/auth/guards/roles.guard.ts)
+- [`backend/src/documents/documents.service.ts`](./backend/src/documents/documents.service.ts)
+
+#### Ambiente production
+
+En producción solo se despliegan builds provenientes de `main` y previamente validados en staging. Las variables sensibles deben venir desde Azure Key Vault o Application Settings de Azure App Service.
+
+Reglas obligatorias:
+
+- No usar archivos `.env` en producción.
+- No permitir `ALLOWED_ORIGINS` abiertos con `*`.
+- No desplegar si fallan pruebas, lint, build, audit o migraciones.
+- No ejecutar `prisma db push` en producción; solo `prisma migrate deploy`.
+- No activar logs con datos sensibles.
+
+Referencias:
+
+- [`backend/src/config/configuration.ts`](./backend/src/config/configuration.ts)
+- [`backend/src/common/filters/http-exception.filter.ts`](./backend/src/common/filters/http-exception.filter.ts)
+- [`backend/src/investments/investments.repository.ts`](./backend/src/investments/investments.repository.ts)
+
+---
+
+### Referencias del ZIP utilizadas
+
+Además de los archivos de `/src`, el ZIP incluye archivos de configuración que sirven como base para definir esta sección:
+
+- [`backend/package.json`](./backend/package.json): scripts actuales del backend.
+- [`backend/tsconfig.json`](./backend/tsconfig.json): configuración de TypeScript.
+- [`backend/eslint.config.mjs`](./backend/eslint.config.mjs): configuración de ESLint y Prettier.
+- [`.github/workflows/deploy-stage.yml`](./.github/workflows/deploy-stage.yml): pipeline actual de stage usado como referencia estructural.
+- [`.github/workflows/deploy-production.yml`](./.github/workflows/deploy-production.yml): pipeline actual de production usado como referencia estructural.
+- [`.github/dependabot.yml`](./.github/dependabot.yml): referencia de automatización para revisión de dependencias.
+
+> Los workflows existentes en el ZIP están orientados al frontend. Para el backend se debe crear una versión equivalente usando `working-directory: backend`, filtrado por `paths: ["backend/**"]` y despliegue hacia Azure App Service.
+
+## 3.8 Técnicas y patrones arquitectónicos implementados
 
 ### Técnicas arquitectónicas utilizadas
 
@@ -4166,7 +4600,7 @@ InvestmentsModule
 └── entities/
 ```
 
-## 3.8 Patrones de diseño orientados a objetos
+## 3.9 Patrones de diseño orientados a objetos
 
 ### Strategy Pattern
 
@@ -4303,7 +4737,7 @@ export class UserRepository {
 ```
 
 
-## 3.9 Especificaciones de Diseño de la Base de Datos
+## 3.10 Especificaciones de Diseño de la Base de Datos
 
 ---
 
@@ -5458,7 +5892,7 @@ AuditLogService
 }
 ```
 
-## 3.8 Optimización del artefacto de deployment
+## 3.15 Optimización del artefacto de deployment
  
 El backend de JICA se despliega como código compilado directamente en Azure App Service. El artefacto de deployment es la carpeta `/dist` generada por TypeScript más las dependencias de producción de `node_modules`. Esta sección define las reglas para mantener ese artefacto reducido y eficiente.
  
@@ -5544,7 +5978,7 @@ Si `prisma generate` no se ejecuta, el backend arranca pero falla al intentar co
 - No incluir archivos de configuración de desarrollo (`eslint.config.js`, `prettier.config.js`, `jest.config.ts`) en el artefacto de production.
 - El tamaño de `node_modules` en producción debe revisarse si supera **200MB**. En ese caso auditar dependencias con `npm ls --prod` para identificar librerías innecesarias en `dependencies`.
  
-## 3.14 Estrategias de seguridad de datos del backend
+## 3.16 Estrategias de seguridad de datos del backend
 
 Esta sección define las estrategias de seguridad de datos para el backend de JICA, considerando cifrado, auditoría, trazabilidad, manejo de secretos, backups y recuperación ante fallos. Estas estrategias son especialmente importantes porque JICA maneja información financiera, datos de inversionistas, datos de pymes gastronómicas, documentos financieros y operaciones relacionadas con oportunidades de inversión.
 
