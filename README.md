@@ -116,7 +116,6 @@ Las pruebas fueron realizadas por un total de 4 estudiantes externos al equipo, 
 | Volver al dashboard               | Regresar a la pantalla principal del sistema                     |
 
 
-### Resultados obtenidos
 
 ### Resultados obtenidos
 
@@ -133,7 +132,7 @@ Los resultados muestran que la mayoría de las tareas fueron completadas exitosa
 Asimismo, se observó la presencia de clics erróneos en distintas tareas, lo que permitió identificar oportunidades de mejora relacionadas con la ubicación y visibilidad de algunos elementos interactivos del prototipo.
 
 
-### Evidencias del UX Testing
+
 
 ### Evidencias del UX Testing
 
@@ -303,12 +302,12 @@ Se incrementó la prominencia visual del botón **"Confirmar inversión"** media
 
 Las modificaciones realizadas se enfocaron en fortalecer la jerarquía visual de las acciones principales del flujo de inversión sin alterar la estructura general del prototipo. Esto permitió conservar la familiaridad de la interfaz mientras se mejoraba la facilidad de navegación y la identificación de las acciones clave por parte de los usuarios.
 
-
+---
 # 2. Frontend
 
 ## 2.1 Stack de tecnologías del frontend
 
-El frontend de JICA será desarrollado como una aplicación web de tipo **Client Side Rendering**, orientada a inversionistas que necesitan explorar oportunidades de inversión, revisar información financiera de pymes gastronómicas y simular inversiones dentro de una interfaz clara, moderna y segura.
+El frontend de JICA será desarrollado como una aplicación web de tipo Client Side Rendering, orientada a inversionistas que necesitan explorar oportunidades de inversión, revisar información financiera de pymes gastronómicas y simular inversiones dentro de una interfaz clara, moderna y segura.
 
 
 
@@ -348,7 +347,7 @@ ESLint, Prettier y Husky serán obligatorios para mantener calidad, consistencia
 
 Azure Static Web Apps será utilizado para publicar el frontend de forma segura y separada por ambientes. GitHub Actions automatizará el proceso de integración y despliegue continuo.
 
-
+---
 ## 2.2 Estructura general del frontend
 
 El frontend de JICA estará ubicado dentro de la carpeta `/frontend` del repositorio. La aplicación debe mantener una estructura modular, separando responsabilidades entre páginas, componentes reutilizables, servicios, hooks, validaciones, tipos y configuración.
@@ -405,6 +404,7 @@ El frontend de JICA estará ubicado dentro de la carpeta `/frontend` del reposit
 | `/tests/unit`      | Pruebas unitarias con Vitest.                                                              |
 | `/tests/e2e`       | Pruebas end-to-end con Playwright.                                                         |
 
+---
 ## 2.3 Desarrollo de componentes visuales
 
 Los componentes visuales del frontend de JICA deben desarrollarse bajo un enfoque modular, reutilizable y mantenible. Cada componente debe tener una única responsabilidad visual o funcional, evitando mezclar lógica de negocio, llamadas a API o validaciones complejas dentro del JSX.
@@ -456,14 +456,14 @@ Cada componente reutilizable seguirá una arquitectura modular separando lógica
 
 - [InvestmentCard.tsx](./frontend/src/features/investments/components/InvestmentCard/InvestmentCard.tsx)
 - [InvestmentCard.types.ts](./frontend/src/features/investments/components/InvestmentCard/InvestmentCard.types.ts)
-
+---
 ## 2.4 Convenciones de nomenclatura
 
 Para mantener el código del frontend consistente, legible se deben seguir las siguientes convenciones de nomenclatura en todo el proyecto.
 
 ### Componentes
 
-Los componentes de React deben nombrarse usando **PascalCase**.
+Los componentes de React deben nombrarse usando PascalCase.
 
 ```tsx
 InvestorCard.tsx
@@ -504,7 +504,7 @@ ConfirmInvestmentModal.tsx
 
 ### Páginas
 
-Las páginas principales deben nombrarse usando **PascalCase** y terminar con el sufijo `Page`.
+Las páginas principales deben nombrarse usando PascalCase y terminar con el sufijo `Page`.
 
 ```tsx
 LoginPage.tsx
@@ -520,7 +520,7 @@ Esto permite diferenciar fácilmente una página completa de un componente reuti
 
 ### Layouts
 
-Los layouts deben nombrarse usando **PascalCase** y terminar con el sufijo `Layout`.
+Los layouts deben nombrarse usando PascalCase y terminar con el sufijo `Layout`.
 
 ```tsx
 AuthLayout.tsx
@@ -534,7 +534,7 @@ Un layout debe utilizarse únicamente para definir estructura visual común, com
 
 ### Hooks personalizados
 
-Los hooks personalizados deben nombrarse usando **camelCase** y siempre deben iniciar con el prefijo `use`.
+Los hooks personalizados deben nombrarse usando camelCase y siempre deben iniciar con el prefijo `use`.
 
 ```tsx
 useAuth.ts
@@ -565,7 +565,7 @@ useConfirmInvestment.ts
 
 ### Servicios y llamadas a API
 
-Los archivos encargados de comunicarse con el backend deben nombrarse usando **camelCase** y terminar con el sufijo `Service`.
+Los archivos encargados de comunicarse con el backend deben nombrarse usando camelCase y terminar con el sufijo `Service`.
 
 ```tsx
 authService.ts
@@ -623,7 +623,7 @@ investor-profile/
 
 ### Archivos de utilidades
 
-Los archivos de utilidades deben nombrarse usando **camelCase** y deben reflejar claramente su función.
+Los archivos de utilidades deben nombrarse usando camelCase y deben reflejar claramente su función.
 
 ```tsx
 formatCurrency.ts
@@ -632,7 +632,7 @@ validateEmail.ts
 calculateReturn.ts
 ```
 
-Las funciones utilitarias también deben usar **camelCase**.
+Las funciones utilitarias también deben usar camelCase.
 
 ```tsx
 formatCurrency()
@@ -645,7 +645,7 @@ calculateExpectedReturn()
 
 ### Interfaces y tipos
 
-Las interfaces y tipos de TypeScript deben nombrarse usando **PascalCase**.
+Las interfaces y tipos de TypeScript deben nombrarse usando PascalCase.
 
 ```tsx
 Investor
@@ -683,7 +683,7 @@ DashboardLayoutProps
 
 ### Variables y funciones
 
-Las variables y funciones deben usar **camelCase**.
+Las variables y funciones deben usar camelCase.
 
 ```tsx
 const investorName = "Juan Pérez";
@@ -717,7 +717,7 @@ loadInvestorProfile()
 
 ### Constantes
 
-Las constantes globales deben nombrarse usando **UPPER_SNAKE_CASE**.
+Las constantes globales deben nombrarse usando UPPER_SNAKE_CASE.
 
 ```tsx
 API_BASE_URL
@@ -726,7 +726,7 @@ MIN_PASSWORD_LENGTH
 DEFAULT_CURRENCY
 ```
 
-Las constantes locales dentro de componentes pueden usar **camelCase** si no representan valores globales.
+Las constantes locales dentro de componentes pueden usar camelCase si no representan valores globales.
 
 ```tsx
 const maxVisibleProjects = 6;
@@ -786,7 +786,7 @@ Solo se deben crear clases personalizadas cuando:
 * La combinación de clases Tailwind es demasiado extensa.
 * El estilo no puede resolverse fácilmente con utilidades de Tailwind.
 
-Las clases personalizadas deben usar **kebab-case**.
+Las clases personalizadas deben usar kebab-case.
 
 ```css
 .dashboard-container
@@ -831,11 +831,10 @@ dashboardContainer
 
 Esta sección define las reglas visuales que debe seguir el frontend de JICA.
 
-El frontend debe usar **Tailwind CSS** como herramienta principal de estilos. Los estilos reutilizables deben centralizarse en archivos CSS dentro de:
+El frontend debe usar Tailwind CSS como herramienta principal de estilos. Los estilos reutilizables deben centralizarse en archivos CSS dentro de:
 
 [/src/styles](./frontend/src/styles)
 
----
 
 ### Paleta de colores
 
@@ -871,7 +870,6 @@ Uso requerido:
 
 No se deben usar colores arbitrarios directamente en componentes si ya existe un color definido en la paleta.
 
----
 
 ### Tipografías
 
@@ -900,7 +898,6 @@ Texto auxiliar: text-xs text-slate-400
 
 No se deben mezclar fuentes ni tamaños fuera de esta jerarquía sin justificación.
 
----
 
 ### Logos
 
@@ -918,7 +915,6 @@ Reglas obligatorias:
 * La versión compacta debe usarse en mobile o sidebar reducido.
 * El atributo `alt` siempre debe estar presente.
 
----
 
 ### Iconografía
 
@@ -935,7 +931,6 @@ Reglas obligatorias:
 * Los iconos no deben reemplazar texto importante.
 * Las acciones críticas deben incluir icono y texto.
 
----
 
 ### Espaciados
 
@@ -957,7 +952,6 @@ Reglas obligatorias:
 * Los elementos internos deben separarse con `gap-4` o `gap-6`.
 * No se deben usar márgenes aleatorios fuera de la escala de Tailwind.
 
----
 
 ### Responsive Design
 
@@ -1018,7 +1012,6 @@ No permitido:
 }
 ```
 
----
 
 ### Estilos reutilizables
 
@@ -1046,7 +1039,6 @@ Uso:
 * `.btn-primary`: registrarse, iniciar sesión o confirmar inversión.
 * `.btn-secondary`: cancelar, volver o ejecutar acciones alternativas.
 
----
 
 #### Tarjetas
 
@@ -1067,7 +1059,6 @@ Uso:
 * Datos del usuario.
 * Paneles de dashboard.
 
----
 
 #### Inputs
 
@@ -1089,8 +1080,6 @@ Uso:
 * Perfil.
 * Simulación de inversión.
 
----
-
 #### Mensajes de retroalimentación
 
 Implementación requerida:
@@ -1106,7 +1095,6 @@ Clases requeridas:
 .form-info
 ```
 
----
 
 ### Branding visual
 
@@ -1120,7 +1108,7 @@ Reglas obligatorias:
 * Mantener consistencia entre dashboard, formularios y páginas de detalle.
 * Priorizar claridad sobre decoración.
 
----
+
 
 ### Etiquetas de estado
 
@@ -1165,7 +1153,6 @@ Uso esperado:
 
 No se deben escribir clases de color directamente en componentes para estados.
 
----
 
 ### Etiquetas de riesgo
 
@@ -1202,7 +1189,6 @@ Uso esperado:
 
 No se deben escribir clases de color directamente en componentes para niveles de riesgo.
 
----
 
 ### Reglas generales de estilos
 
@@ -1223,7 +1209,6 @@ No se deben escribir clases de color directamente en componentes para niveles de
  
 Esta sección define las reglas obligatorias de autenticación, autorización, manejo de sesiones, privacidad de datos y cifrado que debe seguir el frontend de JICA. 
  
----
  
 ### Tecnologías y servicios de autenticación
  
@@ -1292,7 +1277,7 @@ Ejemplo [useAuthListener.ts](./frontend/src/hooks/useAuthListener.ts)
 
 ### Roles y autorización
  
-JICA maneja tres roles de usuario definidos como **App Roles en Microsoft Entra ID**. Los roles se asignan desde el portal de Azure y vienen incluidos en el Access Token como claim `roles`.
+JICA maneja tres roles de usuario definidos como App Roles en Microsoft Entra ID. Los roles se asignan desde el portal de Azure y vienen incluidos en el Access Token como claim `roles`.
  
 | Rol | Valor en token | Acceso principal |
 |---|---|---|
@@ -1338,7 +1323,7 @@ Todo cliente HTTP debe obtener el Access Token desde MSAL y adjuntarlo en cada r
 Ejemplo [httpClient.ts](./frontend/src/services/httpClient.ts)
 
 
-### Manejo seguro de sesiones
+
  
 ### Persistencia de sesión
  
@@ -1369,7 +1354,7 @@ VITE_INACTIVITY_TIMEOUT_MS=1800000  # configurable por ambiente en GitHub Action
  
 ### Privacidad de datos
  
-El masking de datos sensibles es responsabilidad del **backend**. El frontend renderiza únicamente lo que el backend entrega; nunca recibe datos sin masking para ocultarlos en el cliente.
+El masking de datos sensibles es responsabilidad del backend. El frontend renderiza únicamente lo que el backend entrega; nunca recibe datos sin masking para ocultarlos en el cliente.
  
 ### Datos que el backend debe entregar con masking aplicado
  
@@ -1390,7 +1375,7 @@ El backend es responsable de filtrar qué datos se incluyen en cada respuesta se
  
 ### Cifrado y transmisión de datos
  
-- Toda comunicación con el backend debe realizarse exclusivamente por **HTTPS**. No se permiten requests HTTP en `stage` ni `production`.
+- Toda comunicación con el backend debe realizarse exclusivamente por HTTPS. No se permiten requests HTTP en `stage` ni `production`.
 - `VITE_API_BASE_URL` debe comenzar con `https://` en ambientes distintos a `development`.
 - No transmitir tokens ni datos sensibles como query parameters en la URL.
 - Los formularios con datos sensibles deben enviarse siempre por `POST` o `PUT`, nunca por `GET`.
@@ -1424,20 +1409,11 @@ VITE_INACTIVITY_TIMEOUT_MS=1800000
 - Nunca loguear Access Tokens, contraseñas ni datos financieros con `console.log` en `stage` o `production`.
 - No cambiar `cacheLocation` de `sessionStorage` a `localStorage` en `msalConfig.ts`.
 - Los errores de autenticación de Entra ID deben capturarse en Sentry sin incluir tokens en el payload.
----
- 
-
-
-
-
-
-
-
-
+  
 ---
 ## 2.7 Estándares de seguridad OWASP aplicados al frontend
 
-Esta sección define las prácticas de seguridad obligatorias del frontend de JICA basadas en el estándar **OWASP Top 10**. 
+Esta sección define las prácticas de seguridad obligatorias del frontend de JICA basadas en el estándar OWASP Top 10. 
 
 ---
 
@@ -1537,7 +1513,7 @@ Ausencia de trazabilidad ante incidentes de seguridad.
 
 **Reglas obligatorias:**
 
-- **Sentry** debe estar configurado para capturar errores no manejados en `stage` y `production`.
+- Sentry debe estar configurado para capturar errores no manejados en `stage` y `production`.
 - Los errores de autenticación de Firebase deben capturarse en Sentry sin incluir contraseñas ni tokens en el payload del error.
 - No se deben registrar datos sensibles (tokens, contraseñas, datos financieros) en Sentry ni en ningún sistema de logging.
 - Sentry debe inicializarse en `/src/main.tsx` antes de montar la aplicación.
@@ -1562,10 +1538,10 @@ Sentry.init({
 - No construir URLs de API concatenando input del usuario directamente.
 - Mantener el principio de mínimo privilegio: mostrar solo la información que el rol del usuario necesita ver.
 
-
+---
 ## 2.8 Patrones Utilizados
 
----
+
 ### Patrones arquitectónicos
 
 Esta sección define los patrones arquitectónicos que debe seguir el frontend de JICA para mantener una estructura modular, escalable y fácil de mantener. Todo desarrollo nuevo debe respetar estos lineamientos.
@@ -1741,7 +1717,7 @@ Usuario
 - La comunicación entre un componente contenedor y uno de presentación debe realizarse mediante props claramente definidas.
 - Los componentes reutilizables de la interfaz deben diseñarse como componentes de presentación siempre que sea posible.
 
-
+---
 ## 2.9 Almacenamiento, comunicación y observabilidad
  
 Esta sección define las reglas obligatorias para el manejo de almacenamiento en el navegador, comunicación asíncrona, Web Sockets, procesos largos, eventos, observabilidad, monitoreo, errores, estado, caché y reintentos en el frontend de JICA.
@@ -1991,7 +1967,7 @@ useQuery({
   retry: 0,
 });
 ```
- 
+ ---
 ### Mutaciones (escritura de datos)
  
 Las mutaciones **no deben reintentarse automáticamente**. Un reintento automático en una operación de escritura (confirmar inversión, subir documento) puede causar duplicados o efectos no deseados. El usuario debe reintentar manualmente.
@@ -2161,6 +2137,8 @@ const button = document.querySelector('.btn-primary');
 
 [ProtectedRoute.test.ts](./frontend/tests/unit/routes/ProtectedRoute.test.tsx)
 
+---
+
 ### UI Testing — End to End con Playwright
  
 Las pruebas E2E validan flujos completos del usuario desde el navegador real. No mockean servicios ni el backend; se ejecutan contra el ambiente `stage`.
@@ -2198,7 +2176,7 @@ Las pruebas E2E validan flujos completos del usuario desde el navegador real. No
 
 ### Cobertura mínima esperada
  
-La cobertura se mide con `@vitest/coverage-v8` y se reporta en cada ejecución del pipeline de CI/CD. Un build con cobertura por debajo del mínimo definido debe **bloquear el merge**.
+La cobertura se mide con `@vitest/coverage-v8` y se reporta en cada ejecución del pipeline de CI/CD. Un build con cobertura por debajo del mínimo definido debe bloquear el merge.
  
 | Categoría | Cobertura mínima |
 |---|---|
@@ -2233,6 +2211,7 @@ Estos scripts deben estar definidos en `package.json`. Los nombres de los script
 
 ![Diagrama C4 Frontend](./images/c4Diagrams/frontend_c4.png)
  
+ ---
 ### Pipeline de CI/CD
  
 El pipeline de GitHub Actions debe ejecutar en orden:
@@ -2245,7 +2224,7 @@ El pipeline de GitHub Actions debe ejecutar en orden:
  
 Las pruebas E2E solo se ejecutan en el pipeline de `stage`. No se ejecutan en `production`; el deploy a production depende de que el pipeline de stage haya pasado completamente.
 
-
+--
 ## 2.11 Consumo de APIs y contratos de datos
 
 Esta sección define cómo el frontend de JICA debe comunicarse con el backend y cómo se deben manejar los contratos de datos entre ambas capas.
@@ -2739,7 +2718,7 @@ Usar `rollup-plugin-visualizer` para analizar el bundle antes de cada deploy a p
 
 Ejemplo  [vite.config.ts](vite.config.ts)
 
-
+---
 ### Manejo eficiente de imágenes
  
 ### Formatos permitidos
@@ -2841,7 +2820,7 @@ const handleViewDetail = useCallback((id: string) => {
  
 ### Virtualización
  
-La virtualización debe aplicarse en listas que rendericen más de **50 elementos simultáneamente**. Renderizar cientos de tarjetas o filas de tabla sin virtualización degrada significativamente el rendimiento en dispositivos de gama baja.
+La virtualización debe aplicarse en listas que rendericen más de 50 elementos simultáneamente. Renderizar cientos de tarjetas o filas de tabla sin virtualización degrada significativamente el rendimiento en dispositivos de gama baja.
  
 ### Librería
  
@@ -2995,6 +2974,7 @@ Todos los secrets deben estar configurados en **Settings → Secrets and variabl
 | `PLAYWRIGHT_TEST_EMAIL` | stage | Email de usuario de prueba para E2E |
 | `PLAYWRIGHT_TEST_PASSWORD` | stage | Contraseña de usuario de prueba para E2E |
 | `STAGE_BASE_URL` | stage | URL base de la app en stage para Playwright |
+
 --- 
 
 
@@ -3022,6 +3002,7 @@ El backend de JICA será desarrollado utilizando un stack basado en **Node.js, T
 | Configuración | @nestjs/config | 4.x | Manejo centralizado de variables de entorno |
 | Observabilidad | Azure Application Insights | Última versión estable | Logs, métricas, trazabilidad y monitoreo |
 
+---
 ## 3.2 Servicios cloud y hosting
 
 ### Servicios cloud seleccionados
@@ -3075,7 +3056,7 @@ JICA contará con tres ambientes independientes:
 
 Cada ambiente tendrá sus propias variables de configuración, credenciales, base de datos y recursos cloud para evitar interferencias entre entornos.
 
-
+---
 ## 3.3 Estructura general del backend
  
 El backend de JICA estará ubicado dentro de la carpeta `/backend` del repositorio, organizado en módulos NestJS donde cada módulo agrupa toda la lógica relacionada a una funcionalidad.
@@ -3152,8 +3133,6 @@ El backend de JICA estará ubicado dentro de la carpeta `/backend` del repositor
  
 El backend de JICA sigue una arquitectura en capas estricta. Cada capa tiene responsabilidades definidas y restricciones claras sobre con qué otras capas puede comunicarse. Ninguna capa puede saltarse otra ni asumir responsabilidades que no le corresponden.
  
----
- 
 ### Capas del sistema
  
 ```
@@ -3217,6 +3196,7 @@ La comunicación entre capas es **unidireccional y descendente**. Una capa solo 
 ### Referencia de implementación
 [investments.controller.ts](./backend/src/investments/investments.controller.ts)
 
+---
 ### Capa 2 — Services
  
 ### Responsabilidades
@@ -3247,6 +3227,7 @@ La comunicación entre capas es **unidireccional y descendente**. Una capa solo 
 ### Referencia de implementación
 [investments.service.ts](./backend/src/investments/investments.service.ts)
 
+---
 ### Capa 3 — Repositories
  
 ### Responsabilidades
@@ -3281,7 +3262,7 @@ La comunicación entre capas es **unidireccional y descendente**. Una capa solo 
 El masking se aplica en `/backend/src/common/utils/maskData.ts` y se llama desde el Repository. Es la única capa donde se aplica; el Service y el Controller nunca reciben datos sin masking.
 Ejemplo [investments.repository.ts](./backend/src/common/utils/maskData.ts)
 
-
+---
 ### Capa 4 — Prisma
  
 ### Responsabilidades
@@ -3305,7 +3286,7 @@ Ejemplo [investments.repository.ts](./backend/src/prisma/prisma.service.ts)
 
 `PrismaService` debe registrarse como global en `/backend/src/prisma/prisma.module.ts` para estar disponible en todos los módulos sin necesidad de importarlo en cada uno.
 
-
+---
 ### Flujo de comunicación entre capas
  
 Ejemplo completo con una operación real: un inversionista registra interés en una inversión.
@@ -3476,7 +3457,7 @@ Registrar globalmente en `/backend/src/main.ts`:
 ```ts
 app.useGlobalFilters(new HttpExceptionFilter());
 ```
-
+---
 ### Excepciones por capa
  
 | Capa | Excepciones permitidas |
@@ -3494,7 +3475,7 @@ Los errores de Prisma deben capturarse en el Repository y traducirse a excepcion
 // P2002 → registro duplicado → ConflictException (lanzado desde Service)
 // P2025 → registro no encontrado → el Repository retorna null, el Service lanza NotFoundException
 ```
- 
+ ---
 ### Formato de respuesta de error
  
 Todas las respuestas de error deben seguir esta estructura:
@@ -3690,6 +3671,7 @@ DATABASE_URL="postgresql://user:password@host:5432/jica?connection_limit=10&pool
 | `connection_limit` | 10 | Máximo de conexiones simultáneas al pool |
 | `pool_timeout` | 10 | Segundos de espera antes de error si el pool está lleno |
 
+---
 ### Redis — Manejo de conexión
  
 La conexión con Redis se gestiona a través de BullMQ. En caso de pérdida de conexión, BullMQ reintenta automáticamente con backoff exponencial. No se necesita configuración adicional.
@@ -3868,7 +3850,7 @@ common/
 ├── pipes/          ← pipes de validación globales
 └── utils/          ← funciones utilitarias: maskData, formatCurrency, etc.
 ```
- 
+--- 
 ### Regla de utils
  
 Las funciones en `common/utils/` deben ser funciones puras sin dependencias de NestJS. No deben inyectar servicios ni acceder a la base de datos.
@@ -3992,7 +3974,7 @@ findById(id: string): Promise<InvestmentResponseDto | null>
 create(data: CreateInvestmentDto): Promise<InvestmentResponseDto>
 registerInterest(investmentId: string, investorId: string): Promise<void>
 ```
- 
+ ---
 ### Variables de entorno
  
 Las variables de entorno del backend usan **UPPER_SNAKE_CASE** sin prefijo:
@@ -4445,7 +4427,7 @@ Además de los archivos de `/src`, el ZIP incluye archivos de configuración que
 - [`.github/dependabot.yml`](./.github/dependabot.yml): referencia de automatización para revisión de dependencias.
 
 > Los workflows existentes en el ZIP están orientados al frontend. Para el backend se debe crear una versión equivalente usando `working-directory: backend`, filtrado por `paths: ["backend/**"]` y despliegue hacia Azure App Service.
-
+---
 ## 3.8 Técnicas y patrones arquitectónicos implementados
 
 ### Técnicas arquitectónicas utilizadas
@@ -4607,7 +4589,7 @@ InvestmentsModule
 ├── dto/
 └── entities/
 ```
-
+---
 ## 3.9 Patrones de diseño orientados a objetos
 
 ### Strategy Pattern
@@ -4744,10 +4726,9 @@ export class UserRepository {
 }
 ```
 
-
+---
 ## 3.10 Especificaciones de Diseño de la Base de Datos
 
----
 
 La base de datos es el componente encargado de almacenar de forma persistente toda la información del sistema. Su diseño debe garantizar integridad, consistencia, escalabilidad y facilidad de mantenimiento.
 
@@ -4935,7 +4916,7 @@ Cada migración debe:
 - Ser versionada.
 - Ser reproducible.
 - Mantener la consistencia del esquema entre ambientes.
-
+--
 ## 3.10 Agentes o herramientas automatizadas de revisión
 > **Pendiente de definición.** Esta sección será completada cuando se defina el alcance y el proveedor de IA a integrar en JICA.
  
@@ -5729,7 +5710,7 @@ BusinessDto
 InvestmentDto
 SimulationDto
 ```
-
+---
 ## 3.14 Reglas de negocio y procesos complejos
 
 Esta sección documenta los procesos del backend que no corresponden únicamente a operaciones CRUD.
@@ -5899,7 +5880,7 @@ AuditLogService
   "status": "CONFIRMED"
 }
 ```
-
+---
 ## 3.15 Optimización del artefacto de deployment
  
 El backend de JICA se despliega como código compilado directamente en Azure App Service. El artefacto de deployment es la carpeta `/dist` generada por TypeScript más las dependencias de producción de `node_modules`. Esta sección define las reglas para mantener ese artefacto reducido y eficiente.
@@ -5985,7 +5966,7 @@ Si `prisma generate` no se ejecuta, el backend arranca pero falla al intentar co
 - No dejar código muerto (`noUnusedLocals` y `noUnusedParameters` en `tsconfig.json` lo bloquean en compilación).
 - No incluir archivos de configuración de desarrollo (`eslint.config.js`, `prettier.config.js`, `jest.config.ts`) en el artefacto de production.
 - El tamaño de `node_modules` en producción debe revisarse si supera **200MB**. En ese caso auditar dependencias con `npm ls --prod` para identificar librerías innecesarias en `dependencies`.
- 
+ ---
 ## 3.16 Estrategias de seguridad de datos del backend
 
 Esta sección define las estrategias de seguridad de datos para el backend de JICA, considerando cifrado, auditoría, trazabilidad, manejo de secretos, backups y recuperación ante fallos. Estas estrategias son especialmente importantes porque JICA maneja información financiera, datos de inversionistas, datos de pymes gastronómicas, documentos financieros y operaciones relacionadas con oportunidades de inversión.
