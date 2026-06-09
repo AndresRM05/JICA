@@ -5933,7 +5933,7 @@ Solo librerías que el código en `/dist` necesita en runtime:
 }
 ```
 
-# Archivos excluidos del artefacto
+### Archivos excluidos del artefacto
  
 El artefacto que sube a Azure App Service contiene únicamente:
  
@@ -5946,7 +5946,7 @@ package-lock.json
 nest-cli.json
 ```
 
-# Cliente de Prisma
+### Cliente de Prisma
  
 `@prisma/client` genera su cliente en `node_modules/.prisma/client` durante `prisma generate`. Este paso debe ejecutarse después del build y antes del deploy para que el cliente esté disponible en runtime.
  
@@ -6359,3 +6359,114 @@ Archivos en `/src`:
 - [`backend/src/investments/investments.repository.ts`](./backend/src/investments/investments.repository.ts)
 - [`backend/src/investments/dto/create-investment.dto.ts`](./backend/src/investments/dto/create-investment.dto.ts)
 - [`backend/src/prisma/prisma.service.ts`](./backend/src/prisma/prisma.service.ts)
+
+
+
+# 4. Creación del MVP
+
+## 4.1 1. Definición Formal del Alcance del MVP
+
+
+### Flujo Principal
+
+El MVP se enfocará en permitir que un inversionista analice oportunidades de inversión en pymes gastronómicas mediante información financiera confiable, con el objetivo de tomar una decisión preliminar de inversión.
+
+Flujo principal:
+
+**Registro / Inicio de sesión → Dashboard de oportunidades → Consulta de detalle financiero → Simulación de inversión → Confirmación de intención de inversión**
+
+---
+
+### Core Features
+
+Las siguientes funcionalidades representan el valor principal de la plataforma y son indispensables para validar el MVP:
+
+#### Gestión de acceso
+
+* Registro de inversionistas.
+* Inicio de sesión.
+
+#### Exploración de oportunidades
+
+* Visualización de oportunidades de inversión disponibles.
+* Consulta de información resumida de cada oportunidad.
+
+#### Análisis de oportunidades
+
+* Consulta del detalle financiero de una pyme.
+* Visualización de métricas relevantes para la toma de decisiones.
+* Visualización del nivel de riesgo asociado.
+
+#### Simulación de inversión
+
+* Ingreso de un monto de inversión.
+* Cálculo del retorno estimado.
+* Visualización de resultados de la simulación.
+
+### Confirmación
+
+* Confirmación de intención de inversión.
+* Registro de la intención de inversión en el sistema.
+
+---
+
+### Supporting Features
+
+Estas funcionalidades apoyan el flujo principal, pero no constituyen el valor central del producto.
+
+* Base de datos local.
+* Seed data de pymes gastronómicas.
+* Seed data de métricas financieras.
+* Validación de formularios.
+* Manejo de errores y mensajes de retroalimentación.
+* Navegación entre pantallas.
+* Persistencia básica de usuarios e intenciones de inversión.
+
+---
+
+### Out of Scope
+
+Las siguientes funcionalidades quedan fuera del alcance del MVP:
+
+* Registro y administración de pymes.
+* Panel administrativo.
+* Pasarelas de pago.
+* Integración bancaria.
+* Transferencias reales de dinero.
+* Firma de contratos de inversión.
+* Notificaciones por correo electrónico o SMS.
+* Servicios de inteligencia artificial.
+* Gestión avanzada de portafolios.
+* Reportes financieros avanzados.
+* Aplicación móvil.
+* Integraciones con servicios externos.
+
+---
+
+### User Journeys en Scope
+
+#### Journey 1: Registro e inicio de sesión
+
+1. El usuario accede a la plataforma.
+2. Se registra como inversionista o inicia sesión.
+3. Accede al dashboard principal.
+
+#### Journey 2: Exploración de oportunidades
+
+1. El usuario visualiza las oportunidades disponibles.
+2. Selecciona una oportunidad de interés.
+3. Consulta información resumida de la pyme.
+
+### Journey 3: Análisis de oportunidad
+
+1. El usuario accede al detalle de una pyme.
+2. Revisa métricas financieras.
+3. Analiza el nivel de riesgo de la inversión.
+
+### Journey 4: Simulación y confirmación
+
+1. El usuario ingresa un monto de inversión.
+2. El sistema calcula el retorno estimado.
+3. El usuario revisa los resultados.
+4. Confirma su intención de inversión.
+5. El sistema registra la operación y muestra una confirmación.
