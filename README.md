@@ -2228,6 +2228,10 @@ npm run test:e2e:ui
 ```
  
 Estos scripts deben estar definidos en `package.json`. Los nombres de los scripts no deben cambiarse; el pipeline de CI/CD los llama por estos nombres exactos.
+
+### Diagrama C4 - Frontend
+
+![Diagrama C4 Frontend](./images/c4Diagrams/frontend_c4.png)
  
 ### Pipeline de CI/CD
  
@@ -3349,6 +3353,10 @@ Ejemplo completo con una operación real: un inversionista registra interés en 
 | Service | Repositories, otros Services exportados | PrismaService directamente | `NotFoundException`, `BadRequestException`, `ForbiddenException` |
 | Repository | PrismaService | Otros Repositories, Services | `InternalServerErrorException` |
 | Prisma | — | — | Errores de conexión y consulta |
+
+### Diagrama C4 - Backend
+
+![Diagrama C4 Backend](./images/c4Diagrams/backend_c4.png)
 
 ---
 ## 3.5 Lineamientos del backend
