@@ -1856,7 +1856,7 @@ Sentry es el único sistema de monitoreo de errores del frontend. Debe inicializ
 - Errores en carga de documentos o simulación
 ### Qué nunca debe enviarse a Sentry
  
-- ID Tokens de Firebase
+- Access Tokens de Microsoft Entra ID
 - Contraseñas
 - Datos financieros del usuario
 - Números de cuenta o cédula
@@ -2001,7 +2001,7 @@ Esta sección define las reglas obligatorias de testing para el frontend de JICA
 | Unit e integration testing | Vitest | 4.x | Pruebas de funciones utilitarias, hooks, servicios y componentes |
 | Renderizado de componentes | React Testing Library | 16.x | Renderizar y consultar componentes en pruebas unitarias e integración |
 | E2E / UI testing | Playwright | 1.x | Pruebas de flujos completos desde el navegador |
-| Mocking de módulos | Vitest (`vi.mock`) | 4.x | Mock de servicios, Firebase, Socket.io y TanStack Query |
+| Mocking de módulos | Vitest (`vi.mock`) | 4.x | Mock de servicios, Microsoft Entra ID, Socket.io y TanStack Query |
 | Cobertura | Vitest (`@vitest/coverage-v8`) | 4.x | Reporte de cobertura de código |
  
 ---
