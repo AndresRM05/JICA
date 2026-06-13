@@ -19,6 +19,31 @@ El proyecto sigue una arquitectura por capas y por features. Cada capa debe comu
 
 ---
 
+## Restricción Principal del MVP
+
+Este agente debe revisar y generar recomendaciones únicamente para un MVP académico local.
+
+No debe proponer ni exigir el uso de:
+
+* Azure
+* Microsoft Entra ID
+* MSAL
+* Firebase Auth
+* Azure Key Vault
+* Azure Blob Storage
+* Azure App Service
+* Azure Application Insights
+* Sentry
+* Redis
+* BullMQ
+* Socket.io
+* Servicios cloud o pagos
+* Procesos en background para el MVP inicial
+
+Si el README menciona tecnologías de producción, este agente debe considerarlas fuera del alcance durante la generación y revisión del MVP, salvo que el usuario solicite explícitamente implementarlas.
+
+---
+
 # Cómo se usa
 
 Se invoca desde Copilot indicando el módulo o directorio a revisar.
