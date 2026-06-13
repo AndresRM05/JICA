@@ -5960,7 +5960,7 @@ Si `prisma generate` no se ejecuta, el backend arranca pero falla al intentar co
  
 ---
  
-## Reglas generales
+### Reglas generales
  
 - No importar librerías completas si solo se usa una parte. Aplicar imports específicos para evitar que TypeScript compile código innecesario.
 - No dejar código muerto (`noUnusedLocals` y `noUnusedParameters` en `tsconfig.json` lo bloquean en compilación).
