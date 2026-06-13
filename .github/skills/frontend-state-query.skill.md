@@ -63,7 +63,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
 ### Configuración global
 
-TanStack Query está configurado globalmente en `frontend/src/App.tsx`. No modificar estos valores sin justificación:
+TanStack Query debe estar  configurado globalmente en `frontend/src/App.tsx`.  un ejemplo es el siguiente
 
 ```ts
 const queryClient = new QueryClient({
