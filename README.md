@@ -2269,15 +2269,17 @@ GET /investments/:id
 
 ### Responsabilidad de cada capa
 
-| Capa              | Ubicación                                                  | Responsabilidad                                                                  |
+### Responsabilidad de cada capa
+
+| Capa | Ubicación | Responsabilidad |
 | ----------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Página            | `/src/pages` o `/src/features/{feature}/pages`             | Renderiza la pantalla y conecta los componentes principales.                     |
-| Componente visual | `/src/components` o `/src/features/{feature}/components`   | Muestra información recibida por props. No consume APIs directamente.            |
-| Hook de feature   | `/src/features/{feature}/hooks`                            | Usa TanStack Query para manejar loading, error, success, caché e invalidación.   |
-| Servicio de API   | `/src/features/{feature}/services` o `/src/services`       | Define funciones específicas para llamar endpoints del backend.                  |
-| Cliente HTTP      | `/src/services/httpClient.ts`                              | Centraliza base URL, headers, token Firebase, timeout y manejo común de errores. |
-| Tipos             | `/src/types` o `/src/features/{feature}/types`             | Define contratos TypeScript para requests y responses.                           |
-| Validaciones      | `/src/validations` o `/src/features/{feature}/validations` | Define esquemas Zod para formularios y respuestas críticas.                      |
+| Página | `/src/pages` o `/src/features/{feature}/pages` | Renderiza la pantalla y conecta los componentes principales. |
+| Componente visual | `/src/components` o `/src/features/{feature}/components` | Muestra información recibida por props. No consume APIs directamente. |
+| Hook de feature | `/src/features/{feature}/hooks` | Usa TanStack Query para manejar loading, error, success, caché e invalidación. |
+| Servicio de API | `/src/features/{feature}/services` o `/src/services` | Define funciones específicas para llamar endpoints del backend. |
+| Cliente HTTP | `/src/services/httpClient.ts` | Centraliza base URL, headers, Access Token de Microsoft Entra ID, timeout y manejo común de errores. |
+| Tipos | `/src/types` o `/src/features/{feature}/types` | Define contratos TypeScript para requests y responses. |
+| Validaciones | `/src/validations` o `/src/features/{feature}/validations` | Define esquemas Zod para formularios y respuestas críticas. |
 
 ---
 
@@ -2295,7 +2297,7 @@ Reglas obligatorias:
 * No usar `axios` directamente fuera de `httpClient.ts`.
 * Todas las requests deben usar `VITE_API_BASE_URL`.
 * En `stage` y `production`, `VITE_API_BASE_URL` debe iniciar con `https://`.
-* El ID Token de Firebase debe adjuntarse automáticamente en el header `Authorization`.
+* El Access Token de Microsoft Entra ID debe adjuntarse automáticamente en el header `Authorization`.
 * El token debe obtenerse con `user.getIdToken()`, nunca desde `localStorage`, `sessionStorage` ni Zustand.
 * Los errores HTTP deben normalizarse antes de llegar a la UI.
 * El timeout debe configurarse de forma centralizada en httpClient.ts.
