@@ -1437,7 +1437,7 @@ Exposición de datos sensibles por transmisión o almacenamiento inseguro.
 **Reglas obligatorias:**
 
 - Toda comunicación con el backend debe ser exclusivamente por **HTTPS**. No se permiten requests HTTP en `stage` ni `production`.
-- El ID Token de Firebase nunca debe almacenarse en `localStorage` ni `sessionStorage`. Debe obtenerse siempre con `user.getIdToken()` desde el SDK.
+- El ID Token nunca debe almacenarse en `localStorage` ni `sessionStorage`. Debe obtenerse siempre con `user.getIdToken()` desde el SDK.
 - Las contraseñas nunca deben almacenarse, loguearse ni transmitirse fuera del formulario de autenticación.
 - Los datos financieros sensibles (cuentas bancarias, cédulas) deben mostrarse con masking en la UI. Ver funciones en `/src/utils/maskData.ts` [maskData.ts](./frontend/src/utils/maskData.ts)   .
 
@@ -1514,7 +1514,7 @@ Ausencia de trazabilidad ante incidentes de seguridad.
 **Reglas obligatorias:**
 
 - Sentry debe estar configurado para capturar errores no manejados en `stage` y `production`.
-- Los errores de autenticación de Firebase deben capturarse en Sentry sin incluir contraseñas ni tokens en el payload del error.
+- Los errores de autenticación  deben capturarse en Sentry sin incluir contraseñas ni tokens en el payload del error.
 - No se deben registrar datos sensibles (tokens, contraseñas, datos financieros) en Sentry ni en ningún sistema de logging.
 - Sentry debe inicializarse en `/src/main.tsx` antes de montar la aplicación.
 
