@@ -1,215 +1,263 @@
-# frontend-state-query.skill.md
-
+# frontend-api-contracts.skill.md
+ 
+## Restricción principal del MVP
+ 
+Este skill debe generar únicamente código para el MVP académico local de JICA.
+ 
+No debe proponer, exigir ni generar código que dependa de:
+- Azure, MSAL o Microsoft Entra ID
+- Firebase Auth o Auth0
+- Sentry
+- Redis, BullMQ o Socket.io
+- Servicios cloud o de pago
+El stack permitido para contratos y comunicación HTTP es:
+```
+TypeScript + Zod + axios + JWT local
+```
+ 
+El backend corre localmente en `http://localhost:3000`. No se usa HTTPS en development.
+ 
+Si el README menciona tecnologías de producción, deben considerarse fuera del alcance del MVP, salvo que el usuario lo solicite explícitamente.
+ 
+---
+ 
 ## Propósito
-
-Este skill define las reglas obligatorias para manejo de estado y datos del servidor en el proyecto JICA. Copilot debe aplicar estas reglas al generar cualquier código relacionado con Zustand, TanStack Query, caché y query keys.
-
+ 
+Este skill define las reglas obligatorias para contratos TypeScript, validación con Zod, servicios API y uso del cliente HTTP en el proyecto JICA. Copilot debe aplicar estas reglas al generar cualquier código relacionado con comunicación con el backend.
+ 
 ---
-
-## Separación de responsabilidades de estado
-
-El estado del frontend de JICA se divide en dos capas con responsabilidades distintas. No mezclarlas bajo ninguna circunstancia.
-
-| Capa | Herramienta | Qué maneja |
-|---|---|---|
-| Estado del servidor | TanStack Query | Datos del backend: inversiones, pymes, documentos, simulaciones |
-| Estado global de UI | Zustand | Sesión del usuario, notificaciones, filtros activos, tema |
-
+ 
+## Contratos TypeScript
+ 
+### Reglas de tipos e interfaces
+ 
+- Todas las interfaces y tipos usan **PascalCase**.
+- Los tipos de formulario terminan con sufijo `FormData`.
+- Los tipos de respuesta del backend terminan con sufijo `Response`.
+- Los tipos de props de componentes terminan con sufijo `Props`.
+- Los tipos compartidos entre módulos van en `frontend/src/types/`.
+### Convenciones obligatorias
+ 
+```ts
+// Tipos de formulario
+LoginFormData
+RegisterFormData
+SimulationFormData
+ 
+// Tipos de respuesta del backend
+LoginResponse
+InvestmentResponse
+SimulationResponse
+ 
+// Props de componentes
+InvestmentCardProps
+LoginFormProps
+DashboardLayoutProps
+```
+ 
+### Tipos de autenticación para el MVP
+ 
+```ts
+// frontend/src/types/auth.types.ts
+export type UserRole = 'investor' | 'business' | 'admin';
+ 
+export interface AuthenticatedUser {
+  id: string;
+  email: string;
+  fullName: string;
+  role: UserRole;
+}
+ 
+export interface LoginResponse {
+  accessToken: string;
+  user: AuthenticatedUser;
+}
+```
+ 
 ---
-
-## Zustand
-
-### Stores definidos
-
-| Store | Archivo | Responsabilidad |
-|---|---|---|
-| `authStore` | `frontend/src/store/authStore.ts` | Sesión y usuario autenticado |
-| `notificationStore` | `frontend/src/store/notificationStore.ts` | Notificaciones en tiempo real de Socket.io |
-| `uiStore` | `frontend/src/store/uiStore.ts` | Tema, sidebar abierto/cerrado |
-| `filterStore` | `frontend/src/store/filterStore.ts` | Filtros activos en el dashboard de inversiones |
-
+ 
+## Zod
+ 
+Zod se usa para validar datos de entrada en formularios antes de enviarlos al backend. No reemplaza la validación del backend — es una capa de UX.
+ 
+### Ubicación
+ 
+Los esquemas de validación van en `frontend/src/validations/`. Un archivo por formulario o dominio.
+ 
+```
+frontend/src/validations/
+├── loginSchema.ts
+├── registerSchema.ts
+├── simulationSchema.ts
+└── confirmInvestmentSchema.ts
+```
+ 
 ### Reglas
-
-- Cada store tiene una responsabilidad única. No crear un store global que maneje todo.
-- No almacenar datos del servidor en Zustand. Esos van en TanStack Query.
-- No almacenar el Access Token de MSAL en Zustand. Obtenerlo siempre con `acquireTokenSilent()`.
-- No crear stores adicionales sin justificación documentada.
-- El estado de UI global va en Zustand. El estado local de un componente va en `useState`.
-
-### Estructura obligatoria de un store
-
+ 
+- Todo formulario que envía datos al backend debe tener un esquema Zod.
+- Los mensajes de error deben estar en español y ser claros para el usuario.
+- La validación de reglas de negocio no pertenece a Zod — pertenece al backend.
+- Los esquemas deben inferir sus tipos con `z.infer<typeof schema>` para no duplicar tipos.
 ```ts
-// Ejemplo de referencia — authStore
-interface AuthState {
-  user: AuthenticatedUser | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  setUser: (user: AuthenticatedUser) => void;
-  clearSession: () => void;
-}
-
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  isAuthenticated: false,
-  isLoading: true,
-  setUser: (user) => set({ user, isAuthenticated: true, isLoading: false }),
-  clearSession: () => set({ user: null, isAuthenticated: false, isLoading: false }),
-}));
-```
-
----
-
-## TanStack Query
-
-### Configuración global
-
-TanStack Query debe estar  configurado globalmente en `frontend/src/App.tsx`.  un ejemplo es el siguiente
-
-```ts
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,       // 5 minutos
-      gcTime: 1000 * 60 * 10,          // 10 minutos
-      retry: 2,
-      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
-      refetchOnWindowFocus: false,
-    },
-    mutations: {
-      retry: 0, // las mutaciones nunca se reintentan automáticamente
-    },
-  },
+// frontend/src/validations/loginSchema.ts
+import { z } from 'zod';
+ 
+export const loginSchema = z.object({
+  email: z.string().email('Ingresa un correo electrónico válido'),
+  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
 });
+ 
+export type LoginFormData = z.infer<typeof loginSchema>;
 ```
-
-### Query Keys
-
-Las query keys son constantes definidas en el mismo archivo del hook. Nunca escribir query keys como strings sueltos en los componentes.
-
+ 
 ```ts
-// Patrón obligatorio de query keys
-export const investmentKeys = {
-  all: ['investments'] as const,
-  list: (filters: InvestmentFilters) => ['investments', 'list', filters] as const,
-  detail: (id: string) => ['investments', 'detail', id] as const,
-};
-```
-
-### Ubicación de queries y mutations
-
-Los hooks de TanStack Query deben organizarse por feature dentro de `frontend/src/features/{feature}/hooks/`. No definir queries directamente en páginas o componentes.
-
-```ts
-// frontend/src/features/investments/hooks/useInvestments.ts
-export function useInvestments(filters: InvestmentFilters) {
-  return useQuery({
-    queryKey: investmentKeys.list(filters),
-    queryFn: () => getAvailableInvestments(filters),
-  });
-}
-
-export function useInvestmentDetail(id: string) {
-  return useQuery({
-    queryKey: investmentKeys.detail(id),
-    queryFn: () => getInvestmentById(id),
-    enabled: !!id,
-  });
-}
-```
-
-### Mutations
-
-Las mutaciones nunca deben reintentarse automáticamente (`retry: 0`). Después de una mutación exitosa, invalidar el caché correspondiente.
-
-```ts
-export function useConfirmInvestment() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: confirmInvestment,
-    retry: 0,
-    onSuccess: (_, { investmentId }) => {
-      queryClient.invalidateQueries({ queryKey: investmentKeys.detail(investmentId) });
-      queryClient.invalidateQueries({ queryKey: investmentKeys.all });
-    },
-    onError: (error) => {
-      // Mostrar error al usuario con opción de reintento manual
-    },
-  });
-}
-```
-
-### Procesos largos con mutations
-
-Los procesos largos como carga de documentos deben usar `isPending` para mostrar feedback visual. El usuario debe poder reintentar manualmente si falla.
-
-```ts
-const { mutate, isPending, isError } = useUploadFinancialDocument();
-// isPending → mostrar barra de progreso
-// isError   → mostrar mensaje de error con botón de reintento manual
-```
-
----
-
-## Caché
-
-### staleTime por tipo de dato
-
-| Dato | staleTime | Justificación |
-|---|---|---|
-| Lista de inversiones disponibles | 5 minutos | Cambia con frecuencia moderada |
-| Detalle de una inversión | 10 minutos | Cambia poco una vez publicada |
-| Perfil del inversionista | 15 minutos | Cambia raramente |
-| Métricas financieras de pyme | 10 minutos | Se actualizan periódicamente |
-| Simulación de inversión | 0 (sin caché) | Siempre debe ser fresca |
-
-```ts
-// Ejemplo de staleTime específico por query
-useQuery({
-  queryKey: investmentKeys.detail(id),
-  queryFn: () => getInvestmentById(id),
-  staleTime: 1000 * 60 * 10, // 10 minutos
+// frontend/src/validations/simulationSchema.ts
+import { z } from 'zod';
+ 
+export const simulationSchema = z.object({
+  amount: z.number().min(1, 'El monto debe ser mayor a 0'),
+  investmentId: z.string().uuid('ID de inversión inválido'),
 });
-
-// Simulación sin caché
-useQuery({
-  queryKey: ['simulation', params],
-  queryFn: () => runSimulation(params),
-  staleTime: 0,
-  retry: 0,
-});
+ 
+export type SimulationFormData = z.infer<typeof simulationSchema>;
 ```
-
-### Invalidación de caché
-
-El caché debe invalidarse después de mutaciones que modifiquen datos en el servidor:
-
+ 
+---
+ 
+## Servicios API
+ 
+### Regla general
+ 
+Todas las llamadas al backend deben realizarse a través de archivos de servicio en `frontend/src/services/`. Ningún componente, página ni hook llama a `httpClient` directamente.
+ 
+### Servicios del MVP
+ 
+```
+frontend/src/services/
+├── authService.ts        ← register, login, getMe
+├── investmentService.ts  ← getInvestments, getInvestmentById, registerInterest, confirmInvestment
+├── simulationService.ts  ← runSimulation
+└── httpClient.ts         ← cliente HTTP centralizado
+```
+ 
+### Ejemplos de endpoints que se podrian utilizar 
+ 
 ```ts
-// Después de confirmar inversión
-queryClient.invalidateQueries({ queryKey: investmentKeys.detail(id) });
-queryClient.invalidateQueries({ queryKey: investmentKeys.all });
+// authService.ts
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+GET  /api/v1/auth/me
+ 
+// investmentService.ts
+GET  /api/v1/investments
+GET  /api/v1/investments/:id
+POST /api/v1/investments/:id/interest
+POST /api/v1/investments/:id/confirm
+ 
+// simulationService.ts
+POST /api/v1/simulation
 ```
-
-### Lo que nunca debe cachearse con TanStack Query
-
-- Datos del usuario autenticado → van en `authStore` (Zustand)
-- Access Token de MSAL → obtener siempre con `acquireTokenSilent()`
-- Estado de UI (sidebar, tema, filtros) → van en stores de Zustand
-
+ 
+### Nomenclatura de funciones
+ 
+```ts
+// authService.ts
+registerUser(data: RegisterFormData): Promise<void>
+loginUser(data: LoginFormData): Promise<LoginResponse>
+getCurrentUser(): Promise<AuthenticatedUser>
+ 
+// investmentService.ts
+getAvailableInvestments(filters?: InvestmentFilters): Promise<InvestmentResponse[]>
+getInvestmentById(id: string): Promise<InvestmentResponse>
+registerInterest(investmentId: string): Promise<void>
+confirmInvestment(investmentId: string, amount: number): Promise<void>
+ 
+// simulationService.ts
+runSimulation(data: SimulationFormData): Promise<SimulationResponse>
+```
+ 
+### Reglas
+ 
+- Funciones que obtienen datos usan prefijos `get`, `fetch` o `load`.
+- Ningún componente usa `fetch` o `axios` directamente.
+- Ningún componente importa `httpClient` directamente.
+- Los servicios no manejan estado — solo realizan llamadas HTTP y retornan datos.
 ---
-
-## Manejo de estado de loading y error
-
-- Usar `isPending` de TanStack Query para estados de carga de datos del servidor. No duplicar ese estado con `useState` local.
-- Usar skeleton loaders para contenido con estructura conocida (tarjetas, tablas, perfiles).
-- Usar spinner solo para acciones puntuales sin estructura predefinida.
-- Los errores de queries se capturan globalmente en el `QueryClient`. Ver configuración en `frontend/src/App.tsx`.
-
+ 
+## Http Client
+ 
+### Regla general
+ 
+El cliente HTTP centralizado vive en `frontend/src/services/httpClient.ts`. Es el único punto de salida de requests al backend.
+ 
+### Responsabilidades del httpClient en el MVP
+ 
+- Adjuntar el JWT local en cada request con `Authorization: Bearer <token>`.
+- El token se lee desde `authStore` de Zustand.
+- Manejar respuestas 401 — ejecutar `clearSession()` y redirigir a `/login`.
+- Apuntar a `VITE_API_BASE_URL` configurado en `.env.development`.
+```ts
+// Referencia de implementación — httpClient.ts
+httpClient.interceptors.request.use((config) => {
+  const token = useAuthStore.getState().accessToken;
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
+  return config;
+});
+ 
+httpClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      useAuthStore.getState().clearSession();
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+```
+ 
+### Reglas
+ 
+- Toda comunicación con el backend usa `httpClient`, nunca `fetch` ni `axios` directo.
+- No transmitir tokens ni datos sensibles como query parameters en la URL.
+- Los formularios con datos sensibles se envían por `POST` o `PUT`, nunca por `GET`.
+### Variable de entorno requerida
+ 
+```bash
+# frontend/.env.development
+VITE_API_BASE_URL=http://localhost:3000
+```
+ 
 ---
-
+ 
+## DTOs del frontend
+ 
+Los DTOs del frontend son los tipos que definen qué datos se envían y reciben del backend.
+ 
+### Reglas
+ 
+- Los DTOs de respuesta nunca incluyen datos sensibles sin masking. El backend aplica masking antes de responder.
+- Los DTOs de entrada deben tener un esquema Zod asociado para validación.
+- Los DTOs se infieren desde los esquemas Zod con `z.infer<>` cuando es posible.
+```ts
+// Ejemplo: DTO inferido desde esquema Zod
+export const simulationSchema = z.object({
+  amount: z.number().min(1, 'El monto debe ser mayor a 0'),
+  investmentId: z.string().uuid('ID de inversión inválido'),
+});
+ 
+export type SimulationFormData = z.infer<typeof simulationSchema>;
+```
+ 
+---
+ 
 ## Ejemplos reales en el proyecto
-
+ 
 > Estos archivos existen como estructura base y patrón de referencia. No representan la implementación final del MVP. Copilot debe usarlos únicamente para entender la estructura y nomenclatura del proyecto, no para copiar su contenido.
-
-- `frontend/src/store/authStore.ts`
-- `frontend/src/store/notificationStore.ts`
+ 
+- `frontend/src/services/httpClient.ts`
+- `frontend/src/services/authService.ts`
+- `frontend/src/types/auth.types.ts`
+ 

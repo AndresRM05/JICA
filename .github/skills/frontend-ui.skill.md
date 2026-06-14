@@ -1,5 +1,23 @@
 # frontend-ui.skill.md
  
+## Restricción principal del MVP
+ 
+Este skill debe generar únicamente código para el MVP académico local de JICA.
+ 
+No debe proponer, exigir ni generar código que dependa de:
+- Azure o cualquier servicio cloud
+- Azure Static Web Apps
+- Sentry
+- Servicios de pago o infraestructura de producción
+El stack permitido para UI es:
+```
+React + Vite + TypeScript + Tailwind CSS + lucide-react
+```
+ 
+Si el README menciona tecnologías de producción, deben considerarse fuera del alcance del MVP, salvo que el usuario lo solicite explícitamente.
+ 
+---
+ 
 ## Propósito
  
 Este skill define las reglas obligatorias para generar y revisar componentes React en el proyecto JICA. Copilot debe aplicar estas reglas automáticamente al generar cualquier componente visual, sin excepción.
@@ -237,3 +255,4 @@ xl:  p-8   (2rem)
 - Los elementos interactivos deben ser accesibles por teclado.
 - El nivel de riesgo y estado de inversión nunca dependen únicamente del color — siempre acompañar con texto.
 - Los iconos en acciones críticas siempre llevan etiqueta textual visible.
+ 
