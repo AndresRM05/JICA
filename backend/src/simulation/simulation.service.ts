@@ -3,12 +3,15 @@ import { SimulationRepository } from './simulation.repository';
 import { OpportunitiesRepository } from '../opportunities/opportunities.repository';
 import { CreateSimulationDto } from './dto/create-simulation.dto';
 import { SimulationResultDto } from './dto/simulation-result.dto';
+import { InvestmentIntentRepository } from './investment-intent.repository';
+import { ConfirmIntentResultDto } from './dto/confirm-intent-result.dto';
 
 @Injectable()
 export class SimulationService {
   constructor(
     private readonly simulationRepository: SimulationRepository,
     private readonly opportunitiesRepository: OpportunitiesRepository,
+    private readonly investmentIntentRepository: InvestmentIntentRepository,
   ) {}
 
   async createSimulation(
@@ -57,5 +60,62 @@ export class SimulationService {
     });
 
     return simulation;
+  }
+
+  async confirmSimulation(simulationId: string, investorId: string): Promise<ConfirmIntentResultDto> {
+    // Obtener simulación
+    const simulation = await this.simulationRepository.findById(simulationId);
+    if (!simulation) {
+      throw new NotFoundException(`Simulación con id ${simulationId} no encontrada`);
+    }
+
+    // Verificar pertenencia
+    if (simulation.investorId !== investorId) {
+      throw new BadRequestException('La simulación no pertenece al usuario autenticado');
+    }
+
+    // Verificar oportunidad
+    const opportunity = await this.opportunitiesRepository.findById(simulation.opportunityId);
+    if (!opportunity) {
+      throw new NotFoundException(`Oportunidad asociada con id ${simulation.opportunityId} no encontrada`);
+    }
+
+    if (opportunity.status !== 'available') {
+      throw new BadRequestException('La oportunidad no está disponible para confirmar intención');
+    }
+
+    // Verificar intención existente
+    const existing = await this.investmentIntentRepository.findBySimulationId(simulationId);
+    if (existing && existing.status === 'confirmed') {
+      throw new BadRequestException('Ya existe una intención confirmada para esta simulación');
+    }
+
+    // Calcular valores
+    const roiUsed = Number(simulation.estimatedReturn);
+    const estimatedProfit = (Number(simulation.amount) * roiUsed) / 100;
+    const totalReturn = Number(simulation.amount) + estimatedProfit;
+
+    // Crear intención en BD
+    const intent = await this.investmentIntentRepository.createIntent({
+      investorId,
+      opportunityId: simulation.opportunityId,
+      simulationId: simulationId,
+      amount: Number(simulation.amount),
+      expectedReturn: totalReturn,
+      status: 'confirmed',
+      confirmedAt: new Date(),
+    });
+
+    return {
+      intentId: intent.id,
+      simulationId: intent.simulationId,
+      opportunityId: intent.opportunityId,
+      investorId: intent.investorId,
+      amount: Number(intent.amount),
+      expectedReturn: Number(intent.expectedReturn),
+      status: intent.status,
+      confirmedAt: intent.confirmedAt,
+      message: 'Intent confirmed',
+    };
   }
 }

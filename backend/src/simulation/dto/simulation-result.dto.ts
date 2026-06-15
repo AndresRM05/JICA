@@ -3,7 +3,7 @@ export class SimulationResultDto {
   opportunityId: string;
   investorId: string;
   investmentAmount: number;
-  estimatedReturn: number;
+  totalReturn: number;
   estimatedProfit: number;
   roiUsed: number;
   riskLevel: string;

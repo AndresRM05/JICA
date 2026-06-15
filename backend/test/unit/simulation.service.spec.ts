@@ -3,6 +3,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { SimulationService } from '../../src/simulation/simulation.service';
 import { SimulationRepository } from '../../src/simulation/simulation.repository';
 import { OpportunitiesRepository } from '../../src/opportunities/opportunities.repository';
+import { InvestmentIntentRepository } from '../../src/simulation/investment-intent.repository';
 
 const mockSimulationRepository = () => ({
   createSimulation: jest.fn(),
@@ -21,6 +22,9 @@ describe('SimulationService', () => {
     simulationRepository = mockSimulationRepository();
     opportunitiesRepository = mockOpportunitiesRepository();
 
+
+    const mockInvestmentIntentRepository = mockSimulationRepository();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SimulationService,
@@ -31,6 +35,10 @@ describe('SimulationService', () => {
         {
           provide: OpportunitiesRepository,
           useValue: opportunitiesRepository,
+        },
+        {
+          provide: InvestmentIntentRepository,
+          useValue: mockInvestmentIntentRepository,
         },
       ],
     }).compile();
@@ -62,7 +70,7 @@ describe('SimulationService', () => {
       opportunityId,
       investorId,
       investmentAmount,
-      estimatedReturn: 15,
+      totalReturn: 5750,
       estimatedProfit: 750,
       roiUsed: 15,
       riskLevel: 'medium',
@@ -170,7 +178,7 @@ describe('SimulationService', () => {
       opportunityId,
       investorId,
       investmentAmount,
-      estimatedReturn: 20,
+      totalReturn: 12000,
       estimatedProfit: 2000,
       roiUsed: 20,
       riskLevel: 'medium',
