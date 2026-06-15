@@ -1,10 +1,9 @@
 // /src/main.tsx
-import { PublicClientApplication } from '@azure/msal-browser';
-import { MsalProvider } from '@azure/msal-react';
-import { msalConfig } from '@/services/msalConfig';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
 import * as Sentry from '@sentry/react';
- 
-const msalInstance = new PublicClientApplication(msalConfig);
+import '@/styles/global.css';
+import App from '@/App';
  
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
@@ -13,7 +12,7 @@ Sentry.init({
 });
  
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <MsalProvider instance={msalInstance}>
+  <React.StrictMode>
     <App />
-  </MsalProvider>
+  </React.StrictMode>,
 );

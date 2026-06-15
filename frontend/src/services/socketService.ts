@@ -1,17 +1,12 @@
 // /src/services/socketService.ts
-import { io, Socket } from 'socket.io-client';
-import { PublicClientApplication } from '@azure/msal-browser';
-import { getAccessToken } from './authService';
+import { io, type Socket } from 'socket.io-client';
 
 let socket: Socket | null = null;
 
-export async function connectSocket(msalInstance: PublicClientApplication): Promise<void> {
-  const accounts = msalInstance.getAllAccounts();
-  if (accounts.length === 0) return;
-  const token = await getAccessToken(msalInstance, accounts[0]);
+export async function connectSocket(token?: string): Promise<void> {
   if (!token) return;
 
-  socket = io(import.meta.env.VITE_SOCKET_URL,  {
+  socket = io(import.meta.env.VITE_SOCKET_URL, {
     auth: { token },
     transports: ['websocket'],
     reconnection: true,

@@ -1,22 +1,43 @@
 // /src/hooks/useInactivityLogout.ts
 import { useEffect, useRef } from 'react';
-import { useMsal } from '@azure/msal-react';
 import { useAuthStore } from '@/store/authStore';
  
-const INACTIVITY_LIMIT_MS = Number(import.meta.env.VITE_INACTIVITY_TIMEOUT_MS);
+const INACTIVITY_LIMIT_MS = Number(import.meta.env.VITE_INACTIVITY_TIMEOUT_MS ?? 1800000);
 const TRACKED_EVENTS = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'] as const;
  
 export function useInactivityLogout() {
-  const { instance } = useMsal();
   const { clearSession } = useAuthStore();
-  const timer = useRef<ReturnType<typeof setTimeout>>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
  
   useEffect(() => {
     const resetTimer = () => {
       if (timer.current) clearTimeout(timer.current);
-      timer.current = setTimeout(async () => {
+      timer.current = setTimeout(() => {
         clearSession();
-        await instance.logoutRedirect();
+      }, INACTIVITY_LIMIT_MS);
+    };
+ 
+    TRACKED_EVENTS.forEach((event) => window.addEventListener(event, resetTimer));
+    resetTimer();
+ 
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+      TRACKED_EVENTS.forEach((event) => window.removeEventListener(event, resetTimer));
+    };
+  }, [clearSession]);
+}
+
+const TRACKED_EVENTS = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'] as const;
+ 
+export function useInactivityLogout() {
+  const { clearSession } = useAuthStore();
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+ 
+  useEffect(() => {
+    const resetTimer = () => {
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => {
+        clearSession();
       }, INACTIVITY_LIMIT_MS);
     };
  

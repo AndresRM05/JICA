@@ -1,7 +1,6 @@
 // /src/store/authStore.ts
 import { create } from 'zustand';
-import { AccountInfo } from '@azure/msal-browser';
-import { UserRole } from '@/types/auth.types';
+import type { UserRole } from '@/types/auth.types';
  
 export interface AuthenticatedUser {
   uid: string;
