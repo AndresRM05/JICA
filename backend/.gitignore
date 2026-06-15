@@ -6,7 +6,6 @@ dist/
 coverage/
 *.log
 tests/
-src/
 tsconfig*.json   ← no se necesitan en runtime
 eslint.config.js
 prettier.config.js
