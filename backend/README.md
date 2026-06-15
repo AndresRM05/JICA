@@ -31,6 +31,41 @@
 $ npm install
 ```
 
+## Local database setup
+
+1. Copia `backend/.env.example` a `backend/.env`.
+2. Ajusta `DATABASE_URL` para tu PostgreSQL local.
+3. Instala dependencias si no lo has hecho: `npm install`.
+4. Genera el cliente de Prisma:
+
+```bash
+npm run prisma:generate
+```
+
+5. Crea la migración inicial y aplica el esquema:
+
+```bash
+npm run prisma:migrate:dev -- --name init-investments-mvp
+```
+
+6. Carga los datos de prueba:
+
+```bash
+npm run prisma:db:seed
+```
+
+7. Verifica el esquema local con:
+
+```bash
+npm run prisma:validate
+```
+
+8. Opcional: abre Prisma Studio para revisar los datos:
+
+```bash
+npm run prisma:studio
+```
+
 ## Compile and run the project
 
 ```bash

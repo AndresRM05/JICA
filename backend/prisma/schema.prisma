@@ -1,0 +1,170 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  investor
+  business
+  admin
+}
+
+enum RiskLevel {
+  low
+  medium
+  high
+}
+
+enum OpportunityStatus {
+  available
+  reserved
+  closed
+}
+
+enum InvestmentIntentStatus {
+  pending
+  confirmed
+  cancelled
+}
+
+enum InvestmentStatus {
+  active
+  completed
+  cancelled
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  role      UserRole
+  investor  Investor?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([role])
+}
+
+model Investor {
+  id          String                 @id @default(uuid()) @db.Uuid
+  userId      String                 @unique @db.Uuid
+  user        User                   @relation(fields: [userId], references: [id])
+  phone       String?
+  interests   InvestmentIntent[]
+  simulations InvestmentSimulation[]
+  investments Investment[]
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  deletedAt   DateTime?
+
+  @@index([userId])
+}
+
+model InvestmentOpportunity {
+  id             String                     @id @default(uuid()) @db.Uuid
+  title          String
+  description    String
+  businessName   String
+  category       String
+  location       String
+  targetAmount   Decimal
+  currentAmount  Decimal                    @default(0)
+  minAmount      Decimal
+  riskLevel      RiskLevel
+  estimatedReturn Decimal
+  status         OpportunityStatus         @default(available)
+  metrics        BusinessFinancialMetric[]
+  intents        InvestmentIntent[]
+  simulations    InvestmentSimulation[]
+  investments    Investment[]
+  createdAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
+  deletedAt      DateTime?
+
+  @@index([status])
+  @@index([riskLevel])
+}
+
+model BusinessFinancialMetric {
+  id                   String                 @id @default(uuid()) @db.Uuid
+  opportunityId        String                 @db.Uuid
+  opportunity          InvestmentOpportunity  @relation(fields: [opportunityId], references: [id])
+  month                String
+  revenue              Decimal
+  grossMargin          Decimal
+  operatingMargin      Decimal
+  customerCount        Int?
+  averageTicket        Decimal?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  deletedAt            DateTime?
+
+  @@index([opportunityId])
+}
+
+model InvestmentSimulation {
+  id                 String                 @id @default(uuid()) @db.Uuid
+  investorId         String                 @db.Uuid
+  opportunityId      String                 @db.Uuid
+  amount             Decimal
+  estimatedReturn    Decimal
+  riskLevel          RiskLevel
+  simulatedAt        DateTime               @default(now())
+  investor           Investor               @relation(fields: [investorId], references: [id])
+  opportunity        InvestmentOpportunity  @relation(fields: [opportunityId], references: [id])
+  intents            InvestmentIntent[]
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  deletedAt          DateTime?
+
+  @@index([investorId])
+  @@index([opportunityId])
+}
+
+model InvestmentIntent {
+  id                 String                 @id @default(uuid()) @db.Uuid
+  investorId         String                 @db.Uuid
+  opportunityId      String                 @db.Uuid
+  simulationId       String?                @db.Uuid
+  amount             Decimal
+  expectedReturn     Decimal
+  status             InvestmentIntentStatus @default(pending)
+  confirmedAt        DateTime?
+  investor           Investor               @relation(fields: [investorId], references: [id])
+  opportunity        InvestmentOpportunity  @relation(fields: [opportunityId], references: [id])
+  simulation         InvestmentSimulation?  @relation(fields: [simulationId], references: [id])
+  investment         Investment?            @relation("IntentToInvestment")
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  deletedAt          DateTime?
+
+  @@index([investorId])
+  @@index([opportunityId])
+  @@index([status])
+  @@unique([investorId, opportunityId])
+}
+
+model Investment {
+  id                 String                 @id @default(uuid()) @db.Uuid
+  investorId         String                 @db.Uuid
+  opportunityId      String                 @db.Uuid
+  intentId           String                 @unique @db.Uuid
+  investedAmount     Decimal
+  status             InvestmentStatus       @default(active)
+  investor           Investor               @relation(fields: [investorId], references: [id])
+  opportunity        InvestmentOpportunity  @relation(fields: [opportunityId], references: [id])
+  intent             InvestmentIntent       @relation("IntentToInvestment", fields: [intentId], references: [id])
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  deletedAt          DateTime?
+
+  @@index([investorId])
+  @@index([opportunityId])
+}

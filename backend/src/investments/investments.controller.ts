@@ -1,4 +1,13 @@
 // /backend/src/investments/investments.controller.ts
+import { Controller, Get, Post, Param, Query, UseGuards } from '@nestjs/common';
+import { InvestmentsService } from './investments.service';
+import { GetInvestmentsQueryDto } from './dto/get-investments-query.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthenticatedUser } from '../auth/auth.types';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { EntraIdGuard } from '../auth/guards/entra-id.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+
 @Controller('investments')
 @UseGuards(EntraIdGuard, RolesGuard)
 export class InvestmentsController {
@@ -10,18 +19,18 @@ export class InvestmentsController {
     return this.investmentsService.findAll(filters);
   }
  
-  @Get(':id')
+  @Get(':opportunityId')
   @Roles('investor', 'admin')
-  findOne(@Param('id') id: string) {
-    return this.investmentsService.findOne(id);
+  findOne(@Param('opportunityId') opportunityId: string) {
+    return this.investmentsService.findOne(opportunityId);
   }
  
-  @Post(':id/interest')
+  @Post(':opportunityId/interest')
   @Roles('investor')
   registerInterest(
-    @Param('id') investmentId: string,
+    @Param('opportunityId') opportunityId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.investmentsService.registerInterest(investmentId, user.id);
+    return this.investmentsService.registerInterest(opportunityId, user.id);
   }
 }
