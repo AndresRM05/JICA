@@ -2,25 +2,25 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { SimulationService } from '../../src/simulation/simulation.service';
 import { SimulationRepository } from '../../src/simulation/simulation.repository';
-import { OpportunitiesRepository } from '../../src/opportunities/opportunities.repository';
+import { OpportunitiesService } from '../../src/opportunities/opportunities.service';
 import { InvestmentIntentRepository } from '../../src/simulation/investment-intent.repository';
 
 const mockSimulationRepository = () => ({
   createSimulation: jest.fn(),
 });
 
-const mockOpportunitiesRepository = () => ({
-  findById: jest.fn(),
+const mockOpportunitiesService = () => ({
+  findOne: jest.fn(),
 });
 
 describe('SimulationService', () => {
   let service: SimulationService;
   let simulationRepository: ReturnType<typeof mockSimulationRepository>;
-  let opportunitiesRepository: ReturnType<typeof mockOpportunitiesRepository>;
+  let opportunitiesService: ReturnType<typeof mockOpportunitiesService>;
 
   beforeEach(async () => {
     simulationRepository = mockSimulationRepository();
-    opportunitiesRepository = mockOpportunitiesRepository();
+    opportunitiesService = mockOpportunitiesService();
 
 
     const mockInvestmentIntentRepository = mockSimulationRepository();
@@ -33,8 +33,8 @@ describe('SimulationService', () => {
           useValue: simulationRepository,
         },
         {
-          provide: OpportunitiesRepository,
-          useValue: opportunitiesRepository,
+          provide: OpportunitiesService,
+          useValue: opportunitiesService,
         },
         {
           provide: InvestmentIntentRepository,
@@ -51,7 +51,7 @@ describe('SimulationService', () => {
     const investorId = 'investor-1';
     const investmentAmount = 5000;
 
-    opportunitiesRepository.findById.mockResolvedValue({
+    opportunitiesService.findOne.mockResolvedValue({
       opportunityId,
       title: 'Oportunidad A',
       businessName: 'Negocio A',
@@ -98,7 +98,7 @@ describe('SimulationService', () => {
     const opportunityId = 'missing-opportunity';
     const investorId = 'investor-1';
 
-    opportunitiesRepository.findById.mockResolvedValue(null);
+    opportunitiesService.findOne.mockResolvedValue(null);
 
     await expect(
       service.createSimulation(opportunityId, investorId, { investmentAmount: 5000 }),
@@ -109,7 +109,7 @@ describe('SimulationService', () => {
     const opportunityId = 'opportunity-1';
     const investorId = 'investor-1';
 
-    opportunitiesRepository.findById.mockResolvedValue({
+    opportunitiesService.findOne.mockResolvedValue({
       opportunityId,
       title: 'Oportunidad A',
       businessName: 'Negocio A',
@@ -134,7 +134,7 @@ describe('SimulationService', () => {
     const investorId = 'investor-1';
     const investmentAmount = 500;
 
-    opportunitiesRepository.findById.mockResolvedValue({
+    opportunitiesService.findOne.mockResolvedValue({
       opportunityId,
       title: 'Oportunidad A',
       businessName: 'Negocio A',
@@ -159,7 +159,7 @@ describe('SimulationService', () => {
     const investorId = 'investor-1';
     const investmentAmount = 10000;
 
-    opportunitiesRepository.findById.mockResolvedValue({
+    opportunitiesService.findOne.mockResolvedValue({
       opportunityId,
       title: 'Oportunidad A',
       businessName: 'Negocio A',

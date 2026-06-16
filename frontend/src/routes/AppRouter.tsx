@@ -1,28 +1,72 @@
-// /src/routes/AppRouter.tsx
-import { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { FullScreenLoader } from '@/components/ui/FullScreenLoader';
- 
-const LoginPage = lazy(() => import('@/pages/LoginPage'));
-const RegisterPage = lazy(() => import('@/pages/RegisterPage'));
-const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
-const InvestmentDetailsPage = lazy(() => import('@/pages/InvestmentDetailsPage'));
-const SimulationPage = lazy(() => import('@/pages/SimulationPage'));
-const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
-const AdminPage = lazy(() => import('@/pages/AdminPage'));
- 
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { DashboardLayout } from '@/layouts/DashboardLayout';
+import { ConfirmationPage } from '@/pages/ConfirmationPage';
+import { DashboardPage } from '@/pages/DashboardPage';
+import { InvestmentDetailsPage } from '@/pages/InvestmentDetailsPage';
+import { LoginPage } from '@/pages/LoginPage';
+import { NotFoundPage } from '@/pages/NotFoundPage';
+import { ProfilePage } from '@/pages/ProfilePage';
+import { RegisterPage } from '@/pages/RegisterPage';
+import { SimulationPage } from '@/pages/SimulationPage';
+import { ProtectedRoute } from '@/routes/ProtectedRoute';
+
 export function AppRouter() {
   return (
-    <Suspense fallback={<FullScreenLoader />}>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/investments/:id" element={<InvestmentDetailsPage />} />
-        <Route path="/simulate" element={<SimulationPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/admin/*" element={<AdminPage />} />
-      </Routes>
-    </Suspense>
+    <Routes>
+      <Route path="/" element={<Navigate to="/register" replace />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <DashboardPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/opportunities/:opportunityId"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <InvestmentDetailsPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/opportunities/:opportunityId/simulate"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <SimulationPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/simulations/:simulationId/confirmation"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <ConfirmationPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <ProfilePage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   );
 }

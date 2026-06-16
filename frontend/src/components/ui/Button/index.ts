@@ -1,2 +1,2 @@
-export { Button } from "./Button";
-export type { ButtonProps } from "./Button.types";
+export { Button } from '@/components/ui/Button/Button';
+export type { ButtonProps } from '@/components/ui/Button/Button.types';

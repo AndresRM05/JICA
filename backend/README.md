@@ -1,133 +1,133 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Backend JICA - MVP
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Backend NestJS para el MVP de JICA, una plataforma fintech enfocada en mostrar oportunidades de inversión para pymes gastronómicas.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Para facilitar la presentación, esta versión funciona con datos en memoria y no requiere PostgreSQL, Prisma ni configuración de Microsoft Entra ID. El objetivo es que el flujo principal del inversionista pueda ejecutarse rápido:
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ npm install
+```txt
+Dashboard de oportunidades
+        ↓
+Detalle financiero de una oportunidad
+        ↓
+Simulación de inversión
+        ↓
+Confirmación de intención de inversión
 ```
 
-## Local database setup
+## Requisitos
 
-1. Copia `backend/.env.example` a `backend/.env`.
-2. Ajusta `DATABASE_URL` para tu PostgreSQL local.
-3. Instala dependencias si no lo has hecho: `npm install`.
-4. Genera el cliente de Prisma:
+- Node.js 20 o superior.
+- npm.
 
-```bash
-npm run prisma:generate
-```
-
-5. Crea la migración inicial y aplica el esquema:
+## Instalación
 
 ```bash
-npm run prisma:migrate:dev -- --name init-investments-mvp
+npm install
 ```
 
-6. Carga los datos de prueba:
+## Ejecutar en desarrollo
 
 ```bash
-npm run prisma:db:seed
+npm run start:dev
 ```
 
-7. Verifica el esquema local con:
+El backend queda disponible por defecto en:
+
+```txt
+http://localhost:3000/api/v1
+```
+
+## Ejecutar en modo producción local
 
 ```bash
-npm run prisma:validate
+npm run build
+npm run start:prod
 ```
 
-8. Opcional: abre Prisma Studio para revisar los datos:
+## Variables de entorno opcionales
+
+Puedes copiar `.env.example` a `.env` si quieres cambiar el puerto o los orígenes permitidos por CORS.
+
+```env
+PORT=3000
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+```
+
+## Usuario demo
+
+Para que el MVP funcione sin login externo, los guards asignan automáticamente un inversionista demo cuando no llega un usuario autenticado.
+
+```txt
+email: demo@jica.local
+password: Demo12345
+role: investor
+```
+
+También puedes registrar usuarios nuevos con `/auth/register` y probar login local con `/auth/login`.
+
+## Endpoints principales
+
+### Health/root
 
 ```bash
-npm run prisma:studio
+curl http://localhost:3000/api/v1
 ```
 
-## Compile and run the project
+### Listar oportunidades
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+curl http://localhost:3000/api/v1/opportunities
 ```
 
-## Run tests
+### Ver detalle financiero
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+curl http://localhost:3000/api/v1/opportunities/00000000-0000-4000-8000-000000000001/financial-detail
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Crear simulación
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+curl -X POST http://localhost:3000/api/v1/opportunities/00000000-0000-4000-8000-000000000001/simulations \
+  -H "Content-Type: application/json" \
+  -d '{"investmentAmount":3000}'
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Confirmar simulación
 
-## Resources
+Usa el `simulationId` devuelto por el endpoint anterior.
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+curl -X POST http://localhost:3000/api/v1/simulations/<simulationId>/confirm
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Registrar interés en una oportunidad
 
-## Support
+```bash
+curl -X POST http://localhost:3000/api/v1/investments/00000000-0000-4000-8000-000000000001/interest
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Validación
 
-## Stay in touch
+```bash
+npm run build
+npm test -- --runInBand
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Resultado validado:
 
-## License
+```txt
+Test Suites: 17 passed, 17 total
+Tests:       50 passed, 50 total
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Cambios principales realizados para estabilizar el MVP
+
+- Se reemplazó la dependencia obligatoria de Prisma/PostgreSQL por un `PrismaService` en memoria compatible con los repositorios existentes.
+- Se agregaron datos demo de oportunidades, métricas financieras, inversionista, simulaciones e intenciones.
+- Se corrigieron dependencias faltantes (`helmet`, `compression`, tipos de compression).
+- Se agregaron DTOs faltantes para inversiones.
+- Se creó `InvestmentsModule` y se registró en `AppModule`.
+- Se ajustaron los guards para permitir demo local sin Microsoft Entra ID.
+- Se corrigieron imports y archivos incompletos que impedían compilar.
+- Se excluyó `prisma/` del build porque el seed ya no forma parte del runtime del MVP.

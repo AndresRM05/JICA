@@ -9,15 +9,8 @@ export interface ApiResponse<T> {
   };
 }
 
-export interface ApiError {
-  statusCode: number;
-  code: string;
-  message: string;
-  fieldErrors?: Record<string, string>;
-}
-
-export interface PaginatedParams {
-  page?: number;
-  pageSize?: number;
-  search?: string;
+export interface ApiErrorResponse {
+  statusCode?: number;
+  message?: string | string[];
+  error?: string;
 }

@@ -1,13 +1,11 @@
-// Consumer — procesa el trabajo en background
-// /backend/src/documents/documents.processor.ts
-@Processor('documents')
+import { Injectable, Logger } from '@nestjs/common';
+
+@Injectable()
 export class DocumentsProcessor {
   private readonly logger = new Logger(DocumentsProcessor.name);
- 
-  @Process('validate-document')
-  async handleValidateDocument(job: Job) {
-    const { fileBuffer, fileName, businessId } = job.data;
-    // Lógica de validación y subida a Azure Blob Storage
+
+  async handleValidateDocument(job: { data: { fileName: string; businessId: string } }): Promise<void> {
+    const { fileName, businessId } = job.data;
     this.logger.log(`Procesando documento ${fileName} para negocio ${businessId}`);
   }
 }

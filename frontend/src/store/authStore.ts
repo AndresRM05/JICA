@@ -1,25 +1,18 @@
-// /src/store/authStore.ts
 import { create } from 'zustand';
-import { AccountInfo } from '@azure/msal-browser';
-import { UserRole } from '@/types/auth.types';
- 
-export interface AuthenticatedUser {
-  uid: string;
-  email: string;
-  fullName: string;
-  role: UserRole;
-}
- 
+import type { AuthenticatedUser } from '@/types/auth.types';
+
 interface AuthState {
+  accessToken: string | null;
   user: AuthenticatedUser | null;
   isAuthenticated: boolean;
-  setUser: (user: AuthenticatedUser) => void;
+  setSession: (accessToken: string, user: AuthenticatedUser) => void;
   clearSession: () => void;
 }
- 
+
 export const useAuthStore = create<AuthState>((set) => ({
+  accessToken: null,
   user: null,
   isAuthenticated: false,
-  setUser: (user) => set({ user, isAuthenticated: true }),
-  clearSession: () => set({ user: null, isAuthenticated: false }),
+  setSession: (accessToken, user) => set({ accessToken, user, isAuthenticated: true }),
+  clearSession: () => set({ accessToken: null, user: null, isAuthenticated: false }),
 }));

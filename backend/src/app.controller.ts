@@ -6,4 +6,8 @@ export class AppController {
   getRoot() {
     return 'Hello World!';
   }
+
+  getHello() {
+    return this.getRoot();
+  }
 }

@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { SimulationRepository } from './simulation.repository';
-import { OpportunitiesRepository } from '../opportunities/opportunities.repository';
+import { OpportunitiesService } from '../opportunities/opportunities.service';
 import { CreateSimulationDto } from './dto/create-simulation.dto';
 import { SimulationResultDto } from './dto/simulation-result.dto';
 import { InvestmentIntentRepository } from './investment-intent.repository';
@@ -10,7 +10,7 @@ import { ConfirmIntentResultDto } from './dto/confirm-intent-result.dto';
 export class SimulationService {
   constructor(
     private readonly simulationRepository: SimulationRepository,
-    private readonly opportunitiesRepository: OpportunitiesRepository,
+    private readonly opportunitiesService: OpportunitiesService,
     private readonly investmentIntentRepository: InvestmentIntentRepository,
   ) {}
 
@@ -22,7 +22,7 @@ export class SimulationService {
     const { investmentAmount } = createSimulationDto;
 
     // Obtener oportunidad
-    const opportunity = await this.opportunitiesRepository.findById(opportunityId);
+    const opportunity = await this.opportunitiesService.findOne(opportunityId);
 
     if (!opportunity) {
       throw new NotFoundException(
@@ -75,7 +75,7 @@ export class SimulationService {
     }
 
     // Verificar oportunidad
-    const opportunity = await this.opportunitiesRepository.findById(simulation.opportunityId);
+    const opportunity = await this.opportunitiesService.findOne(simulation.opportunityId);
     if (!opportunity) {
       throw new NotFoundException(`Oportunidad asociada con id ${simulation.opportunityId} no encontrada`);
     }

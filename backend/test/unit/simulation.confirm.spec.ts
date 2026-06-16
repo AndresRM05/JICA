@@ -2,15 +2,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { SimulationService } from '../../src/simulation/simulation.service';
 import { SimulationRepository } from '../../src/simulation/simulation.repository';
-import { OpportunitiesRepository } from '../../src/opportunities/opportunities.repository';
+import { OpportunitiesService } from '../../src/opportunities/opportunities.service';
 import { InvestmentIntentRepository } from '../../src/simulation/investment-intent.repository';
 
 const mockSimulationRepository = () => ({
   findById: jest.fn(),
 });
 
-const mockOpportunitiesRepository = () => ({
-  findById: jest.fn(),
+const mockOpportunitiesService = () => ({
+  findOne: jest.fn(),
 });
 
 const mockInvestmentIntentRepository = () => ({
@@ -21,19 +21,19 @@ const mockInvestmentIntentRepository = () => ({
 describe('SimulationService.confirmSimulation', () => {
   let service: SimulationService;
   let simulationRepository: ReturnType<typeof mockSimulationRepository>;
-  let opportunitiesRepository: ReturnType<typeof mockOpportunitiesRepository>;
+  let opportunitiesService: ReturnType<typeof mockOpportunitiesService>;
   let investmentIntentRepository: ReturnType<typeof mockInvestmentIntentRepository>;
 
   beforeEach(async () => {
     simulationRepository = mockSimulationRepository();
-    opportunitiesRepository = mockOpportunitiesRepository();
+    opportunitiesService = mockOpportunitiesService();
     investmentIntentRepository = mockInvestmentIntentRepository();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SimulationService,
         { provide: SimulationRepository, useValue: simulationRepository },
-        { provide: OpportunitiesRepository, useValue: opportunitiesRepository },
+        { provide: OpportunitiesService, useValue: opportunitiesService },
         { provide: InvestmentIntentRepository, useValue: investmentIntentRepository },
       ],
     }).compile();
@@ -55,7 +55,7 @@ describe('SimulationService.confirmSimulation', () => {
       simulatedAt: new Date('2025-06-14'),
     });
 
-    opportunitiesRepository.findById.mockResolvedValue({
+    opportunitiesService.findOne.mockResolvedValue({
       opportunityId: 'opp-1',
       status: 'available',
       minAmount: 1000,
@@ -94,13 +94,13 @@ describe('SimulationService.confirmSimulation', () => {
 
   it('throws BadRequest if opportunity not available', async () => {
     simulationRepository.findById.mockResolvedValue({ simulationId: 's1', investorId: 'inv-1', opportunityId: 'opp-1', amount: 1000, estimatedReturn: 10, riskLevel: 'low', simulatedAt: new Date() });
-    opportunitiesRepository.findById.mockResolvedValue({ opportunityId: 'opp-1', status: 'closed' });
+    opportunitiesService.findOne.mockResolvedValue({ opportunityId: 'opp-1', status: 'closed' });
     await expect(service.confirmSimulation('s1', 'inv-1')).rejects.toThrow(BadRequestException);
   });
 
   it('throws BadRequest if existing confirmed intent', async () => {
     simulationRepository.findById.mockResolvedValue({ simulationId: 's1', investorId: 'inv-1', opportunityId: 'opp-1', amount: 1000, estimatedReturn: 10, riskLevel: 'low', simulatedAt: new Date() });
-    opportunitiesRepository.findById.mockResolvedValue({ opportunityId: 'opp-1', status: 'available' });
+    opportunitiesService.findOne.mockResolvedValue({ opportunityId: 'opp-1', status: 'available' });
     investmentIntentRepository.findBySimulationId.mockResolvedValue({ id: 'i1', status: 'confirmed' });
     await expect(service.confirmSimulation('s1', 'inv-1')).rejects.toThrow(BadRequestException);
   });

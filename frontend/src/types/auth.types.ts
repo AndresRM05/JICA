@@ -1,9 +1,14 @@
 export type UserRole = 'investor' | 'business' | 'admin';
- 
+
 export interface AuthenticatedUser {
-  uid: string;
+  id: string;
   email: string;
-  role: UserRole;
   fullName: string;
-  emailVerified: boolean;
+  role: UserRole;
+  investorId?: string;
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  user: AuthenticatedUser;
 }

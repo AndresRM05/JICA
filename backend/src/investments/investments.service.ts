@@ -2,12 +2,13 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InvestmentsRepository } from './investments.repository';
 import { InvestmentResponseDto } from './dto/investment-response.dto';
+import { GetInvestmentsQueryDto } from './dto/get-investments-query.dto';
 
 @Injectable()
 export class InvestmentsService {
   constructor(private readonly investmentsRepository: InvestmentsRepository) {}
 
-  async findAll(filters: any): Promise<InvestmentResponseDto[]> {
+  async findAll(filters: GetInvestmentsQueryDto): Promise<InvestmentResponseDto[]> {
     return [];
   }
  

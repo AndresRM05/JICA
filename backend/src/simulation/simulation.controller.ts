@@ -3,6 +3,7 @@ import { SimulationService } from './simulation.service';
 import { CreateSimulationDto } from './dto/create-simulation.dto';
 import { SimulationResultDto } from './dto/simulation-result.dto';
 import { InvestorGuard } from '../auth/guards/investor.guard';
+import type { AuthenticatedInvestorRequest } from '../auth/auth.types';
 
 @Controller('opportunities')
 @UseGuards(InvestorGuard)
@@ -13,7 +14,7 @@ export class SimulationController {
   async createSimulation(
     @Param('opportunityId') opportunityId: string,
     @Body() createSimulationDto: CreateSimulationDto,
-    @Req() request: any,
+    @Req() request: AuthenticatedInvestorRequest,
   ): Promise<SimulationResultDto> {
     const investorId = request.user.investorId;
     return this.simulationService.createSimulation(opportunityId, investorId, createSimulationDto);

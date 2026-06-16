@@ -1,12 +1,7 @@
-
-export type RiskLevel = "low" | "medium" | "high";
+import type { OpportunitySummaryResponse } from '@/features/investments/types/investment.types';
 
 export interface InvestmentCardProps {
-  smeName: string;
-  businessType: string;
-  roi: number;
-  riskLevel: RiskLevel;
-  requiredAmount: number;
-  onViewDetails: () => void;
-  onSimulateInvestment: () => void;
+  opportunity: OpportunitySummaryResponse;
+  onViewDetails: (opportunityId: string) => void;
+  onSimulateInvestment: (opportunityId: string) => void;
 }

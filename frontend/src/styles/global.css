@@ -1,5 +1,23 @@
-@import "./components/button.css";
-@import "./components/card.css";
-@import "./components/input.css";
-@import "./components/feedback.css";
-@import "./components/badges.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply min-h-screen bg-slate-50 font-sans text-slate-900 antialiased;
+  }
+}
+
+@layer components {
+  .jica-card {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  .jica-input {
+    @apply h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100;
+  }
+}

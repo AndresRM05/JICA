@@ -1,29 +1,20 @@
-import type { ButtonProps } from "./Button.types";
+import type { ButtonProps, ButtonVariant } from '@/components/ui/Button/Button.types';
 
-export function Button({
-  label,
-  variant = "primary",
-  disabled = false,
-  type = "button",
-  onClick,
-}: ButtonProps) {
-  const baseStyles =
-    "rounded-xl px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50";
+const variantClasses: Record<ButtonVariant, string> = {
+  primary: 'bg-emerald-700 text-white hover:bg-emerald-800 focus:ring-emerald-500',
+  secondary: 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus:ring-slate-400',
+  danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
+  ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 focus:ring-slate-400',
+};
 
-  const variants: Record<string, string> = {
-    primary: "bg-emerald-600 text-white hover:bg-emerald-700",
-    secondary: "bg-gray-100 text-gray-800 hover:bg-gray-200",
-    danger: "bg-red-600 text-white hover:bg-red-700",
-  };
-
+export function Button({ children, variant = 'primary', isLoading = false, disabled, className = '', ...props }: ButtonProps) {
   return (
     <button
-      type={type}
-      className={${baseStyles} ${variants[variant]}}
-      disabled={disabled}
-      onClick={onClick}
+      className={`inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${variantClasses[variant]} ${className}`}
+      disabled={disabled || isLoading}
+      {...props}
     >
-      {label}
+      {isLoading ? 'Procesando...' : children}
     </button>
   );
 }

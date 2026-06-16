@@ -3,7 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
-import * as compression from 'compression';
+import compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,7 +12,10 @@ async function bootstrap() {
   app.use(compression());
 
   app.enableCors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') ?? [],
+    origin: process.env.ALLOWED_ORIGINS?.split(',') ?? [
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+    ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     allowedHeaders: ['Authorization', 'Content-Type'],
     credentials: true,

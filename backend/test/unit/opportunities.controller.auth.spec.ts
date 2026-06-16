@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { OpportunitiesController } from '../../src/opportunities/opportunities.controller';
 import { OpportunitiesService } from '../../src/opportunities/opportunities.service';
 import { InvestorGuard } from '../../src/auth/guards/investor.guard';
@@ -43,9 +43,16 @@ describe('OpportunitiesController Auth Guards', () => {
     expect(investorGuard.canActivate(context as ExecutionContext)).toBe(true);
   });
 
-  it('should throw UnauthorizedException when user is not authenticated', () => {
-    const context = mockExecutionContext(null);
-    expect(() => investorGuard.canActivate(context as ExecutionContext)).toThrow(UnauthorizedException);
+  it('should attach demo investor user when no authenticated user exists in MVP mode', () => {
+    const request = { user: null };
+    const context = {
+      switchToHttp: () => ({
+        getRequest: () => request,
+      }),
+    } as Partial<ExecutionContext>;
+
+    expect(investorGuard.canActivate(context as ExecutionContext)).toBe(true);
+    expect(request.user).toEqual(expect.objectContaining({ roles: ['investor'] }));
   });
 
   it('should throw ForbiddenException when user is not investor', () => {

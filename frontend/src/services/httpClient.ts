@@ -1,28 +1,30 @@
 import axios from 'axios';
-import { msalInstance } from '@/main';
 import { useAuthStore } from '@/store/authStore';
-import { getAccessToken } from './authService';
- 
+
 export const httpClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/api/v1',
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
- 
-httpClient.interceptors.request.use(async (config) => {
-  const accounts = msalInstance.getAllAccounts();
-  if (accounts.length > 0) {
-    const token = await getAccessToken(msalInstance, accounts[0]);
-    config.headers['Authorization'] = `Bearer ${token}`;
+
+httpClient.interceptors.request.use((config) => {
+  const token = useAuthStore.getState().accessToken;
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
- 
+
 httpClient.interceptors.response.use(
   (response) => response,
-  async (error) => {
+  (error) => {
     if (error.response?.status === 401) {
       useAuthStore.getState().clearSession();
-      await msalInstance.logoutRedirect();
     }
+
     return Promise.reject(error);
-  }
+  },
 );

@@ -1,32 +1,24 @@
-// /tests/e2e/simulation/simulate.spec.ts
-import { test, expect } from '@playwright/test';
- 
-test.describe('Simulación de inversión', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/login');
-    await page.getByLabel(/correo electrónico/i).fill(process.env.PLAYWRIGHT_TEST_EMAIL!);
-    await page.getByLabel(/contraseña/i).fill(process.env.PLAYWRIGHT_TEST_PASSWORD!);
-    await page.getByRole('button', { name: /iniciar sesión/i }).click();
-    await page.waitForURL('/dashboard');
-  });
- 
-  test('debe calcular el retorno estimado al ingresar un monto válido', async ({ page }) => {
-    await page.goto('/investments/1');
-    await page.getByRole('button', { name: /simular inversión/i }).click();
- 
-    await page.getByLabel(/monto a invertir/i).fill('1000000');
- 
-    await expect(page.getByTestId('estimated-return')).toBeVisible();
-    await expect(page.getByTestId('estimated-return')).not.toBeEmpty();
-  });
- 
-  test('debe mostrar error si el monto ingresado es menor al mínimo permitido', async ({ page }) => {
-    await page.goto('/investments/1');
-    await page.getByRole('button', { name: /simular inversión/i }).click();
- 
-    await page.getByLabel(/monto a invertir/i).fill('100');
-    await page.getByRole('button', { name: /calcular/i }).click();
- 
-    await expect(page.getByText(/monto mínimo/i)).toBeVisible();
-  });
+import { expect, test } from '@playwright/test';
+import { demoOpportunity, mockMvpApi } from '../mvp-fixtures';
+
+test('investor can review details, simulate and confirm an investment intent', async ({ page }) => {
+  await mockMvpApi(page);
+
+  await page.goto('/login');
+  await page.getByRole('button', { name: /^entrar$/i }).click();
+  await page.getByRole('button', { name: /ver detalles/i }).click();
+
+  await expect(page.getByRole('heading', { name: demoOpportunity.businessName })).toBeVisible();
+  await expect(page.getByText(/análisis de riesgo/i)).toBeVisible();
+
+  await page.getByRole('button', { name: /simular inversión/i }).click();
+  await page.getByLabel(/monto de inversión/i).fill('1000');
+  await page.getByRole('button', { name: /confirmar simulación/i }).click();
+
+  await expect(page).toHaveURL(/\/simulations\/sim-costa-verde\/confirmation$/);
+  await expect(page.getByText(/revise y confirme su intención/i)).toBeVisible();
+
+  await page.getByRole('button', { name: /confirmar inversión/i }).click();
+
+  await expect(page.getByText(/inversión registrada correctamente/i)).toBeVisible();
 });
