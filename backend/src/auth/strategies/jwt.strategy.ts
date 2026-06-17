@@ -2,10 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import type { UserRole } from '../auth.types';
 
 /**
- * Estrategia simplificada para el MVP.
- *
- * La integración real con Microsoft Entra ID queda desacoplada para que la demo
- * pueda ejecutarse sin tenant, client id ni dependencias externas de Passport.
+ * Estrategia simplificada y no obligatoria para el MVP local.
  */
 interface JwtPayload {
   oid?: string;

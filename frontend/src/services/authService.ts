@@ -4,7 +4,7 @@ import type { AuthenticatedUser, LoginResponse, RegisterResponse } from '@/types
 import type { LoginFormData } from '@/validations/loginSchema';
 import type { RegisterFormData } from '@/validations/registerSchema';
 
-interface BackendAuthResponse {
+interface AuthApiResponse {
   id: string;
   email: string;
   firstName: string;
@@ -13,7 +13,7 @@ interface BackendAuthResponse {
   investorId: string;
 }
 
-function mapBackendAuthResponse(response: BackendAuthResponse): LoginResponse {
+function mapAuthApiResponse(response: AuthApiResponse): LoginResponse {
   const user: AuthenticatedUser = {
     id: response.id,
     email: response.email,
@@ -26,11 +26,11 @@ function mapBackendAuthResponse(response: BackendAuthResponse): LoginResponse {
 }
 
 export async function loginUser(data: LoginFormData): Promise<LoginResponse> {
-  const response = await httpClient.post<BackendAuthResponse | { data: BackendAuthResponse }>('/auth/login', data);
-  return mapBackendAuthResponse(unwrapApiData(response.data));
+  const response = await httpClient.post<AuthApiResponse | { data: AuthApiResponse }>('/auth/login', data);
+  return mapAuthApiResponse(unwrapApiData(response.data));
 }
 
 export async function registerUser(data: RegisterFormData): Promise<RegisterResponse> {
-  const response = await httpClient.post<BackendAuthResponse | { data: BackendAuthResponse }>('/auth/register', data);
-  return mapBackendAuthResponse(unwrapApiData(response.data));
+  const response = await httpClient.post<AuthApiResponse | { data: AuthApiResponse }>('/auth/register', data);
+  return mapAuthApiResponse(unwrapApiData(response.data));
 }

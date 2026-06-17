@@ -14,7 +14,7 @@ export function getUserFriendlyErrorMessage(error: unknown): string {
   }
 
   if (axiosError.code === 'ERR_NETWORK') {
-    return 'No se pudo conectar con el backend. Verifique que esté corriendo en http://localhost:3000.';
+    return 'No se pudo conectar con el servidor local. Verifique que esté corriendo en http://localhost:3000.';
   }
 
   return 'Ocurrió un error inesperado. Intente nuevamente.';

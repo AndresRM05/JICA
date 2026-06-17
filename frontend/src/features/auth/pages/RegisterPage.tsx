@@ -63,7 +63,7 @@ export function RegisterPage() {
           </div>
         </div>
         <p className="mt-4 text-sm text-slate-500">
-          Esta pantalla inicia el flujo principal validado del MVP: registro, dashboard, detalle, simulacion y confirmacion.
+          Esta pantalla inicia el flujo principal validado del MVP: registro, dashboard, detalle, simulación y confirmación.
         </p>
 
         {generalError ? <div className="mt-6"><StatusMessage title="No se pudo registrar" message={generalError} variant="error" /></div> : null}

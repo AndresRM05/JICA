@@ -50,7 +50,7 @@ export function AuthPage() {
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-2xl font-black text-emerald-800">J</div>
           <h1 className="mt-8 text-4xl font-black tracking-tight">JICA</h1>
           <p className="mt-4 max-w-md text-lg text-emerald-50">
-            Marketplace financiero para analizar pymes gastronomicas y registrar inversiones con datos claros.
+            Marketplace financiero para analizar pymes gastronómicas y registrar inversiones con datos claros.
           </p>
           <div className="mt-10 rounded-2xl bg-white/10 p-5">
             <p className="text-sm font-semibold uppercase tracking-wide text-emerald-100">Credenciales locales</p>

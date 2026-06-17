@@ -37,17 +37,13 @@ export class SimulationRepository {
       },
     });
 
-    // Calcular estimatedProfit y totalReturn basado en amount y estimatedReturn (porcentaje)
-    const estimatedProfit = (Number(simulation.amount) * Number(simulation.estimatedReturn)) / 100;
-    const totalReturn = Number(simulation.amount) + estimatedProfit;
-
     return {
       simulationId: simulation.id,
       opportunityId: simulation.opportunityId,
       investorId: simulation.investorId,
       investmentAmount: Number(simulation.amount),
-      totalReturn,
-      estimatedProfit,
+      totalReturn: input.totalReturn,
+      estimatedProfit: input.estimatedProfit,
       roiUsed: Number(simulation.estimatedReturn),
       riskLevel: simulation.riskLevel,
       simulatedAt: simulation.simulatedAt,

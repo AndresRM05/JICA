@@ -1,16 +1,16 @@
 import type { RoiProjectionChartProps } from '@/features/investments/components/RoiProjectionChart/RoiProjectionChart.types';
-import { formatCurrency } from '@/utils/formatters';
+import { formatCurrency, formatPercent } from '@/utils/formatters';
 
 export function RoiProjectionChart({ investmentAmount, estimatedReturn }: RoiProjectionChartProps) {
-  const projectedReturn = investmentAmount + investmentAmount * (estimatedReturn / 100);
-  const maxValue = Math.max(investmentAmount, projectedReturn);
-  const capitalHeight = Math.max((investmentAmount / maxValue) * 150, 8);
-  const returnHeight = Math.max((projectedReturn / maxValue) * 150, 8);
+  const capitalHeight = 150;
+  const roiHeight = Math.max(Math.min((estimatedReturn / 30) * 150, 150), 8);
 
   return (
     <section className="jica-card p-5">
-      <h2 className="text-lg font-bold text-slate-950">Proyección ROI</h2>
-      <p className="text-sm text-slate-500">Comparación entre capital invertido y retorno estimado.</p>
+      <h2 className="text-lg font-bold text-slate-950">ROI estimado</h2>
+      <p className="text-sm text-slate-500">
+        El retorno estimado se calcula al simular tu inversión, usando el ROI publicado para esta oportunidad. Los resultados son referenciales y no garantizan rendimientos futuros.
+      </p>
 
       <div className="mt-6 flex h-56 items-end justify-center gap-8 rounded-2xl bg-slate-50 p-6">
         <div className="flex flex-col items-center gap-3">
@@ -21,10 +21,10 @@ export function RoiProjectionChart({ investmentAmount, estimatedReturn }: RoiPro
           </div>
         </div>
         <div className="flex flex-col items-center gap-3">
-          <div className="w-20 rounded-t-xl bg-emerald-700" style={{ height: `${returnHeight}px` }} />
+          <div className="w-20 rounded-t-xl bg-emerald-700" style={{ height: `${roiHeight}px` }} />
           <div className="text-center text-sm">
-            <p className="font-semibold text-slate-700">Retorno</p>
-            <p className="text-slate-500">{formatCurrency(projectedReturn)}</p>
+            <p className="font-semibold text-slate-700">ROI</p>
+            <p className="text-slate-500">{formatPercent(estimatedReturn)}</p>
           </div>
         </div>
       </div>

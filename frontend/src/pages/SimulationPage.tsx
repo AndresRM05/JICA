@@ -1,5 +1,5 @@
 import { ArrowLeft, ShieldAlert, TrendingUp, WalletCards } from 'lucide-react';
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ZodError } from 'zod';
 import { Button } from '@/components/ui/Button';
@@ -23,10 +23,8 @@ export function SimulationPage() {
 
   const numericAmount = Number(amount || opportunity?.minAmount) || 0;
   const projectedRoi = opportunity?.estimatedReturn ?? 0;
-  const estimatedReturns = numericAmount + numericAmount * (projectedRoi / 100);
-  const expectedProfit = estimatedReturns - numericAmount;
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setAmountError(undefined);
 
@@ -61,7 +59,7 @@ export function SimulationPage() {
 
       <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <div className="jica-card p-6">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Investment Simulation</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Simulación de inversión</p>
           <h2 className="mt-3 text-3xl font-black text-slate-950">Simular inversión</h2>
           <p className="mt-3 text-sm leading-6 text-slate-500">
             Ingrese el monto que desea invertir en {opportunity.businessName}. El sistema calcula el retorno usando el ROI y riesgo configurados.
@@ -104,16 +102,22 @@ export function SimulationPage() {
 
         <div className="space-y-5">
           <div className="grid gap-4 md:grid-cols-3">
-            <MetricCard title="ROI proyectado" value={formatPercent(projectedRoi)} icon={<TrendingUp className="h-5 w-5" aria-hidden="true" />} />
-            <MetricCard title="Retorno estimado" value={formatCurrency(estimatedReturns)} icon={<WalletCards className="h-5 w-5" aria-hidden="true" />} />
-            <MetricCard title="Ganancia esperada" value={formatCurrency(expectedProfit)} description="Antes de impuestos o comisiones" />
+            <MetricCard title="ROI estimado" value={formatPercent(projectedRoi)} icon={<TrendingUp className="h-5 w-5" aria-hidden="true" />} />
+            <MetricCard title="Monto de inversión" value={formatCurrency(numericAmount)} icon={<WalletCards className="h-5 w-5" aria-hidden="true" />} />
+            <MetricCard
+              title="Resultado de la simulación"
+              value="Referencial"
+              description="Esta simulación calcula una ganancia aproximada usando el ROI estimado publicado por la oportunidad. Los resultados son referenciales y no garantizan rendimientos futuros."
+            />
           </div>
 
           <section className="jica-card p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-lg font-bold text-slate-950">Indicador de riesgo</h3>
-                <p className="mt-1 text-sm text-slate-500">Nivel visual y textual para evitar depender solo del color.</p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Este nivel resume el riesgo estimado de la oportunidad para ayudarte a comparar opciones de inversión.
+                </p>
               </div>
               <RiskBadge riskLevel={opportunity.riskLevel} />
             </div>

@@ -62,7 +62,7 @@ async function main() {
       currentAmount: new Prisma.Decimal('12000'),
       minAmount: new Prisma.Decimal('2500'),
       riskLevel: RiskLevel.medium,
-      estimatedReturn: new Prisma.Decimal('0.18'),
+      estimatedReturn: new Prisma.Decimal('18'),
       status: OpportunityStatus.available,
       metrics: {
         create: [
@@ -70,7 +70,7 @@ async function main() {
             month: '2026-01',
             revenue: new Prisma.Decimal('32000'),
             grossMargin: new Prisma.Decimal('0.62'),
-            operatingMargin: new Prisma.Decimal('0.18'),
+            operatingMargin: new Prisma.Decimal('18'),
             customerCount: 420,
             averageTicket: new Prisma.Decimal('18.50')
           },
@@ -100,7 +100,7 @@ async function main() {
       currentAmount: new Prisma.Decimal('8000'),
       minAmount: new Prisma.Decimal('2000'),
       riskLevel: RiskLevel.low,
-      estimatedReturn: new Prisma.Decimal('0.15'),
+      estimatedReturn: new Prisma.Decimal('15'),
       status: OpportunityStatus.available,
       metrics: {
         create: [
@@ -108,7 +108,7 @@ async function main() {
             month: '2026-01',
             revenue: new Prisma.Decimal('28000'),
             grossMargin: new Prisma.Decimal('0.58'),
-            operatingMargin: new Prisma.Decimal('0.16'),
+            operatingMargin: new Prisma.Decimal('16'),
             customerCount: 340,
             averageTicket: new Prisma.Decimal('20.75')
           },
@@ -116,7 +116,7 @@ async function main() {
             month: '2026-02',
             revenue: new Prisma.Decimal('29500'),
             grossMargin: new Prisma.Decimal('0.60'),
-            operatingMargin: new Prisma.Decimal('0.17'),
+            operatingMargin: new Prisma.Decimal('17'),
             customerCount: 360,
             averageTicket: new Prisma.Decimal('21.00')
           }
@@ -138,7 +138,7 @@ async function main() {
       currentAmount: new Prisma.Decimal('6500'),
       minAmount: new Prisma.Decimal('1500'),
       riskLevel: RiskLevel.medium,
-      estimatedReturn: new Prisma.Decimal('0.16'),
+      estimatedReturn: new Prisma.Decimal('16'),
       status: OpportunityStatus.available,
       metrics: {
         create: [
@@ -146,7 +146,7 @@ async function main() {
             month: '2026-01',
             revenue: new Prisma.Decimal('23000'),
             grossMargin: new Prisma.Decimal('0.55'),
-            operatingMargin: new Prisma.Decimal('0.14'),
+            operatingMargin: new Prisma.Decimal('14'),
             customerCount: 290,
             averageTicket: new Prisma.Decimal('14.25')
           },
@@ -154,7 +154,7 @@ async function main() {
             month: '2026-02',
             revenue: new Prisma.Decimal('24500'),
             grossMargin: new Prisma.Decimal('0.57'),
-            operatingMargin: new Prisma.Decimal('0.15'),
+            operatingMargin: new Prisma.Decimal('15'),
             customerCount: 315,
             averageTicket: new Prisma.Decimal('15.00')
           }
@@ -177,7 +177,7 @@ async function main() {
       currentAmount: new Prisma.Decimal('9000'),
       minAmount: new Prisma.Decimal('1800'),
       riskLevel: RiskLevel.medium,
-      estimatedReturn: new Prisma.Decimal('0.17'),
+      estimatedReturn: new Prisma.Decimal('17'),
       status: OpportunityStatus.available,
       metrics: {
         create: [
@@ -185,7 +185,7 @@ async function main() {
             month: '2026-01',
             revenue: new Prisma.Decimal('26000'),
             grossMargin: new Prisma.Decimal('0.59'),
-            operatingMargin: new Prisma.Decimal('0.16'),
+            operatingMargin: new Prisma.Decimal('16'),
             customerCount: 510,
             averageTicket: new Prisma.Decimal('12.75')
           },
@@ -193,7 +193,7 @@ async function main() {
             month: '2026-02',
             revenue: new Prisma.Decimal('27800'),
             grossMargin: new Prisma.Decimal('0.61'),
-            operatingMargin: new Prisma.Decimal('0.17'),
+            operatingMargin: new Prisma.Decimal('17'),
             customerCount: 545,
             averageTicket: new Prisma.Decimal('13.10')
           }
@@ -216,7 +216,7 @@ async function main() {
       currentAmount: new Prisma.Decimal('7200'),
       minAmount: new Prisma.Decimal('1200'),
       riskLevel: RiskLevel.low,
-      estimatedReturn: new Prisma.Decimal('0.14'),
+      estimatedReturn: new Prisma.Decimal('14'),
       status: OpportunityStatus.available,
       metrics: {
         create: [
@@ -255,7 +255,7 @@ async function main() {
       currentAmount: new Prisma.Decimal('5600'),
       minAmount: new Prisma.Decimal('1500'),
       riskLevel: RiskLevel.medium,
-      estimatedReturn: new Prisma.Decimal('0.16'),
+      estimatedReturn: new Prisma.Decimal('16'),
       status: OpportunityStatus.available,
       metrics: {
         create: [
@@ -271,7 +271,7 @@ async function main() {
             month: '2026-02',
             revenue: new Prisma.Decimal('26800'),
             grossMargin: new Prisma.Decimal('0.55'),
-            operatingMargin: new Prisma.Decimal('0.14'),
+            operatingMargin: new Prisma.Decimal('14'),
             customerCount: 650,
             averageTicket: new Prisma.Decimal('10.20')
           }
@@ -294,7 +294,7 @@ async function main() {
       currentAmount: new Prisma.Decimal('15000'),
       minAmount: new Prisma.Decimal('3000'),
       riskLevel: RiskLevel.high,
-      estimatedReturn: new Prisma.Decimal('0.22'),
+      estimatedReturn: new Prisma.Decimal('22'),
       status: OpportunityStatus.available,
       metrics: {
         create: [
@@ -302,7 +302,7 @@ async function main() {
             month: '2026-01',
             revenue: new Prisma.Decimal('41000'),
             grossMargin: new Prisma.Decimal('0.63'),
-            operatingMargin: new Prisma.Decimal('0.18'),
+            operatingMargin: new Prisma.Decimal('18'),
             customerCount: 470,
             averageTicket: new Prisma.Decimal('28.50')
           },
@@ -333,7 +333,7 @@ async function main() {
       currentAmount: new Prisma.Decimal('11000'),
       minAmount: new Prisma.Decimal('2200'),
       riskLevel: RiskLevel.low,
-      estimatedReturn: new Prisma.Decimal('0.15'),
+      estimatedReturn: new Prisma.Decimal('15'),
       status: OpportunityStatus.available,
       metrics: {
         create: [
@@ -341,7 +341,7 @@ async function main() {
             month: '2026-01',
             revenue: new Prisma.Decimal('33500'),
             grossMargin: new Prisma.Decimal('0.57'),
-            operatingMargin: new Prisma.Decimal('0.16'),
+            operatingMargin: new Prisma.Decimal('16'),
             customerCount: 430,
             averageTicket: new Prisma.Decimal('22.50')
           },
@@ -349,7 +349,7 @@ async function main() {
             month: '2026-02',
             revenue: new Prisma.Decimal('35200'),
             grossMargin: new Prisma.Decimal('0.58'),
-            operatingMargin: new Prisma.Decimal('0.17'),
+            operatingMargin: new Prisma.Decimal('17'),
             customerCount: 455,
             averageTicket: new Prisma.Decimal('23.10')
           }
@@ -358,13 +358,43 @@ async function main() {
     }
   });
 
+  const opportunityReturnRates = [
+    { businessName: 'CafÃ© Alma', estimatedReturn: '18' },
+    { businessName: 'Verde Sabor', estimatedReturn: '15' },
+    { businessName: 'PanaderÃ­a La Masa', estimatedReturn: '16' },
+    { businessName: 'Taco Barrio', estimatedReturn: '17' },
+    { businessName: 'Nieve Verde', estimatedReturn: '14' },
+    { businessName: 'Soda El Buen Punto', estimatedReturn: '16' },
+    { businessName: 'Tapas 27', estimatedReturn: '22' },
+    { businessName: 'Forno Lento', estimatedReturn: '15' },
+  ];
+
+  for (const opportunityReturnRate of opportunityReturnRates) {
+    await prisma.investmentOpportunity.updateMany({
+      where: { businessName: opportunityReturnRate.businessName },
+      data: { estimatedReturn: new Prisma.Decimal(opportunityReturnRate.estimatedReturn) },
+    });
+  }
+
+  await prisma.$executeRaw`
+    UPDATE "InvestmentOpportunity"
+    SET "estimatedReturn" = "estimatedReturn" * 100
+    WHERE "estimatedReturn" > 0 AND "estimatedReturn" < 1
+  `;
+
+  await prisma.$executeRaw`
+    UPDATE "InvestmentSimulation"
+    SET "estimatedReturn" = "estimatedReturn" * 100
+    WHERE "estimatedReturn" > 0 AND "estimatedReturn" < 1
+  `;
+
   const simulation = await prisma.investmentSimulation.upsert({
     where: { id: '00000000-0000-0000-0000-000000000101' },
     update: {
       investorId: investorUser1.investor!.id,
       opportunityId: opportunity1.id,
       amount: new Prisma.Decimal('3000'),
-      estimatedReturn: new Prisma.Decimal('540'),
+      estimatedReturn: new Prisma.Decimal('18'),
       riskLevel: RiskLevel.medium
     },
     create: {
@@ -372,7 +402,7 @@ async function main() {
       investorId: investorUser1.investor!.id,
       opportunityId: opportunity1.id,
       amount: new Prisma.Decimal('3000'),
-      estimatedReturn: new Prisma.Decimal('540'),
+      estimatedReturn: new Prisma.Decimal('18'),
       riskLevel: RiskLevel.medium
     }
   });
@@ -387,7 +417,7 @@ async function main() {
     update: {
       simulationId: simulation.id,
       amount: new Prisma.Decimal('3000'),
-      expectedReturn: new Prisma.Decimal('540'),
+      expectedReturn: new Prisma.Decimal('3540'),
       status: InvestmentIntentStatus.confirmed,
       confirmedAt: new Date()
     },
@@ -396,7 +426,7 @@ async function main() {
       opportunityId: opportunity1.id,
       simulationId: simulation.id,
       amount: new Prisma.Decimal('3000'),
-      expectedReturn: new Prisma.Decimal('540'),
+      expectedReturn: new Prisma.Decimal('3540'),
       status: InvestmentIntentStatus.confirmed,
       confirmedAt: new Date()
     }
@@ -413,3 +443,4 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+

@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 import { InvestmentsController } from './investments.controller';
 import { InvestmentsService } from './investments.service';
 import { InvestmentsRepository } from './investments.repository';
-import { EntraIdGuard } from '../auth/guards/entra-id.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
+  imports: [AuthModule],
   controllers: [InvestmentsController],
-  providers: [InvestmentsService, InvestmentsRepository, EntraIdGuard, RolesGuard],
+  providers: [InvestmentsService, InvestmentsRepository],
 })
 export class InvestmentsModule {}

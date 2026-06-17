@@ -1,9 +1,12 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import type { InvestmentIntentStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class InvestmentIntentRepository {
+  private readonly logger = new Logger(InvestmentIntentRepository.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async findBySimulationId(simulationId: string) {
@@ -32,8 +35,21 @@ export class InvestmentIntentRepository {
     confirmedAt?: Date | null;
   }) {
     try {
-      const intent = await this.prisma.investmentIntent.create({
-        data: {
+      const intent = await this.prisma.investmentIntent.upsert({
+        where: {
+          investorId_opportunityId: {
+            investorId: data.investorId,
+            opportunityId: data.opportunityId,
+          },
+        },
+        update: {
+          simulationId: data.simulationId,
+          amount: data.amount,
+          expectedReturn: data.expectedReturn,
+          status: data.status,
+          confirmedAt: data.confirmedAt ?? null,
+        },
+        create: {
           investorId: data.investorId,
           opportunityId: data.opportunityId,
           simulationId: data.simulationId,
@@ -55,8 +71,14 @@ export class InvestmentIntentRepository {
       });
 
       return intent;
-    } catch (e) {
-      throw new InternalServerErrorException('Error creating investment intent');
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        this.logger.error(`No se pudo guardar la intención de inversión. Código Prisma: ${error.code}`);
+      } else {
+        this.logger.error('No se pudo guardar la intención de inversión', error);
+      }
+
+      throw new InternalServerErrorException('No se pudo registrar la intención de inversión');
     }
   }
 }

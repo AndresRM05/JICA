@@ -6,6 +6,13 @@ import { SimulationResultDto } from './dto/simulation-result.dto';
 import { InvestmentIntentRepository } from './investment-intent.repository';
 import { ConfirmIntentResultDto } from './dto/confirm-intent-result.dto';
 
+function calculateEstimatedReturn(investmentAmount: number, estimatedReturn: number) {
+  const estimatedProfit = (investmentAmount * estimatedReturn) / 100;
+  const totalReturn = investmentAmount + estimatedProfit;
+
+  return { estimatedProfit, totalReturn };
+}
+
 @Injectable()
 export class SimulationService {
   constructor(
@@ -45,8 +52,10 @@ export class SimulationService {
 
     // Calcular utilidad estimada
     // estimatedReturn de opportunity está en porcentaje (ej: 15 para 15%)
-    const estimatedProfit = (investmentAmount * opportunity.estimatedReturn) / 100;
-    const totalReturn = investmentAmount + estimatedProfit;
+    const { estimatedProfit, totalReturn } = calculateEstimatedReturn(
+      investmentAmount,
+      opportunity.estimatedReturn,
+    );
 
     // Crear simulación en BD
     const simulation = await this.simulationRepository.createSimulation({
@@ -92,8 +101,7 @@ export class SimulationService {
 
     // Calcular valores
     const roiUsed = Number(simulation.estimatedReturn);
-    const estimatedProfit = (Number(simulation.amount) * roiUsed) / 100;
-    const totalReturn = Number(simulation.amount) + estimatedProfit;
+    const { totalReturn } = calculateEstimatedReturn(Number(simulation.amount), roiUsed);
 
     // Crear intención en BD
     const intent = await this.investmentIntentRepository.createIntent({

@@ -5,11 +5,11 @@ import { GetInvestmentsQueryDto } from './dto/get-investments-query.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { EntraIdGuard } from '../auth/guards/entra-id.guard';
+import { InvestorGuard } from '../auth/guards/investor.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Controller('investments')
-@UseGuards(EntraIdGuard, RolesGuard)
+@UseGuards(InvestorGuard, RolesGuard)
 export class InvestmentsController {
   constructor(private readonly investmentsService: InvestmentsService) {}
  
