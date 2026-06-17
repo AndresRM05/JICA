@@ -3,9 +3,8 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { MetricCard } from '@/components/ui/MetricCard';
 import { StatusMessage } from '@/components/ui/StatusMessage';
-import type { OpportunityFinancialDetailResponse } from '@/features/investments/types/investment.types';
-import { useConfirmSimulation } from '@/features/simulation/hooks/useConfirmSimulation';
-import type { SimulationResponse } from '@/features/simulation/types';
+import type { OpportunityFinancialDetailResponse } from '@/features/investments';
+import { useConfirmSimulation, type SimulationResponse } from '@/features/simulation';
 import { getUserFriendlyErrorMessage } from '@/utils/errorMessages';
 import { formatCurrency, formatDateTime, formatPercent } from '@/utils/formatters';
 

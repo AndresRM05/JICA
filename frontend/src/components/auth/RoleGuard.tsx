@@ -1,8 +1,11 @@
-// /src/components/auth/RoleGuard.tsx
+import type { ReactNode } from 'react';
+import { useAuthStore } from '@/store/authStore';
+import type { UserRole } from '@/types/auth.types';
+
 interface RoleGuardProps {
   allowedRoles: UserRole[];
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
+  children: ReactNode;
+  fallback?: ReactNode;
 }
  
 export function RoleGuard({ allowedRoles, children, fallback = null }: RoleGuardProps) {

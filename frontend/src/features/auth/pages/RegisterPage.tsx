@@ -1,11 +1,10 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ZodError } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { StatusMessage } from '@/components/ui/StatusMessage';
-import { registerUser } from '@/services/authService';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthMutations } from '@/features/auth/hooks';
 import { getUserFriendlyErrorMessage } from '@/utils/errorMessages';
 import { registerSchema, type RegisterFormData } from '@/validations/registerSchema';
 
@@ -13,32 +12,29 @@ type RegisterErrors = Partial<Record<keyof RegisterFormData, string>>;
 
 export function RegisterPage() {
   const navigate = useNavigate();
-  const setSession = useAuthStore((state) => state.setSession);
+  const { registerMutation } = useAuthMutations();
   const [formData, setFormData] = useState<RegisterFormData>({
-    firstName: 'Andrés',
-    lastName: 'Serrano',
-    email: 'nuevo.inversionista@jica.local',
-    phone: '8888-0000',
-    password: 'Demo12345',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    password: '',
   });
   const [errors, setErrors] = useState<RegisterErrors>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (field: keyof RegisterFormData, value: string) => {
     setFormData((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: undefined }));
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setGeneralError(null);
 
     try {
       const parsedData = registerSchema.parse(formData);
-      setIsSubmitting(true);
-      const response = await registerUser(parsedData);
-      setSession(response.user);
+      await registerMutation.mutateAsync(parsedData);
       navigate('/dashboard');
     } catch (error) {
       if (error instanceof ZodError) {
@@ -53,8 +49,6 @@ export function RegisterPage() {
       } else {
         setGeneralError(getUserFriendlyErrorMessage(error));
       }
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -69,7 +63,7 @@ export function RegisterPage() {
           </div>
         </div>
         <p className="mt-4 text-sm text-slate-500">
-          Esta pantalla inicia el flujo principal validado del MVP: registro, dashboard, detalle, simulación y confirmación.
+          Esta pantalla inicia el flujo principal validado del MVP: registro, dashboard, detalle, simulacion y confirmacion.
         </p>
 
         {generalError ? <div className="mt-6"><StatusMessage title="No se pudo registrar" message={generalError} variant="error" /></div> : null}
@@ -78,19 +72,19 @@ export function RegisterPage() {
           <Input label="Nombre" name="firstName" value={formData.firstName} error={errors.firstName} onChange={(event) => handleChange('firstName', event.target.value)} />
           <Input label="Apellido" name="lastName" value={formData.lastName} error={errors.lastName} onChange={(event) => handleChange('lastName', event.target.value)} />
           <div className="sm:col-span-2">
-            <Input label="Correo electrónico" name="email" type="email" value={formData.email} error={errors.email} onChange={(event) => handleChange('email', event.target.value)} />
+            <Input label="Correo electronico" name="email" type="email" value={formData.email} error={errors.email} onChange={(event) => handleChange('email', event.target.value)} />
           </div>
-          <Input label="Teléfono" name="phone" value={formData.phone ?? ''} error={errors.phone} onChange={(event) => handleChange('phone', event.target.value)} />
-          <Input label="Contraseña" name="password" type="password" value={formData.password} error={errors.password} onChange={(event) => handleChange('password', event.target.value)} />
+          <Input label="Telefono" name="phone" value={formData.phone ?? ''} error={errors.phone} onChange={(event) => handleChange('phone', event.target.value)} />
+          <Input label="Contrasena" name="password" type="password" value={formData.password} error={errors.password} onChange={(event) => handleChange('password', event.target.value)} />
           <div className="sm:col-span-2">
-            <Button type="submit" className="w-full" isLoading={isSubmitting}>Crear cuenta y entrar</Button>
+            <Button type="submit" className="w-full" isLoading={registerMutation.isPending}>Crear cuenta y entrar</Button>
           </div>
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-500">
-          ¿Ya tienes cuenta?{' '}
-          <Link className="font-semibold text-emerald-700 hover:text-emerald-800" to="/login">
-            Iniciar sesión
+          Ya tienes cuenta?{' '}
+          <Link className="font-semibold text-emerald-700 hover:text-emerald-800" to="/auth">
+            Iniciar sesion
           </Link>
         </p>
       </section>

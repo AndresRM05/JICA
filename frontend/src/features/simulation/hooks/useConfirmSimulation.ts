@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { confirmInvestment } from '@/services/simulationService';
-import { investmentKeys } from '@/features/investments/hooks/useInvestments';
+import { investmentKeys } from '@/features/investments';
 
 export function useConfirmSimulation() {
   const queryClient = useQueryClient();

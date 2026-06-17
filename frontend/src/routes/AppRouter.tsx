@@ -1,12 +1,11 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { AuthPage, RegisterPage } from '@/features/auth';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { ConfirmationPage } from '@/pages/ConfirmationPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { InvestmentDetailsPage } from '@/pages/InvestmentDetailsPage';
-import { LoginPage } from '@/pages/LoginPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ProfilePage } from '@/pages/ProfilePage';
-import { RegisterPage } from '@/pages/RegisterPage';
 import { SimulationPage } from '@/pages/SimulationPage';
 import { ProtectedRoute } from '@/routes/ProtectedRoute';
 
@@ -14,8 +13,8 @@ export function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/auth" replace />} />
-      <Route path="/auth" element={<LoginPage />} />
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/auth" element={<AuthPage />} />
+      <Route path="/login" element={<Navigate to="/auth" replace />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route
         path="/dashboard"

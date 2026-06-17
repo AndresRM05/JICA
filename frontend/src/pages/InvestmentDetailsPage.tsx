@@ -4,9 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { MetricCard } from '@/components/ui/MetricCard';
 import { RiskBadge } from '@/components/ui/RiskBadge';
 import { StatusMessage } from '@/components/ui/StatusMessage';
-import { RevenueTrendChart } from '@/features/investments/components/RevenueTrendChart';
-import { RoiProjectionChart } from '@/features/investments/components/RoiProjectionChart';
-import { useInvestmentDetail } from '@/features/investments/hooks/useInvestmentDetail';
+import { RevenueTrendChart, RoiProjectionChart, useInvestmentDetail } from '@/features/investments';
 import { getUserFriendlyErrorMessage } from '@/utils/errorMessages';
 import { formatCurrency, formatPercent } from '@/utils/formatters';
 
