@@ -1,4 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import type { InvestmentIntentStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -27,7 +28,7 @@ export class InvestmentIntentRepository {
     simulationId?: string | null;
     amount: number;
     expectedReturn: number;
-    status: string;
+    status: InvestmentIntentStatus;
     confirmedAt?: Date | null;
   }) {
     try {

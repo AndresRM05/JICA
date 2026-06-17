@@ -39,6 +39,11 @@ export class AuthRepository {
         firstName: true,
         lastName: true,
         role: true,
+        investor: {
+          select: {
+            id: true,
+          },
+        },
       },
     });
   }

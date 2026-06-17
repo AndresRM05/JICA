@@ -38,7 +38,7 @@ export function RegisterPage() {
       const parsedData = registerSchema.parse(formData);
       setIsSubmitting(true);
       const response = await registerUser(parsedData);
-      setSession(response.accessToken, response.user);
+      setSession(response.user);
       navigate('/dashboard');
     } catch (error) {
       if (error instanceof ZodError) {

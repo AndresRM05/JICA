@@ -1,5 +1,5 @@
 export interface SimulationRequest {
-  investmentAmount: number;
+  amount: number;
 }
 
 export interface SimulationResponse {

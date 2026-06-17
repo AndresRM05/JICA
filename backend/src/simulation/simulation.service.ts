@@ -108,7 +108,7 @@ export class SimulationService {
 
     return {
       intentId: intent.id,
-      simulationId: intent.simulationId,
+      simulationId: intent.simulationId ?? simulationId,
       opportunityId: intent.opportunityId,
       investorId: intent.investorId,
       amount: Number(intent.amount),

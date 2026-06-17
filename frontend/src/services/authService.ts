@@ -1,6 +1,6 @@
 import { httpClient } from '@/services/httpClient';
 import { unwrapApiData } from '@/services/apiUtils';
-import type { LoginResponse, AuthenticatedUser } from '@/types/auth.types';
+import type { AuthenticatedUser, LoginResponse, RegisterResponse } from '@/types/auth.types';
 import type { LoginFormData } from '@/validations/loginSchema';
 import type { RegisterFormData } from '@/validations/registerSchema';
 
@@ -10,29 +10,19 @@ interface BackendAuthResponse {
   firstName: string;
   lastName: string;
   role: 'investor' | 'business' | 'admin';
-  investorId?: string;
-  accessToken?: string;
-  user?: AuthenticatedUser;
+  investorId: string;
 }
 
 function mapBackendAuthResponse(response: BackendAuthResponse): LoginResponse {
-  if (response.user && response.accessToken) {
-    return {
-      accessToken: response.accessToken,
-      user: response.user,
-    };
-  }
-
-  return {
-    accessToken: response.accessToken ?? 'local-mvp-token',
-    user: {
-      id: response.id,
-      email: response.email,
-      fullName: `${response.firstName} ${response.lastName}`,
-      role: response.role,
-      investorId: response.investorId,
-    },
+  const user: AuthenticatedUser = {
+    id: response.id,
+    email: response.email,
+    fullName: `${response.firstName} ${response.lastName}`,
+    role: response.role,
+    investorId: response.investorId,
   };
+
+  return { user };
 }
 
 export async function loginUser(data: LoginFormData): Promise<LoginResponse> {
@@ -40,7 +30,7 @@ export async function loginUser(data: LoginFormData): Promise<LoginResponse> {
   return mapBackendAuthResponse(unwrapApiData(response.data));
 }
 
-export async function registerUser(data: RegisterFormData): Promise<LoginResponse> {
+export async function registerUser(data: RegisterFormData): Promise<RegisterResponse> {
   const response = await httpClient.post<BackendAuthResponse | { data: BackendAuthResponse }>('/auth/register', data);
   return mapBackendAuthResponse(unwrapApiData(response.data));
 }

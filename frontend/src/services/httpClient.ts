@@ -9,10 +9,10 @@ export const httpClient = axios.create({
 });
 
 httpClient.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().accessToken;
+  const investorId = useAuthStore.getState().user?.investorId;
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (investorId) {
+    config.headers.set('x-investor-id', investorId);
   }
 
   return config;
@@ -20,8 +20,8 @@ httpClient.interceptors.request.use((config) => {
 
 httpClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
+  (error: unknown) => {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
       useAuthStore.getState().clearSession();
     }
 

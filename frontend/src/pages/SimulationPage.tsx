@@ -65,7 +65,7 @@ export function SimulationPage() {
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Investment Simulation</p>
           <h2 className="mt-3 text-3xl font-black text-slate-950">Simular inversión</h2>
           <p className="mt-3 text-sm leading-6 text-slate-500">
-            Ingrese el monto que desea invertir en {opportunity.businessName}. El backend calcula el retorno usando el ROI y riesgo configurados.
+            Ingrese el monto que desea invertir en {opportunity.businessName}. El sistema calcula el retorno usando el ROI y riesgo configurados.
           </p>
 
           <form className="mt-8 space-y-5" onSubmit={handleSubmit}>

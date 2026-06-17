@@ -19,7 +19,18 @@ export class AuthService {
 
     const user = await this.authRepository.createInvestorUser(dto, passwordHash);
 
-    return user;
+    if (!user.investor) {
+      throw new BadRequestException('No se pudo crear el perfil inversionista');
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      investorId: user.investor.id,
+    };
   }
 
   async login(dto: LoginAuthDto) {

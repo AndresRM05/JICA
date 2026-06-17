@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { RiskLevel } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { SimulationResultDto } from './dto/simulation-result.dto';
 
@@ -23,7 +24,7 @@ export class SimulationRepository {
         opportunityId: input.opportunityId,
         amount: input.amount,
         estimatedReturn: input.estimatedReturn,
-        riskLevel: input.riskLevel,
+        riskLevel: input.riskLevel as RiskLevel,
       },
       select: {
         id: true,

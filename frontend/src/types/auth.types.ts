@@ -5,10 +5,11 @@ export interface AuthenticatedUser {
   email: string;
   fullName: string;
   role: UserRole;
-  investorId?: string;
+  investorId: string;
 }
 
 export interface LoginResponse {
-  accessToken: string;
   user: AuthenticatedUser;
 }
+
+export type RegisterResponse = LoginResponse;

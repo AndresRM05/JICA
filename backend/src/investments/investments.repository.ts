@@ -8,7 +8,7 @@ export class InvestmentsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findById(opportunityId: string): Promise<InvestmentResponseDto | null> {
-    return this.prisma.investmentOpportunity.findUnique({
+    const opportunity = await this.prisma.investmentOpportunity.findUnique({
       where: { id: opportunityId },
       select: {
         id: true,
@@ -19,6 +19,17 @@ export class InvestmentsRepository {
         status: true,
       },
     });
+
+    if (!opportunity) return null;
+
+    return {
+      id: opportunity.id,
+      businessName: opportunity.businessName,
+      estimatedReturn: Number(opportunity.estimatedReturn),
+      riskLevel: opportunity.riskLevel,
+      minAmount: Number(opportunity.minAmount),
+      status: opportunity.status,
+    };
   }
 
   async registerInterest(opportunityId: string, investorId: string): Promise<void> {

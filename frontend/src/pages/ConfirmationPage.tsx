@@ -38,7 +38,7 @@ export function ConfirmationPage() {
         <p className="mt-6 text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Confirmación de inversión</p>
         <h2 className="mt-3 text-3xl font-black text-slate-950">Revise y confirme su intención</h2>
         <p className="mt-3 text-sm text-slate-500">
-          Esta pantalla registra la intención de inversión en el backend del MVP.
+          Esta pantalla registra la intención de inversión.
         </p>
       </section>
 

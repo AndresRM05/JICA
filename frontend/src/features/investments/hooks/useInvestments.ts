@@ -3,7 +3,7 @@ import { getAvailableInvestments } from '@/services/investmentService';
 import type { OpportunityFilters } from '@/features/investments/types/investment.types';
 
 export const investmentKeys = {
-  all: ['investments'] as const,
+  all: ['opportunities'] as const,
   list: (filters: OpportunityFilters) => [...investmentKeys.all, 'list', filters] as const,
   detail: (investmentId: string) => [...investmentKeys.all, 'detail', investmentId] as const,
 };

@@ -14,7 +14,7 @@ type LoginErrors = Partial<Record<keyof LoginFormData, string>>;
 export function LoginPage() {
   const navigate = useNavigate();
   const setSession = useAuthStore((state) => state.setSession);
-  const [formData, setFormData] = useState<LoginFormData>({ email: 'demo@jica.local', password: 'Demo12345' });
+  const [formData, setFormData] = useState<LoginFormData>({ email: 'inversionista1@jica.local', password: 'Password123!' });
   const [errors, setErrors] = useState<LoginErrors>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,7 +32,7 @@ export function LoginPage() {
       const parsedData = loginSchema.parse(formData);
       setIsSubmitting(true);
       const response = await loginUser(parsedData);
-      setSession(response.accessToken, response.user);
+      setSession(response.user);
       navigate('/dashboard');
     } catch (error) {
       if (error instanceof ZodError) {
