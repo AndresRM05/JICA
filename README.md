@@ -165,6 +165,7 @@ Asimismo, se observó la presencia de clics erróneos en distintas tareas, lo qu
 > Interacciones realizadas durante la confirmación de la inversión.
 
 ![Heatmap Tarea 4](./images/ux/maze_screenshot_interaction%20(3).jpg)
+
 ---
 
 #### Heatmap - Volver al dashboard
