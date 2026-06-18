@@ -6366,8 +6366,7 @@ Archivos en `/src`:
 
 # 4. Creación del MVP
 
-## 4.1 1. Definición Formal del Alcance del MVP
-
+## 4.1 Definición Formal del Alcance del MVP
 
 ### Flujo Principal
 
@@ -6405,7 +6404,7 @@ Las siguientes funcionalidades representan el valor principal de la plataforma y
 * Cálculo del retorno estimado.
 * Visualización de resultados de la simulación.
 
-### Confirmación
+#### Confirmación
 
 * Confirmación de intención de inversión.
 * Registro de la intención de inversión en el sistema.
@@ -6459,16 +6458,251 @@ Las siguientes funcionalidades quedan fuera del alcance del MVP:
 2. Selecciona una oportunidad de interés.
 3. Consulta información resumida de la pyme.
 
-### Journey 3: Análisis de oportunidad
+#### Journey 3: Análisis de oportunidad
 
 1. El usuario accede al detalle de una pyme.
 2. Revisa métricas financieras.
 3. Analiza el nivel de riesgo de la inversión.
 
-### Journey 4: Simulación y confirmación
+#### Journey 4: Simulación y confirmación
 
 1. El usuario ingresa un monto de inversión.
 2. El sistema calcula el retorno estimado.
 3. El usuario revisa los resultados.
 4. Confirma su intención de inversión.
 5. El sistema registra la operación y muestra una confirmación.
+
+## 4.2 Implementación actual del MVP
+
+El MVP implementado corresponde a una versión funcional y simplificada de JICA enfocada en el flujo principal del inversionista. Esta versión permite que un usuario inversionista se registre, inicie sesión, explore oportunidades de inversión gastronómicas, consulte información financiera relevante, simule una inversión y confirme una intención de inversión.
+
+El MVP se ejecuta únicamente en ambiente local y utiliza datos precargados para facilitar pruebas funcionales, validación del flujo principal y demostraciones del sistema.
+
+La implementación actual se mantiene alineada con la arquitectura documentada del proyecto, respetando la separación entre frontend, backend y capa de datos.
+
+---
+
+## 4.3 Funcionalidades implementadas en el MVP
+
+Las funcionalidades implementadas en esta versión son:
+
+* Registro de inversionistas.
+* Inicio de sesión de inversionistas.
+* Visualización de oportunidades de inversión disponibles.
+* Consulta del detalle de una oportunidad.
+* Consulta de información financiera asociada a una pyme gastronómica.
+* Visualización de métricas financieras relevantes.
+* Visualización del nivel de riesgo estimado.
+* Simulación de inversión a partir de un monto ingresado por el usuario.
+* Cálculo del retorno estimado.
+* Confirmación de intención de inversión.
+* Registro de la intención de inversión en la base de datos.
+* Navegación entre las pantallas principales del flujo.
+* Validaciones básicas de formularios.
+* Manejo de errores y mensajes de retroalimentación para el usuario.
+
+---
+
+## 4.4 Ejecución local del proyecto
+
+El MVP está diseñado para ejecutarse únicamente en ambiente local. Para levantar el sistema completo se deben ejecutar tres componentes principales:
+
+1. Base de datos local.
+2. Backend.
+3. Frontend.
+
+### 4.4.1 Ejecución de la base de datos
+
+El proyecto utiliza PostgreSQL como base de datos local y Prisma como ORM.
+
+Antes de iniciar el backend, se debe contar con una base de datos PostgreSQL creada localmente.
+
+Ejemplo de base de datos local:
+
+```bash
+jica_db
+```
+
+Luego, desde el backend, se deben ejecutar las migraciones y la carga inicial de datos.
+
+```bash
+npx prisma migrate dev
+npx prisma db seed
+```
+
+También se puede utilizar Prisma Studio para revisar visualmente los datos cargados:
+
+```bash
+npx prisma studio
+```
+
+---
+
+### 4.4.2 Ejecución del Backend
+
+El backend está desarrollado con Node.js, TypeScript, NestJS, Prisma y PostgreSQL.
+
+Pasos para ejecutar el backend:
+
+```bash
+cd backend
+npm install
+npx prisma generate
+npx prisma migrate dev
+npx prisma db seed
+npm run start:dev
+```
+
+Por defecto, el backend se ejecuta de forma local en:
+
+```bash
+http://localhost:3000
+```
+
+---
+
+### 4.4.3 Ejecución del Frontend
+
+El frontend está desarrollado con React, Vite, TypeScript y Tailwind CSS.
+
+Pasos para ejecutar el frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Por defecto, el frontend se ejecuta de forma local en:
+
+```bash
+http://localhost:5173
+```
+
+El frontend consume los endpoints locales expuestos por el backend.
+
+---
+
+## 4.5 Variables de entorno necesarias
+
+El proyecto requiere variables de entorno para conectar los distintos componentes del sistema en ambiente local.
+
+### Backend
+
+Archivo sugerido:
+
+```bash
+backend/.env
+```
+
+Contenido esperado:
+
+```env
+DATABASE_URL="postgresql://usuario:contraseña@localhost:5432/jica_db"
+PORT=3000
+```
+
+La variable `DATABASE_URL` debe ajustarse según la configuración local de PostgreSQL de cada integrante del equipo.
+
+### Frontend
+
+Archivo sugerido:
+
+```bash
+frontend/.env
+```
+
+Contenido esperado:
+
+```env
+VITE_API_URL="http://localhost:3000"
+```
+
+Esta variable permite que el frontend se comunique con el backend local.
+
+---
+
+## 4.6 Dependencias requeridas
+
+Para ejecutar el MVP en ambiente local se requiere tener instalado:
+
+* Node.js.
+* npm.
+* PostgreSQL.
+* Prisma.
+* Navegador web moderno.
+* Visual Studio Code o editor equivalente.
+
+Dependencias principales del backend:
+
+* NestJS.
+* TypeScript.
+* Prisma.
+* PostgreSQL.
+* bcryptjs.
+* Jest.
+* Supertest.
+
+Dependencias principales del frontend:
+
+* React.
+* Vite.
+* TypeScript.
+* Tailwind CSS.
+* React Router.
+* TanStack Query.
+* Zustand.
+* Zod.
+
+---
+
+## 4.7 Procedimiento de inicialización de datos
+
+El MVP utiliza datos precargados para facilitar la validación del flujo principal del inversionista.
+
+La carga inicial incluye:
+
+* Usuarios inversionistas de prueba.
+* Oportunidades de inversión gastronómicas.
+* Métricas financieras asociadas a las oportunidades.
+* Datos necesarios para realizar simulaciones e intenciones de inversión.
+
+Para inicializar los datos se debe ejecutar:
+
+```bash
+npx prisma db seed
+```
+
+Este procedimiento permite que el sistema tenga información disponible desde el primer levantamiento local, sin depender de módulos administrativos ni de registro de pymes, ya que esas funcionalidades están fuera del alcance del MVP.
+
+---
+
+## 4.8 Uso de servicios simulados, mocks o adapters temporales
+
+El MVP no depende de servicios externos de pago, inteligencia artificial, autenticación en la nube ni integraciones bancarias.
+
+Cuando una funcionalidad pertenece a la visión final del sistema pero no al alcance del MVP, se maneja mediante una de las siguientes estrategias:
+
+* Datos precargados.
+* Respuestas locales.
+* Simulación de comportamiento.
+* Reducción del flujo al mínimo funcional.
+* Exclusión explícita dentro de la sección de funcionalidades fuera de alcance.
+
+Esto permite validar el flujo principal sin depender de servicios externos, manteniendo el proyecto ejecutable en ambiente local.
+
+---
+
+## 4.9 Estado actual del MVP
+
+El MVP se encuentra funcional para el flujo principal definido y aprobado:
+
+```text
+Registro / Inicio de sesión
+→ Dashboard de oportunidades
+→ Detalle financiero
+→ Simulación de inversión
+→ Confirmación de intención de inversión
+```
+
+El sistema permite demostrar la propuesta de valor central de JICA: brindar información financiera confiable para apoyar la toma de decisiones de inversionistas interesados en pymes gastronómicas.
