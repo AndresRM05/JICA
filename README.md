@@ -2323,9 +2323,9 @@ Ubicación requerida para servicios por feature:
 
 Ejemplos requeridos:
 
-* [investmentService.ts](./frontend/src/features/investments/services/investmentService.ts)
-* [simulationService.ts](./frontend/src/features/simulation/services/simulationService.ts)
-* [documentService.ts](./frontend/src/features/documents/services/documentService.ts)
+* [investmentService.ts](./frontend/src/services/investmentService.ts)
+* [simulationService.ts](./frontend/src/services/simulationService.ts)
+
 
 Reglas obligatorias:
 
