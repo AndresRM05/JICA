@@ -1,0 +1,111 @@
+name: Deploy Backend Stage
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-backend-stage.yml"
+
+jobs:
+  validate:
+    name: Validación y análisis estático
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Verificar formato
+        run: npm run format:check
+
+  test:
+    name: Pruebas y cobertura
+    runs-on: ubuntu-latest
+    needs: validate
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Pruebas unitarias con cobertura
+        run: npm run test:cov
+
+      - name: Pruebas e2e
+        run: npm run test:e2e
+        env:
+          NODE_ENV: test
+          DATABASE_URL: ${{ secrets.STAGE_DATABASE_URL }}
+
+  build-and-deploy:
+    name: Build y deploy a staging
+    runs-on: ubuntu-latest
+    needs: test
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Audit de dependencias
+        run: npm audit --audit-level=high
+
+      - name: Build
+        run: npm run build
+
+      - name: Generar cliente Prisma
+        run: npx prisma generate
+
+      - name: Aplicar migraciones
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.STAGE_DATABASE_URL }}
+
+      - name: Deploy a Azure App Service - staging
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.STAGE_BACKEND_APP_NAME }}
+          publish-profile: ${{ secrets.STAGE_AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: backend

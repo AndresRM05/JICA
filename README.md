@@ -304,6 +304,7 @@ Se incrementó la prominencia visual del botón **"Confirmar inversión"** media
 Las modificaciones realizadas se enfocaron en fortalecer la jerarquía visual de las acciones principales del flujo de inversión sin alterar la estructura general del prototipo. Esto permitió conservar la familiaridad de la interfaz mientras se mejoraba la facilidad de navegación y la identificación de las acciones clave por parte de los usuarios.
 
 ---
+
 # 2. Frontend
 
 ## 2.1 Stack de tecnologías del frontend
@@ -1553,14 +1554,14 @@ Esta sección define los patrones arquitectónicos que debe seguir el frontend d
 
 El frontend se organiza por funcionalidades del negocio en lugar de agrupar el código únicamente por tipo de archivo. Cada feature contiene los componentes, hooks, servicios, tipos y validaciones que necesita para funcionar.
 
-### Objetivo
+##### Objetivo
 
 - Mantener alta cohesión entre archivos relacionados.
 - Reducir el acoplamiento entre funcionalidades.
 - Facilitar el trabajo colaborativo.
 - Permitir agregar nuevas funcionalidades sin afectar módulos existentes.
 
-### Estructura esperada
+##### Estructura esperada
 
 ```txt
 /src/features
@@ -1581,7 +1582,7 @@ El frontend se organiza por funcionalidades del negocio en lugar de agrupar el c
         ...
 ```
 
-### Reglas obligatorias
+##### Reglas obligatorias
 
 - Cada funcionalidad nueva debe implementarse dentro de su propio feature.
 - No mezclar lógica de diferentes dominios dentro de una misma carpeta.
@@ -1594,7 +1595,7 @@ El frontend se organiza por funcionalidades del negocio en lugar de agrupar el c
 
 La comunicación entre la interfaz y el backend debe seguir una separación clara de responsabilidades. Ninguna capa debe asumir responsabilidades que pertenecen a otra.
 
-### Flujo obligatorio
+##### Flujo obligatorio
 
 ```txt
 Página / Componente
@@ -1608,7 +1609,7 @@ Cliente HTTP
 Backend
 ```
 
-### Responsabilidad de cada capa
+##### Responsabilidad de cada capa
 
 | Capa | Responsabilidad |
 |-------|-----------------|
@@ -1617,7 +1618,7 @@ Backend
 | Servicio | Implementar las operaciones específicas del dominio y consumir los endpoints correspondientes. |
 | Cliente HTTP | Centralizar la configuración de la comunicación con el backend, incluyendo base URL, autenticación y manejo común de errores. |
 
-### Reglas obligatorias
+##### Reglas obligatorias
 
 - Ningún componente o página debe consumir APIs directamente.
 - Toda llamada al backend debe realizarse mediante un servicio.
@@ -1636,14 +1637,14 @@ Esta sección define los patrones de diseño que deben utilizarse en el frontend
 
 El patrón **Facade** proporciona una interfaz sencilla para acceder a funcionalidades que internamente pueden involucrar varios servicios o procesos. De esta forma, los componentes no necesitan conocer la complejidad de la implementación.
 
-### Objetivo
+##### Objetivo
 
 - Reducir el acoplamiento entre la interfaz y los servicios.
 - Centralizar operaciones relacionadas con una misma funcionalidad.
 - Facilitar cambios internos sin afectar a los componentes que consumen el servicio.
 - Simplificar las pruebas y el mantenimiento.
 
-### Flujo esperado
+##### Flujo esperado
 
 ```txt
 Componente
@@ -1657,7 +1658,7 @@ Cliente HTTP
 Backend
 ```
 
-### Estructura esperada
+##### Estructura esperada
 
 ```txt
 /src/features
@@ -1669,7 +1670,7 @@ Backend
             investmentService.ts
 ```
 
-### Reglas obligatorias
+##### Reglas obligatorias
 
 - Los componentes no deben coordinar múltiples servicios directamente.
 - Las operaciones complejas deben exponerse mediante una fachada del dominio correspondiente.
@@ -1678,18 +1679,18 @@ Backend
 
 ---
 
-### Container–Presentational Pattern
+#### Container–Presentational Pattern
 
 Este patrón separa la lógica de la aplicación de la presentación visual. Los componentes contenedores obtienen y preparan la información, mientras que los componentes de presentación únicamente renderizan la interfaz utilizando las propiedades recibidas.
 
-### Objetivo
+##### Objetivo
 
 - Separar la lógica de negocio de la interfaz.
 - Facilitar la reutilización de componentes visuales.
 - Mejorar la mantenibilidad del código.
 - Simplificar las pruebas unitarias de los componentes.
 
-### Flujo esperado
+##### Flujo esperado
 
 ```txt
 Backend
@@ -1703,14 +1704,14 @@ Presentational Component
 Usuario
 ```
 
-### Responsabilidad de cada componente
+##### Responsabilidad de cada componente
 
 | Tipo | Responsabilidad |
 |-------|-----------------|
 | Container | Obtener datos, manejar estados y preparar la información para la vista. |
 | Presentational | Renderizar la interfaz utilizando únicamente las propiedades recibidas. |
 
-### Reglas obligatorias
+##### Reglas obligatorias
 
 - Los componentes de presentación no deben consumir APIs directamente.
 - Los componentes de presentación no deben contener lógica de negocio.
@@ -1741,11 +1742,11 @@ Las siguientes tecnologías se suman al stack definido en la sección 2.1:
  
 ### Session Storage y Local Storage
  
-### Regla general
+#### Regla general
  
 El uso de `localStorage` y `sessionStorage` está **restringido** en JICA. La mayoría del estado vive en Zustand (estado de UI) o TanStack Query (estado del servidor). El almacenamiento en el navegador solo se permite para los casos explícitamente definidos a continuación.
  
-### Casos permitidos
+#### Casos permitidos
  
 | Dato | Mecanismo | Justificación |
 |---|---|---|
@@ -1753,13 +1754,13 @@ El uso de `localStorage` y `sessionStorage` está **restringido** en JICA. La ma
 | Filtros activos del dashboard | `sessionStorage` | Persiste durante la sesión activa, se limpia al cerrar el tab |
 | Paso activo en flujo de simulación | `sessionStorage` | Recupera el progreso si el usuario recarga accidentalmente |
  
-### Casos prohibidos
+#### Casos prohibidos
  
 - ID Token  → obtener siempre con `user.getIdToken()`. Ver sección 2.6.
 - Datos del usuario autenticado → viven en `authStore` (Zustand). Ver `/src/store/authStore.ts`.
 - Datos financieros de pymes o inversiones → viven en caché de TanStack Query.
 - Cualquier dato sensible: contraseñas, cuentas bancarias, cédulas, montos.
-### Implementación
+#### Implementación
  
 Las funciones de acceso a storage deben centralizarse en `/src/utils/storage.ts`. No se debe llamar a `localStorage` o `sessionStorage` directamente desde componentes. Ejemplo [storage.ts](./frontend/src/utils/storage.ts) 
 
@@ -1767,30 +1768,34 @@ Todas las keys de storage deben usar el prefijo `jica:` para evitar colisiones c
 
 ### Comunicación asíncrona con el backend
  
-### Cliente HTTP
+#### Cliente HTTP
  
 Todas las llamadas HTTP al backend deben realizarse a través del cliente centralizado en `/src/services/httpClient.ts`Ejemplo [httpClient.ts](./frontend/src/services/httpClient.ts)  Ningún componente o página debe usar `fetch` o `axios` directamente.
  
-### TanStack Query
+#### TanStack Query
  
 TanStack Query es la capa de comunicación asíncrona con el servidor. Maneja automáticamente caché, estados de carga, errores y reintentos. Debe inicializarse en `/src/App.tsx`:
 
+##### Implementación con TanStack Query mutations
 
-### Estructura de queries
+Ejemplo [useUploadFinancialDocument.ts](./frontend/src/features/documents/hooks/useUploadFinancialDocument.ts) 
+
+
+
+#### Estructura de queries
  
 Los queries de TanStack Query deben organizarse por feature dentro de `/src/features/{feature}/hooks/`. No se deben definir queries directamente en páginas o componentes. Ejemplo [useInvestments.ts](./frontend/src/features/investments/hooks/useInvestments.ts)
 
-### Query keys
+#### Query keys
  
 Todas las query keys deben definirse como constantes en el mismo archivo del hook usando el patrón de objetos mostrado arriba. Esto garantiza invalidación precisa del caché sin colisiones entre features.
  
----
  
 ### Web Sockets — Notificaciones en tiempo real
  
 JICA utiliza **Socket.io** para notificaciones en tiempo real. El uso de Web Sockets está limitado exclusivamente a eventos de notificación; la carga de datos sigue siendo responsabilidad de TanStack Query.
  
-### Eventos definidos
+#### Eventos definidos
  
 | Evento (servidor → cliente) | Descripción | Roles que lo reciben |
 |---|---|---|
@@ -1799,20 +1804,20 @@ JICA utiliza **Socket.io** para notificaciones en tiempo real. El uso de Web Soc
 | `business:approved` | Una pyme fue aprobada por el admin | `business` |
 | `business:rejected` | Una pyme fue rechazada por el admin | `business` |
  
-### Inicialización del cliente Socket.io
+#### Inicialización del cliente Socket.io
  
 La conexión debe gestionarse en `/src/services/socketService.ts`. La conexión solo debe iniciarse cuando el usuario está autenticado y debe cerrarse al hacer logout.Ejemplo [socketService.ts](./frontend/src/services/socketService.ts)
 
-### Hook de notificaciones
+#### Hook de notificaciones
  
 Los componentes no deben suscribirse directamente a eventos del socket. Deben usar el hook centralizado `/src/hooks/useNotifications.ts` Ejemplo [useNotifications.ts](./frontend/src/hooks/useNotifications.ts) 
 
-### Store de notificaciones
+#### Store de notificaciones
  
 Las notificaciones recibidas deben almacenarse en `/src/store/notificationStore.ts`: Ejemplo [notificationStore.ts](./frontend/src/store/notificationStore.ts) 
 
 
-### Manejo de procesos largos
+#### Manejo de procesos largos
  
 Los siguientes procesos en JICA pueden tomar tiempo considerable y requieren feedback visual al usuario:
  
@@ -1822,15 +1827,13 @@ Los siguientes procesos en JICA pueden tomar tiempo considerable y requieren fee
 | Generación de reporte de simulación | 3–8 segundos | Skeleton loader + estado `generating` |
 | Aprobación de pyme por admin | Asíncrono (minutos/horas) | Estado `pending` + notificación por Socket.io al resolverse |
  
-### Reglas obligatorias
+##### Reglas obligatorias
  
 - Todo proceso largo debe mostrar un indicador visual de progreso. No se debe bloquear la UI con un spinner sin información.
 - El usuario debe poder cancelar procesos largos cuando sea técnicamente posible.
 - Si un proceso falla, debe mostrarse el error con una opción de reintento visible.
 - Los procesos asíncronos que el backend resuelve en background (como aprobación de pyme) deben notificarse via Socket.io cuando se completen. El frontend no debe hacer polling para verificar el resultado.
-### Implementación con TanStack Query mutations
 
-Ejemplo [useUploadFinancialDocument.ts](./frontend/src/features/documents/hooks/useUploadFinancialDocument.ts) 
 
 ---
 ### Manejo de eventos del navegador
@@ -1844,30 +1847,31 @@ Todo `addEventListener` dentro de un `useEffect` debe tener su correspondiente `
  
 ### Observabilidad y monitoreo
  
-### Sentry
+#### Sentry
  
 Sentry es el único sistema de monitoreo de errores del frontend. Debe inicializarse en `/src/main.tsx` antes de montar la aplicación. Solo debe estar activo en `stage` y `production`. Ejemplo [main.tsx](./frontend/src/main.tsx) 
 
  
-### Qué debe capturar Sentry
+##### Qué debe capturar Sentry
  
 - Errores JavaScript no manejados
 - Errores en queries de TanStack Query (`onError` global)
 - Errores de conexión con Socket.io
 - Errores en carga de documentos o simulación
-### Qué nunca debe enviarse a Sentry
+##### Qué nunca debe enviarse a Sentry
  
 - Access Tokens de Microsoft Entra ID
 - Contraseñas
 - Datos financieros del usuario
 - Números de cuenta o cédula
-### TanStack Query — monitoreo global de errores
+
+##### TanStack Query — monitoreo global de errores
  
 Los errores globales de queries deben capturarse en el `QueryClient` y reportarse a Sentry:
  
 ### Manejo de errores
  
-### Clasificación de errores
+#### Clasificación de errores
  
 | Tipo | Origen | Manejo |
 |---|---|---|
@@ -1878,11 +1882,11 @@ Los errores globales de queries deben capturarse en el `QueryClient` y reportars
 | Error 404 | Recurso no encontrado | Mostrar página o componente de estado vacío |
 | Error 500 | Error interno del servidor | Mostrar mensaje genérico, capturar en Sentry |
  
-### Error Boundary
+#### Error Boundary
  
 Cada feature crítica debe estar envuelta en un `ErrorBoundary` de React para capturar errores de renderizado sin romper toda la aplicación. Usar el wrapper de Sentry:
 
-### Mensajes de error al usuario
+#### Mensajes de error al usuario
  
 - Los errores nunca deben mostrar mensajes técnicos, stack traces ni códigos de error del servidor.
 - Los mensajes deben ser claros, en español y orientados a la acción del usuario.
@@ -1893,7 +1897,7 @@ Ejemplo en [errorMessages.ts](./frontend/src/utils/errorMessages.ts)
  
 ### Manejo de estado
  
-### Separación de responsabilidades
+#### Separación de responsabilidades
  
 El estado del frontend de JICA se divide en dos capas con responsabilidades distintas. No se deben mezclar:
  
@@ -1902,7 +1906,7 @@ El estado del frontend de JICA se divide en dos capas con responsabilidades dist
 | Estado del servidor | TanStack Query | Datos del backend: inversiones, pymes, documentos, simulaciones |
 | Estado global de UI | Zustand | Sesión del usuario, notificaciones, filtros activos, tema |
  
-### Stores de Zustand
+#### Stores de Zustand
  
 Cada store de Zustand debe tener una responsabilidad única. No se debe crear un store global que maneje todo.
  
@@ -1917,11 +1921,11 @@ No se deben crear stores adicionales sin justificación documentada.
  
 ---
  
-### Caché
+#### Caché
  
 El caché en JICA es gestionado exclusivamente por TanStack Query. No se debe implementar caché manual con variables, refs o `localStorage`.
  
-### Configuración de staleTime por tipo de dato
+#### Configuración de staleTime por tipo de dato
  
 El `staleTime` define cuánto tiempo los datos se consideran frescos antes de hacer un nuevo request. Debe configurarse por query según la frecuencia de cambio del dato:
  
@@ -1942,7 +1946,7 @@ useQuery({
 });
 ```
  
-### Invalidación de caché
+#### Invalidación de caché
  
 El caché debe invalidarse después de mutaciones que modifiquen datos en el servidor:
  
@@ -1954,9 +1958,9 @@ queryClient.invalidateQueries({ queryKey: investmentKeys.all });
  
 ---
  
-### Reintentos
+#### Reintentos
  
-### Queries (lectura de datos)
+##### Queries (lectura de datos)
  
 TanStack Query reintenta automáticamente los queries fallidos con backoff exponencial. La configuración global está en `/src/App.tsx` . Los queries individuales pueden sobreescribir esta configuración.
  
@@ -1969,7 +1973,8 @@ useQuery({
 });
 ```
  ---
-### Mutaciones (escritura de datos)
+
+##### Mutaciones (escritura de datos)
  
 Las mutaciones **no deben reintentarse automáticamente**. Un reintento automático en una operación de escritura (confirmar inversión, subir documento) puede causar duplicados o efectos no deseados. El usuario debe reintentar manualmente.
  
@@ -1984,11 +1989,12 @@ useMutation({
 });
 ```
  
-### Reintentos en Socket.io
+##### Reintentos en Socket.io
  
 El cliente de Socket.io debe intentar reconectarse automáticamente hasta 5 veces con un delay de 2 segundos entre intentos. Ver configuración en `/src/services/socketService.ts`. Si supera los 5 intentos, debe mostrarse un banner informando al usuario que las notificaciones en tiempo real no están disponibles, sin interrumpir el resto de la aplicación.
 
 ---
+
 ## 2.10 Estrategia de testing del frontend
  
 Esta sección define las reglas obligatorias de testing para el frontend de JICA. Cubre pruebas unitarias, de integración de componentes y de UI end-to-end. El backend tiene su propia estrategia de testing; lo definido aquí es exclusivo del lado del cliente.
@@ -2049,7 +2055,7 @@ Las pruebas unitarias y de integración de componentes se ubican en `/tests/unit
  
 Las pruebas unitarias validan funciones, hooks y servicios de forma aislada, sin dependencias externas reales. Todas las dependencias externas deben ser mockeadas.
  
-### Qué debe tener pruebas unitarias obligatoriamente
+#### Qué debe tener pruebas unitarias obligatoriamente
  
 | Categoría | Qué probar |
 |---|---|
@@ -2059,7 +2065,7 @@ Las pruebas unitarias validan funciones, hooks y servicios de forma aislada, sin
 | `/src/hooks/` | Custom hooks globales: `useInactivityLogout`, `useAuthListener`, `useNotifications` |
 | `/src/features/*/hooks/` | Hooks de cada feature: `useInvestments`, `useInvestmentDetail`, `useSimulation`, `useUploadFinancialDocument` |
  
-### Convenciones
+#### Convenciones
  
 - Los archivos de prueba deben nombrarse igual que el archivo que prueban con el sufijo `.test.ts` o `.test.tsx`.
 - Cada `describe` debe corresponder a una función, hook o componente.
@@ -2077,23 +2083,23 @@ describe('tests', () => {
 });
 ```
  
-### Ejemplo — prueba unitaria de utilidad
+#### Ejemplo — prueba unitaria de utilidad
 
 [maskData.test.ts](./frontend/tests/unit/utils/maskData.test.ts) 
 
  
-### Ejemplo — prueba unitaria de esquema Zod
+#### Ejemplo — prueba unitaria de esquema Zod
 
 [loginSchema.test.ts](./frontend/tests/unit/validations/loginSchema.test.ts) 
 
 
-### Mocking de Auth
+#### Mocking de Auth
  
 Las pruebas  deben mockear el módulo completo. Nunca se debe conectarse a azure real en pruebas.
 
 [authService.test.ts](./frontend/tests/unit/services/authService.test.ts)
 
-### Mocking del cliente HTTP
+#### Mocking del cliente HTTP
  
 Las pruebas de servicios que llamen al backend deben mockear `httpClient`, no interceptar requests reales.
 [useInvestments.test.ts](./frontend/tests/unit/features/investments/hooks/useInvestments.test.ts)
@@ -2105,7 +2111,7 @@ Las pruebas de servicios que llamen al backend deben mockear `httpClient`, no in
  
 Las pruebas de integración validan que los componentes rendericen correctamente y respondan a interacciones del usuario. Se usan con React Testing Library sobre Vitest.
  
-### Qué debe tener pruebas de integración obligatoriamente
+#### Qué debe tener pruebas de integración obligatoriamente
  
 | Componente / Feature | Qué probar |
 |---|---|
@@ -2117,7 +2123,7 @@ Las pruebas de integración validan que los componentes rendericen correctamente
 | `RoleGuard` | Muestra children si el rol coincide, muestra fallback si no coincide |
 | `SimulationForm` | Cálculo de retorno estimado al cambiar el monto, validación de monto mínimo |
  
-### Convenciones con React Testing Library
+#### Convenciones con React Testing Library
  
 - Consultar elementos por `role`, `label` o `text` visible. Nunca por `className`, `id` o selectores CSS.
 - No probar detalles de implementación interna (estado interno, nombres de variables).
@@ -2130,11 +2136,11 @@ const button = screen.getByRole('button', { name: /confirmar inversión/i });
 const button = document.querySelector('.btn-primary');
 ```
 
-### Ejemplo — prueba de integración de componente
+#### Ejemplo — prueba de integración de componente
 
 [InvestmentCard.test.ts](./frontend/tests/unit/features/investments/components/InvestmentCard.test.tsx)
 
-### Ejemplo — prueba de integración de ProtectedRoute
+#### Ejemplo — prueba de integración de ProtectedRoute
 
 [ProtectedRoute.test.ts](./frontend/tests/unit/routes/ProtectedRoute.test.tsx)
 
@@ -2143,8 +2149,9 @@ const button = document.querySelector('.btn-primary');
 ### UI Testing — End to End con Playwright
  
 Las pruebas E2E validan flujos completos del usuario desde el navegador real. No mockean servicios ni el backend; se ejecutan contra el ambiente `stage`.
+
  
-### Flujos obligatorios con cobertura E2E
+#### Flujos obligatorios con cobertura E2E
  
 | Flujo | Archivo | Pasos que debe cubrir |
 |---|---|---|
@@ -2154,7 +2161,7 @@ Las pruebas E2E validan flujos completos del usuario desde el navegador real. No
 | Simulación de inversión | `/tests/e2e/simulation/simulate.spec.ts` | Ingresar monto, ver retorno estimado, confirmar simulación |
 | Registro de interés | `/tests/e2e/investments/detail.spec.ts` | Ver detalle completo de pyme, registrar interés de inversión |
  
-### Convenciones de Playwright
+#### Convenciones de Playwright
  
 - Usar `page.getByRole()`, `page.getByLabel()` y `page.getByText()` como selectores principales.
 - No usar selectores CSS ni XPath salvo casos donde no exista alternativa.
@@ -2168,14 +2175,14 @@ Las pruebas E2E validan flujos completos del usuario desde el navegador real. No
 // PLAYWRIGHT_BASE_URL
 ```
  
-### Ejemplo — prueba E2E de login
+#### Ejemplo — prueba E2E de login
 [login.spec.ts](./frontend/tests/e2e/auth/login.spec.ts)
 
-### Ejemplo — prueba E2E de simulación de inversión
+#### Ejemplo — prueba E2E de simulación de inversión
 
 [simulate.spec.ts](./frontend/tests/e2e/simulation/simulate.spec.ts)
 
-### Cobertura mínima esperada
+#### Cobertura mínima esperada
  
 La cobertura se mide con `@vitest/coverage-v8` y se reporta en cada ejecución del pipeline de CI/CD. Un build con cobertura por debajo del mínimo definido debe bloquear el merge.
  
@@ -2190,7 +2197,7 @@ La cobertura se mide con `@vitest/coverage-v8` y se reporta en cada ejecución d
 | `/src/routes/` | 80% |
 | **Cobertura global del proyecto** | **75%** |
 
-### Ejecución de pruebas
+#### Ejecución de pruebas
  
 ```bash
 # Pruebas unitarias e integración
@@ -2208,12 +2215,7 @@ npm run test:e2e:ui
  
 Estos scripts deben estar definidos en `package.json`. Los nombres de los scripts no deben cambiarse; el pipeline de CI/CD los llama por estos nombres exactos.
 
-### Diagrama C4 - Frontend
-
-![Diagrama C4 Frontend](./images/c4Diagrams/frontend_c4.png)
- 
- ---
-### Pipeline de CI/CD
+#### Pipeline de CI/CD
  
 El pipeline de GitHub Actions debe ejecutar en orden:
  
@@ -2225,8 +2227,14 @@ El pipeline de GitHub Actions debe ejecutar en orden:
  
 Las pruebas E2E solo se ejecutan en el pipeline de `stage`. No se ejecutan en `production`; el deploy a production depende de que el pipeline de stage haya pasado completamente.
 
---
-## 2.11 Consumo de APIs y contratos de datos
+## 2.11 Diagrama C4 - Frontend
+
+![Diagrama C4 Frontend](./images/c4Diagrams/frontend_c4.png)
+ 
+---
+
+
+## 2.12 Consumo de APIs y contratos de datos
 
 Esta sección define cómo el frontend de JICA debe comunicarse con el backend y cómo se deben manejar los contratos de datos entre ambas capas.
 
@@ -2267,8 +2275,6 @@ GET /investments/:id
 ```
 
 ---
-
-### Responsabilidad de cada capa
 
 ### Responsabilidad de cada capa
 
@@ -2660,7 +2666,7 @@ Antes de consumir un nuevo endpoint desde el frontend, se debe completar esta li
 [ ] Enlazar el archivo implementado en esta documentación si aplica.
 ```
 ---
-## 2.12 Optimización de rendimiento
+## 2.13 Optimización de rendimiento
  
 Esta sección define las estrategias obligatorias de rendimiento para el frontend de JICA. Al ser una aplicación CSR con datos financieros, la percepción de velocidad es crítica para la confianza del inversionista. Cada técnica aquí definida debe aplicarse en el contexto específico que se indica; no deben aplicarse de forma generalizada sin justificación.
  
@@ -2853,7 +2859,7 @@ Si la lista tiene menos de 50 elementos, usar un `map` estándar sin virtualizac
 - El skeleton loader debe usarse en lugar de spinners para contenido que tiene una estructura conocida (tarjetas de inversión, tablas, perfiles). El spinner solo aplica para acciones puntuales sin estructura predefinida.
 - TanStack Query maneja el estado de loading de datos del servidor. No duplicar ese estado con `useState` local.
 ----
-## 2.13 Estrategia de CI/CD
+## 2.14 Estrategia de CI/CD
  
 Esta sección define los pipelines, scripts de deployment, validaciones automáticas, análisis estático y acciones automáticas de código del frontend de JICA. Todo lo definido aquí es obligatorio; ningún deploy puede realizarse fuera de este flujo.
  
@@ -2917,6 +2923,7 @@ Ejemplo [tsconfig.json](./frontend/tsconfig.json)
 ESLint debe ejecutarse con `--max-warnings 0`. Cualquier warning es tratado como error y bloquea el pipeline.
  
 Las reglas mínimas obligatorias en `eslint.config.js`:
+
 ### Prettier
  
 Prettier verifica que todos los archivos estén formateados. Si un archivo no está formateado, el pipeline falla. El desarrollador debe ejecutar `npm run format` antes de hacer push.
@@ -2925,16 +2932,16 @@ Prettier verifica que todos los archivos estén formateados. Si un archivo no es
  
 ### Acciones automáticas de código
  
-### Dependabot
+#### Dependabot
  
 Dependabot debe estar configurado para revisar actualizaciones de dependencias del frontend semanalmente. Ubicación: `.github/dependabot.yml`.
 Ejemplo [dependabot.yml](.github/dependabot.yml)
 
-### Cache de dependencias
+#### Cache de dependencias
  
 El pipeline debe cachear `node_modules` usando el hash de `package-lock.json` para evitar instalar dependencias en cada ejecución innecesariamente. Esto está configurado en el paso `actions/setup-node` con `cache: 'npm'` en todos los jobs del pipeline.
  
-### Resumen del orden de ejecución por pipeline
+#### Resumen del orden de ejecución por pipeline
  
 **Stage** (push a `develop`):
 ```
@@ -2982,7 +2989,7 @@ Todos los secrets deben estar configurados en **Settings → Secrets and variabl
 
 
 
-# 3. BACKEND
+# 3. Backend
 ## 3.1 Stack de tecnologías y frameworks del backend
 
 El backend de JICA será desarrollado utilizando un stack basado en **Node.js, TypeScript, NestJS, PostgreSQL y Microsoft Entra ID**, manteniendo coherencia con la infraestructura cloud seleccionada en Azure y con la seguridad definida en el frontend.
@@ -3169,117 +3176,133 @@ La comunicación entre capas es **unidireccional y descendente**. Una capa solo 
  
 ---
  
-### Capa 1 — Controllers
+#### Capa 1 — Controllers
  
-### Responsabilidades
+##### Responsabilidades
  
 - Recibir requests HTTP y extraer datos de entrada (body, params, query).
 - Invocar el método correspondiente del Service.
 - Retornar la respuesta HTTP con el status code correcto.
 - Aplicar Guards de autenticación y autorización.
 - Aplicar Pipes de validación de DTOs.
-### Lo que debe implementarse
+
+##### Lo que debe implementarse
  
 - Decoradores de rutas (`@Get`, `@Post`, `@Put`, `@Patch`, `@Delete`).
 - Decoradores de Guards (`@UseGuards`).
 - Extracción de datos del request (`@Body`, `@Param`, `@Query`).
 - Retorno del resultado del Service como respuesta HTTP.
-### Lo que NO debe implementarse
+
+##### Lo que NO debe implementarse
  
 - Lógica de negocio de ningún tipo.
 - Consultas a la base de datos.
 - Llamadas a `PrismaService` directamente.
 - Validaciones de reglas de negocio.
 - Transformaciones complejas de datos.
-### Restricciones
+
+##### Restricciones
  
 - Un Controller solo puede inyectar su propio Service.
 - Un Controller nunca inyecta un Repository directamente.
 - Un Controller nunca inyecta `PrismaService`.
-### Referencia de implementación
+
+##### Referencia de implementación
 [investments.controller.ts](./backend/src/investments/investments.controller.ts)
 
 ---
-### Capa 2 — Services
+
+#### Capa 2 — Services
  
-### Responsabilidades
+##### Responsabilidades
  
 - Contener toda la lógica de negocio del sistema.
 - Orquestar llamadas a uno o más Repositories.
 - Aplicar reglas de negocio antes y después de acceder a datos.
 - Lanzar excepciones de negocio cuando las reglas no se cumplen.
 - Realizar cálculos financieros (ROI, retorno estimado, nivel de riesgo).
-### Lo que debe implementarse
+
+##### Lo que debe implementarse
  
 - Validaciones de negocio (ej: no se puede registrar interés en un proyecto ya financiado).
 - Orquestación de múltiples Repositories cuando una operación afecta varias entidades.
 - Cálculos financieros.
 - Lanzamiento de excepciones tipadas de NestJS (`NotFoundException`, `BadRequestException`, `ForbiddenException`).
-### Lo que NO debe implementarse
+
+##### Lo que NO debe implementarse
  
 - Llamadas directas a `PrismaService`.
 - Lógica de routing o manejo de requests HTTP.
 - Acceso directo a headers, cookies o el objeto `Request`.
 - Formateo de respuestas HTTP.
-### Restricciones
+
+##### Restricciones
  
 - Un Service puede inyectar uno o más Repositories.
 - Un Service puede inyectar otros Services de módulos exportados explícitamente.
 - Un Service nunca inyecta `PrismaService` directamente.
 - Un Service nunca accede al objeto `Request` de HTTP.
-### Referencia de implementación
+
+##### Referencia de implementación
+
 [investments.service.ts](./backend/src/investments/investments.service.ts)
 
 ---
-### Capa 3 — Repositories
+#### Capa 3 — Repositories
  
-### Responsabilidades
+##### Responsabilidades
  
 - Encapsular todo acceso a la base de datos a través de `PrismaService`.
 - Proveer métodos de consulta, creación, actualización y eliminación de datos.
 - Aplicar masking de datos sensibles antes de retornar datos al Service.
 - Usar `select` explícito en todas las consultas para evitar exponer campos innecesarios.
-### Lo que debe implementarse
+
+##### Lo que debe implementarse
  
 - Todas las consultas a la base de datos usando `PrismaService`.
 - Selección explícita de campos con `select` en cada consulta.
 - Aplicación de masking sobre datos sensibles (cédula, cuenta bancaria, email).
 - Paginación de resultados cuando el volumen de datos lo requiera.
-### Lo que NO debe implementarse
+
+##### Lo que NO debe implementarse
  
 - Lógica de negocio.
 - Validaciones de reglas de negocio.
 - Cálculos financieros.
 - Excepciones de negocio (`BadRequestException`, `ForbiddenException`).
-### Restricciones
+
+##### Restricciones
  
 - Un Repository solo puede inyectar `PrismaService`.
 - Un Repository nunca inyecta otros Repositories ni Services.
 - Un Repository nunca retorna un modelo completo de Prisma si contiene campos sensibles.
 - Todo dato sensible debe ser maskeado antes de retornarse al Service.
-### Referencia de implementación
+
+##### Referencia de implementación
 [investments.repository.ts](./backend/src/investments/investments.repository.ts)
 
-### Masking en el Repository
+##### Masking en el Repository
  
 El masking se aplica en `/backend/src/common/utils/maskData.ts` y se llama desde el Repository. Es la única capa donde se aplica; el Service y el Controller nunca reciben datos sin masking.
 Ejemplo [investments.repository.ts](./backend/src/common/utils/maskData.ts)
 
 ---
-### Capa 4 — Prisma
+#### Capa 4 — Prisma
  
-### Responsabilidades
+##### Responsabilidades
  
 - Gestionar la conexión con PostgreSQL.
 - Proveer el cliente tipado para todas las operaciones de base de datos.
 - Gestionar el schema, migraciones y seeders.
-### Lo que debe implementarse
+
+##### Lo que debe implementarse
  
 - `PrismaService` en `/backend/src/prisma/prisma.service.ts` como servicio global.
 - Schema en `/backend/prisma/schema.prisma`.
 - Migraciones en `/backend/prisma/migrations/`.
 - Seeders en `/backend/prisma/seed.ts`.
-### Lo que NO debe implementarse
+
+##### Lo que NO debe implementarse
  
 - Lógica de negocio.
 - Validaciones.
@@ -3290,6 +3313,7 @@ Ejemplo [investments.repository.ts](./backend/src/prisma/prisma.service.ts)
 `PrismaService` debe registrarse como global en `/backend/src/prisma/prisma.module.ts` para estar disponible en todos los módulos sin necesidad de importarlo en cada uno.
 
 ---
+
 ### Flujo de comunicación entre capas
  
 Ejemplo completo con una operación real: un inversionista registra interés en una inversión.
@@ -3338,12 +3362,12 @@ Ejemplo completo con una operación real: un inversionista registra interés en 
 | Repository | PrismaService | Otros Repositories, Services | `InternalServerErrorException` |
 | Prisma | — | — | Errores de conexión y consulta |
 
-### Diagrama C4 - Backend
+## 3.5 Diagrama C4 - Backend
 
 ![Diagrama C4 Backend](./images/c4Diagrams/backend_c4.png)
 
 ---
-## 3.5 Lineamientos del backend
+## 3.6 Lineamientos del backend
  
 Esta sección define las reglas obligatorias para middlewares, autenticación, autorización, manejo de errores, observabilidad, procesos largos, comunicación asíncrona, variables de entorno, caché, queues, conexiones y validación de datos. 
   
@@ -3369,7 +3393,7 @@ Ejemplo de codigo [main.ts](./backend/src/main.ts)
 - Los middlewares no deben acceder a la base de datos.
 - Los middlewares no deben lanzar excepciones de negocio.
 - No se deben crear middlewares custom para lógica que pertenece a un Guard o un Interceptor.
----
+
  
 ### Autenticación
  
@@ -3698,7 +3722,7 @@ No se deben usar Worker Threads en el MVP. Si en el futuro un cálculo financier
  
 Los DTOs definen el contrato de entrada y salida de cada endpoint. Todo dato que entra o sale del sistema debe estar tipado con un DTO.
  
-### Tipos de DTOs
+#### Tipos de DTOs
  
 | Tipo | Sufijo | Uso |
 |---|---|---|
@@ -3707,13 +3731,14 @@ Los DTOs definen el contrato de entrada y salida de cada endpoint. Todo dato que
 | Query params | `Get{Entidad}QueryDto` | Filtros y paginación |
 | Respuesta | `{Entidad}ResponseDto` | Datos que se retornan al cliente |
  
-### Reglas obligatorias
+#### Reglas obligatorias
  
 - Todo DTO debe usar decoradores de `class-validator` para validación.
 - Los DTOs de respuesta nunca deben incluir campos sensibles sin masking (cédula, cuenta bancaria).
 - Los DTOs de actualización deben extender el DTO de creación usando `PartialType` de NestJS.
 - Los DTOs deben ubicarse en la carpeta `dto/` dentro de su módulo.
-### Referencia de implementación
+
+#### Referencia de implementación
 Ejemplo [create-investment.dto.ts](./backend/src/investments/dto/create-investment.dto.ts)
 
 
@@ -3721,19 +3746,20 @@ Ejemplo [create-investment.dto.ts](./backend/src/investments/dto/create-investme
  
 ### Validación de datos
  
-### ValidationPipe global
+#### ValidationPipe global
  
 La validación de DTOs debe aplicarse globalmente con `ValidationPipe`. Se configura en `/backend/src/main.ts`:
 Ejemplo [main.ts](./backend/src/main.ts)
 
-### Reglas de validación
+#### Reglas de validación
  
 - `whitelist: true` es obligatorio. Previene que campos no declarados en el DTO lleguen al Service.
 - `forbidNonWhitelisted: true` es obligatorio. Rechaza requests con campos desconocidos en lugar de ignorarlos silenciosamente.
 - `transform: true` es obligatorio. Permite que los query params lleguen con el tipo correcto al Controller.
 - La validación de reglas de negocio (ej: monto mínimo de inversión según el proyecto) no pertenece al DTO; pertenece al Service.
 ---
-## 3.6 Organización del código
+
+## 3.7 Organización del código
  
 Esta sección define cómo debe organizarse el código del backend para facilitar mantenimiento, navegación y escalabilidad.
 
@@ -3764,7 +3790,7 @@ El repositorio de JICA es un monorepo que contiene frontend y backend como proye
 └── README.md
 ```
  
-### Reglas del monorepo
+#### Reglas del monorepo
  
 - Frontend y backend son completamente independientes. Ninguno importa código del otro.
 - Los cambios en `/frontend` no deben disparar el pipeline del backend y viceversa. Los workflows de GitHub Actions deben usar `paths` para filtrar por carpeta.
@@ -3772,11 +3798,11 @@ El repositorio de JICA es un monorepo que contiene frontend y backend como proye
 
 ### Organización interna del backend
  
-### Principio general
+#### Principio general
  
 El código del backend se organiza por **dominio de negocio**, no por tipo de archivo. Cada módulo NestJS es una unidad autocontenida que agrupa todo lo relacionado a una funcionalidad: controller, service, repository, DTOs y module.
  
-### Regla de dependencias entre módulos
+#### Regla de dependencias entre módulos
  
 Los módulos solo pueden depender de otros módulos exportando explícitamente sus Services. Un módulo nunca accede directamente a los internos de otro módulo.
  
@@ -3796,7 +3822,7 @@ El módulo que expone funcionalidad debe declararlo explícitamente:
 export class UsersModule {}
 ```
  
-### Módulos globales
+#### Módulos globales
  
 Los siguientes módulos deben registrarse como globales en `app.module.ts` para estar disponibles en toda la aplicación sin necesidad de importarlos en cada módulo:
  
@@ -3826,7 +3852,7 @@ Cada módulo sigue esta estructura interna sin excepción:
 └── {modulo}.module.ts
 ```
  
-### Responsabilidad de cada archivo dentro del módulo
+#### Responsabilidad de cada archivo dentro del módulo
  
 | Archivo | Contiene |
 |---|---|
@@ -3854,6 +3880,7 @@ common/
 └── utils/          ← funciones utilitarias: maskData, formatCurrency, etc.
 ```
 --- 
+
 ### Regla de utils
  
 Las funciones en `common/utils/` deben ser funciones puras sin dependencias de NestJS. No deben inyectar servicios ni acceder a la base de datos.
@@ -3874,7 +3901,7 @@ export async function validateInvestmentLimit(investorId: string) {
  
 ### Escalabilidad
  
-### Agregar un nuevo módulo
+#### Agregar un nuevo módulo
  
 Cuando se deba agregar una nueva funcionalidad al backend, el proceso es:
  
@@ -3888,7 +3915,7 @@ Cuando se deba agregar una nueva funcionalidad al backend, el proceso es:
  
 No se debe agregar lógica de una nueva funcionalidad dentro de un módulo existente si esa lógica tiene entidad propia.
  
-### Agregar un nuevo endpoint a un módulo existente
+#### Agregar un nuevo endpoint a un módulo existente
  
 ```
 1. Agregar el DTO de entrada en /dto/ si el endpoint recibe datos nuevos
@@ -3898,7 +3925,7 @@ No se debe agregar lógica de una nueva funcionalidad dentro de un módulo exist
 5. Agregar pruebas unitarias y de integración para el nuevo endpoint
 ```
  
-### Cuándo crear un nuevo módulo vs extender uno existente
+#### Cuándo crear un nuevo módulo vs extender uno existente
  
 | Situación | Decisión |
 |---|---|
@@ -3911,7 +3938,7 @@ No se debe agregar lógica de una nueva funcionalidad dentro de un módulo exist
  
 ### Convenciones de nomenclatura
  
-### Archivos
+#### Archivos
  
 Todos los archivos del backend usan **kebab-case**:
  
@@ -3924,7 +3951,7 @@ investment-response.dto.ts
 http-exception.filter.ts
 ```
  
-### Clases
+#### Clases
  
 Todas las clases usan **PascalCase** con sufijo que indica su tipo:
  
@@ -3940,7 +3967,7 @@ EntraIdGuard
 RolesGuard
 ```
  
-### Métodos en Controllers
+#### Métodos en Controllers
  
 Los métodos de Controllers deben usar verbos estándar REST:
  
@@ -3960,7 +3987,7 @@ approveBusinesss()   // PATCH /admin/businesses/:id/approve
 runSimulation()      // POST /simulation
 ```
  
-### Métodos en Services y Repositories
+#### Métodos en Services y Repositories
  
 Los métodos deben describir claramente su acción:
  
@@ -3978,7 +4005,8 @@ create(data: CreateInvestmentDto): Promise<InvestmentResponseDto>
 registerInterest(investmentId: string, investorId: string): Promise<void>
 ```
  ---
-### Variables de entorno
+
+#### Variables de entorno
  
 Las variables de entorno del backend usan **UPPER_SNAKE_CASE** sin prefijo:
  
@@ -3996,7 +4024,7 @@ ALLOWED_ORIGINS
  
 ---
 
-## 3.7 Estrategia de CI/CD, scripts y configuración de ambientes del backend
+## 3.8 Estrategia de CI/CD, scripts y configuración de ambientes del backend
 
 Esta sección define la estrategia de integración continua, despliegue continuo, scripts, automatizaciones, validaciones automáticas, análisis estático y quality gates para el backend de JICA. El objetivo es que ningún cambio llegue a `staging` o `production` sin haber pasado por validaciones técnicas, pruebas, revisión de seguridad básica y construcción correcta del artefacto.
 
@@ -4095,121 +4123,9 @@ Flujo requerido:
 
 Ejemplo de pipeline para staging:
 
-```yaml
-name: Deploy Backend Stage
-
-on:
-  push:
-    branches:
-      - develop
-    paths:
-      - "backend/**"
-      - ".github/workflows/deploy-backend-stage.yml"
-
-jobs:
-  validate:
-    name: Validación y análisis estático
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: "npm"
-          cache-dependency-path: backend/package-lock.json
-
-      - name: Instalar dependencias
-        run: npm ci
-
-      - name: Type check
-        run: npm run type-check
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Verificar formato
-        run: npm run format:check
-
-  test:
-    name: Pruebas y cobertura
-    runs-on: ubuntu-latest
-    needs: validate
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: "npm"
-          cache-dependency-path: backend/package-lock.json
-
-      - name: Instalar dependencias
-        run: npm ci
-
-      - name: Pruebas unitarias con cobertura
-        run: npm run test:cov
-
-      - name: Pruebas e2e
-        run: npm run test:e2e
-        env:
-          NODE_ENV: test
-          DATABASE_URL: ${{ secrets.STAGE_DATABASE_URL }}
-
-  build-and-deploy:
-    name: Build y deploy a staging
-    runs-on: ubuntu-latest
-    needs: test
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: "npm"
-          cache-dependency-path: backend/package-lock.json
-
-      - name: Instalar dependencias
-        run: npm ci
-
-      - name: Audit de dependencias
-        run: npm audit --audit-level=high
-
-      - name: Build
-        run: npm run build
-
-      - name: Generar cliente Prisma
-        run: npx prisma generate
-
-      - name: Aplicar migraciones
-        run: npx prisma migrate deploy
-        env:
-          DATABASE_URL: ${{ secrets.STAGE_DATABASE_URL }}
-
-      - name: Deploy a Azure App Service - staging
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: ${{ secrets.STAGE_BACKEND_APP_NAME }}
-          publish-profile: ${{ secrets.STAGE_AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: backend
-```
-
 Referencias reales en `/src` relacionadas con el pipeline:
+
+[`github/workflows/deploy-backend-stage.yml`](.github/workflows/deploy-backend-stage.yml):
 
 - [`backend/src/main.ts`](./backend/src/main.ts): archivo que debe compilar correctamente para generar el artefacto `/dist`.
 - [`backend/src/config/configuration.ts`](./backend/src/config/configuration.ts): archivo que consume las variables inyectadas por GitHub Actions/Azure App Service.
@@ -4431,7 +4347,7 @@ Además de los archivos de `/src`, el ZIP incluye archivos de configuración que
 
 > Los workflows existentes en el ZIP están orientados al frontend. Para el backend se debe crear una versión equivalente usando `working-directory: backend`, filtrado por `paths: ["backend/**"]` y despliegue hacia Azure App Service.
 ---
-## 3.8 Técnicas y patrones arquitectónicos implementados
+## 3.9 Técnicas y patrones arquitectónicos implementados
 
 ### Técnicas arquitectónicas utilizadas
 
@@ -4593,7 +4509,7 @@ InvestmentsModule
 └── entities/
 ```
 ---
-## 3.9 Patrones de diseño orientados a objetos
+## 3.10 Patrones de diseño orientados a objetos
 
 ### Strategy Pattern
 
@@ -4730,7 +4646,7 @@ export class UserRepository {
 ```
 
 ---
-## 3.10 Especificaciones de Diseño de la Base de Datos
+## 3.11 Especificaciones de Diseño de la Base de Datos
 
 
 La base de datos es el componente encargado de almacenar de forma persistente toda la información del sistema. Su diseño debe garantizar integridad, consistencia, escalabilidad y facilidad de mantenimiento.
@@ -4920,10 +4836,10 @@ Cada migración debe:
 - Ser reproducible.
 - Mantener la consistencia del esquema entre ambientes.
 --
-## 3.10 Agentes o herramientas automatizadas de revisión
+## 3.12 Agentes o herramientas automatizadas de revisión
 > **Pendiente de definición.** Esta sección será completada cuando se defina el alcance y el proveedor de IA a integrar en JICA.
  
-## 3.11 Diseño de la Base de Datos
+## 3.13 Diseño de la Base de Datos
 
  ### Diseño de la Base de Datos (DBML)
 
@@ -5148,7 +5064,7 @@ Ref: Notification.userId > User.id
 ![Back-end Prisma ERD](media/backend_prisma-ERD.png)
 
 ---
-## 3.12 Gestión de la Base de Datos
+## 3.14 Gestión de la Base de Datos
 
 Esta sección define la estrategia para la creación, evolución y mantenimiento de la base de datos del proyecto JICA. Todas las modificaciones del esquema deberán realizarse de forma controlada y versionada para garantizar la consistencia entre los diferentes entornos de desarrollo, pruebas y producción.
 
@@ -5171,247 +5087,8 @@ PostgreSQL
 ```
 
 ### Scripts de creación
-```sql
-generator client {
-  provider = "prisma-client-js"
-}
 
-generator erd {
-  provider = "prisma-erd-generator"
-  output   = "./ERD.svg"
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-enum UserRole {
-  investor
-  business
-  admin
-}
-
-enum OpportunityStatus {
-  draft
-  open
-  funded
-  closed
-}
-
-enum InterestStatus {
-  pending
-  accepted
-  rejected
-}
-
-enum InvestmentStatus {
-  active
-  completed
-  cancelled
-}
-
-enum RiskLevel {
-  low
-  medium
-  high
-}
-
-enum DocumentType {
-  financialReport
-  taxDocument
-  legalDocument
-  other
-}
-
-model User {
-  id         String   @id @default(uuid()) @db.Uuid
-  firstName  String
-  lastName   String
-  email      String   @unique
-  role       UserRole
-
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  deletedAt  DateTime?
-
-  investor     Investor?
-  business     Business?
-  notifications Notification[]
-
-  @@index([role])
-}
-
-model Investor {
-  id         String   @id @default(uuid()) @db.Uuid
-  userId     String   @unique @db.Uuid
-  phone      String?
-
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  deletedAt  DateTime?
-
-  user         User @relation(fields: [userId], references: [id])
-  interests    InvestmentInterest[]
-  investments  Investment[]
-  simulations  Simulation[]
-}
-
-model Business {
-  id         String   @id @default(uuid()) @db.Uuid
-  userId     String   @unique @db.Uuid
-
-  name        String
-  description String?
-  category    String?
-  location    String?
-
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  deletedAt  DateTime?
-
-  user          User @relation(fields: [userId], references: [id])
-  reports       FinancialReport[]
-  opportunities InvestmentOpportunity[]
-  documents     Document[]
-}
-
-model FinancialReport {
-  id         String   @id @default(uuid()) @db.Uuid
-  businessId String   @db.Uuid
-
-  year      Int
-  revenue   Decimal
-  expenses  Decimal
-  profit    Decimal
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-
-  business Business @relation(fields: [businessId], references: [id])
-
-  @@index([businessId])
-}
-
-model InvestmentOpportunity {
-  id            String   @id @default(uuid()) @db.Uuid
-  businessId    String   @db.Uuid
-
-  title         String
-  description   String?
-  targetAmount  Decimal
-  currentAmount Decimal
-
-  riskLevel RiskLevel
-  status    OpportunityStatus
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-
-  business     Business @relation(fields: [businessId], references: [id])
-  interests    InvestmentInterest[]
-  investments  Investment[]
-  simulations  Simulation[]
-
-  @@index([businessId])
-}
-
-model InvestmentInterest {
-  id            String   @id @default(uuid()) @db.Uuid
-  investorId    String   @db.Uuid
-  opportunityId String   @db.Uuid
-
-  amount Decimal
-  status InterestStatus
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-
-  investor    Investor @relation(fields: [investorId], references: [id])
-  opportunity InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
-  investment  Investment?
-
-  @@unique([investorId, opportunityId])
-  @@index([investorId])
-  @@index([opportunityId])
-}
-
-model Investment {
-  id            String   @id @default(uuid()) @db.Uuid
-  interestId    String   @unique @db.Uuid
-  investorId    String   @db.Uuid
-  opportunityId String   @db.Uuid
-
-  investedAmount Decimal
-  status          InvestmentStatus
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-
-  interest    InvestmentInterest @relation(fields: [interestId], references: [id])
-  investor    Investor @relation(fields: [investorId], references: [id])
-  opportunity InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
-
-  @@index([investorId])
-  @@index([opportunityId])
-}
-
-model Simulation {
-  id            String   @id @default(uuid()) @db.Uuid
-  investorId    String   @db.Uuid
-  opportunityId String   @db.Uuid
-
-  investmentAmount Decimal
-  estimatedReturn  Decimal
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  investor    Investor @relation(fields: [investorId], references: [id])
-  opportunity InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
-
-  @@index([investorId])
-  @@index([opportunityId])
-}
-
-model Document {
-  id         String   @id @default(uuid()) @db.Uuid
-  businessId String   @db.Uuid
-
-  fileName     String
-  fileUrl      String
-  documentType DocumentType
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-
-  business Business @relation(fields: [businessId], references: [id])
-
-  @@index([businessId])
-}
-
-model Notification {
-  id      String @id @default(uuid()) @db.Uuid
-  userId  String @db.Uuid
-
-  title   String
-  message String
-  isRead  Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-}
-```
+[`backend/prisma/schema.prisma`](./backend/prisma/schema.prisma): 
 
 ### Reglas obligatorias
 
@@ -5438,73 +5115,7 @@ Los datos de prueba podrán incluir:
 
 El siguiente ejemplo muestra cómo poblar la base de datos con información inicial para desarrollo y pruebas.
 
-```ts
-import { PrismaClient, UserRole, RiskLevel, OpportunityStatus } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
-async function main() {
-  // Crear usuario inversionista
-  const investorUser = await prisma.user.create({
-    data: {
-      firstName: 'Juan',
-      lastName: 'Pérez',
-      email: 'investor@jica.com',
-      role: UserRole.investor,
-      investor: {
-        create: {
-          phone: '8888-8888'
-        }
-      }
-    }
-  });
-
-  // Crear usuario empresa
-  const businessUser = await prisma.user.create({
-    data: {
-      firstName: 'María',
-      lastName: 'Gómez',
-      email: 'business@jica.com',
-      role: UserRole.business,
-      business: {
-        create: {
-          name: 'Café Tico',
-          description: 'Cafetería especializada en café artesanal.',
-          category: 'Coffee Shop',
-          location: 'San José, Costa Rica'
-        }
-      }
-    },
-    include: {
-      business: true
-    }
-  });
-
-  // Crear oportunidad de inversión
-  await prisma.investmentOpportunity.create({
-    data: {
-      businessId: businessUser.business!.id,
-      title: 'Expansión de sucursal',
-      description: 'Financiamiento para abrir una nueva sucursal.',
-      targetAmount: 50000,
-      currentAmount: 0,
-      riskLevel: RiskLevel.medium,
-      status: OpportunityStatus.open
-    }
-  });
-
-  console.log('Seed ejecutado correctamente.');
-}
-
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
-```
+[`backend/prisma/seed.ts`](./backend/prisma/seed.ts): 
 
 ### Ejecución del Seed
 
@@ -5595,7 +5206,7 @@ La recuperación deberá realizarse mediante los mecanismos proporcionados por P
 - Ninguna modificación directa sobre producción debe realizarse sin un mecanismo de recuperación definido.
 ---
 
-## 3.13 Estrategias de testing y validación
+## 3.15 Estrategias de testing y validación
 
 ### Unit Testing
 
@@ -5714,7 +5325,8 @@ InvestmentDto
 SimulationDto
 ```
 ---
-## 3.14 Reglas de negocio y procesos complejos
+
+## 3.16 Reglas de negocio y procesos complejos
 
 Esta sección documenta los procesos del backend que no corresponden únicamente a operaciones CRUD.
 
@@ -5884,7 +5496,8 @@ AuditLogService
 }
 ```
 ---
-## 3.15 Optimización del artefacto de deployment
+
+## 3.17 Optimización del artefacto de deployment
  
 El backend de JICA se despliega como código compilado directamente en Azure App Service. El artefacto de deployment es la carpeta `/dist` generada por TypeScript más las dependencias de producción de `node_modules`. Esta sección define las reglas para mantener ese artefacto reducido y eficiente.
  
@@ -5895,9 +5508,10 @@ El backend de JICA se despliega como código compilado directamente en Azure App
 El compilador de TypeScript genera el artefacto en `/backend/dist`. La configuración de `tsconfig.json` debe asegurar que el output sea limpio y no incluya archivos innecesarios.
  
 ### Configuración obligatoria en `tsconfig.json`
- Ejemplo [tsconfig.json](./backend)
 
- ### Dependencias
+Ejemplo [tsconfig.json](./backend/tsconfig.json)
+
+### Dependencias
  
 La separación entre dependencias de producción y desarrollo es obligatoria. El artefacto de deployment solo incluye `dependencies`, nunca `devDependencies`.
  
@@ -5908,6 +5522,7 @@ La separación entre dependencias de producción y desarrollo es obligatoria. El
 - Tipos de TypeScript: `@types/node`, `@types/express`, `@types/compression`.
 - El compilador: `typescript`, `ts-node`, `ts-jest`.
 - NestJS CLI: `@nestjs/cli`, `@nestjs/schematics`.
+
 ### Lo que debe estar en `dependencies`
  
 Solo librerías que el código en `/dist` necesita en runtime:
@@ -5970,7 +5585,8 @@ Si `prisma generate` no se ejecuta, el backend arranca pero falla al intentar co
 - No incluir archivos de configuración de desarrollo (`eslint.config.js`, `prettier.config.js`, `jest.config.ts`) en el artefacto de production.
 - El tamaño de `node_modules` en producción debe revisarse si supera **200MB**. En ese caso auditar dependencias con `npm ls --prod` para identificar librerías innecesarias en `dependencies`.
  ---
-## 3.16 Estrategias de seguridad de datos del backend
+
+## 3.18 Estrategias de seguridad de datos del backend
 
 Esta sección define las estrategias de seguridad de datos para el backend de JICA, considerando cifrado, auditoría, trazabilidad, manejo de secretos, backups y recuperación ante fallos. Estas estrategias son especialmente importantes porque JICA maneja información financiera, datos de inversionistas, datos de pymes gastronómicas, documentos financieros y operaciones relacionadas con oportunidades de inversión.
 
