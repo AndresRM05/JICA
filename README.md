@@ -4345,7 +4345,6 @@ Además de los archivos de `/src`, el ZIP incluye archivos de configuración que
 - [`.github/workflows/deploy-production.yml`](./.github/workflows/deploy-production.yml): pipeline actual de production usado como referencia estructural.
 - [`.github/dependabot.yml`](./.github/dependabot.yml): referencia de automatización para revisión de dependencias.
 
-> Los workflows existentes en el ZIP están orientados al frontend. Para el backend se debe crear una versión equivalente usando `working-directory: backend`, filtrado por `paths: ["backend/**"]` y despliegue hacia Azure App Service.
 ---
 ## 3.9 Técnicas y patrones arquitectónicos implementados
 
