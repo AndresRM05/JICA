@@ -5587,9 +5587,7 @@ Si `prisma generate` no se ejecuta, el backend arranca pero falla al intentar co
 
 ## 3.18 Estrategias de seguridad de datos del backend
 
-Esta sección define las estrategias de seguridad de datos para el backend de JICA, considerando cifrado, auditoría, trazabilidad, manejo de secretos, backups y recuperación ante fallos. Estas estrategias son especialmente importantes porque JICA maneja información financiera, datos de inversionistas, datos de pymes gastronómicas, documentos financieros y operaciones relacionadas con oportunidades de inversión.
-
-La seguridad de datos debe aplicarse desde el diseño del backend, no únicamente desde la infraestructura. Por eso, cada estrategia se vincula con archivos reales ubicados en `backend/src`.
+Esta sección define las estrategias de seguridad de datos para el backend de JICA, considerando cifrado, auditoría, trazabilidad, manejo de secretos, backups y recuperación ante fallos. 
 
 ---
 
