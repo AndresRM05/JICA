@@ -4028,7 +4028,7 @@ ALLOWED_ORIGINS
 
 Esta sección define la estrategia de integración continua, despliegue continuo, scripts, automatizaciones, validaciones automáticas, análisis estático y quality gates para el backend de JICA. El objetivo es que ningún cambio llegue a `staging` o `production` sin haber pasado por validaciones técnicas, pruebas, revisión de seguridad básica y construcción correcta del artefacto.
 
-La estrategia se alinea con la arquitectura backend definida para JICA: una API desarrollada con NestJS y TypeScript, desplegada en Azure App Service, conectada a PostgreSQL mediante Prisma, autenticada con Microsoft Entra ID y configurada mediante variables de entorno centralizadas.
+
 
 ---
 
