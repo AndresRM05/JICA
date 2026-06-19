@@ -4333,19 +4333,6 @@ Referencias:
 - [`backend/src/investments/investments.repository.ts`](./backend/src/investments/investments.repository.ts)
 
 ---
-
-### Referencias del ZIP utilizadas
-
-Además de los archivos de `/src`, el ZIP incluye archivos de configuración que sirven como base para definir esta sección:
-
-- [`backend/package.json`](./backend/package.json): scripts actuales del backend.
-- [`backend/tsconfig.json`](./backend/tsconfig.json): configuración de TypeScript.
-- [`backend/eslint.config.mjs`](./backend/eslint.config.mjs): configuración de ESLint y Prettier.
-- [`.github/workflows/deploy-stage.yml`](./.github/workflows/deploy-stage.yml): pipeline actual de stage usado como referencia estructural.
-- [`.github/workflows/deploy-production.yml`](./.github/workflows/deploy-production.yml): pipeline actual de production usado como referencia estructural.
-- [`.github/dependabot.yml`](./.github/dependabot.yml): referencia de automatización para revisión de dependencias.
-
----
 ## 3.9 Técnicas y patrones arquitectónicos implementados
 
 ### Técnicas arquitectónicas utilizadas
@@ -5953,30 +5940,6 @@ Antes de publicar cambios de backend, se debe validar:
 ```
 
 ---
-
-### Referencias del ZIP utilizadas
-
-Archivos en `/src`:
-
-- [`backend/src/main.ts`](./backend/src/main.ts)
-- [`backend/src/config/configuration.ts`](./backend/src/config/configuration.ts)
-- [`backend/src/auth/strategies/jwt.strategy.ts`](./backend/src/auth/strategies/jwt.strategy.ts)
-- [`backend/src/auth/guards/entra-id.guard.ts`](./backend/src/auth/guards/entra-id.guard.ts)
-- [`backend/src/auth/guards/roles.guard.ts`](./backend/src/auth/guards/roles.guard.ts)
-- [`backend/src/auth/decorators/current-user.decorator.ts`](./backend/src/auth/decorators/current-user.decorator.ts)
-- [`backend/src/auth/decorators/roles.decorator.ts`](./backend/src/auth/decorators/roles.decorator.ts)
-- [`backend/src/auth/auth.types.ts`](./backend/src/auth/auth.types.ts)
-- [`backend/src/common/filters/http-exception.filter.ts`](./backend/src/common/filters/http-exception.filter.ts)
-- [`backend/src/common/utils/maskData.ts`](./backend/src/common/utils/maskData.ts)
-- [`backend/src/documents/documents.service.ts`](./backend/src/documents/documents.service.ts)
-- [`backend/src/documents/documents.processor.ts`](./backend/src/documents/documents.processor.ts)
-- [`backend/src/investments/investments.controller.ts`](./backend/src/investments/investments.controller.ts)
-- [`backend/src/investments/investments.service.ts`](./backend/src/investments/investments.service.ts)
-- [`backend/src/investments/investments.repository.ts`](./backend/src/investments/investments.repository.ts)
-- [`backend/src/investments/dto/create-investment.dto.ts`](./backend/src/investments/dto/create-investment.dto.ts)
-- [`backend/src/prisma/prisma.service.ts`](./backend/src/prisma/prisma.service.ts)
-
-
 
 # 4. Creación del MVP
 
