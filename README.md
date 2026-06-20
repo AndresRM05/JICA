@@ -4822,9 +4822,60 @@ Cada migración debe:
 - Ser reproducible.
 - Mantener la consistencia del esquema entre ambientes.
 --
+
 ## 3.12 Agentes o herramientas automatizadas de revisión
-> **Pendiente de definición.** Esta sección será completada cuando se defina el alcance y el proveedor de IA a integrar en JICA.
- 
+
+Durante el desarrollo se utilizan agentes, skills y comandos contextuales para guiar la generación, revisión y validación del código.
+
+
+### Agentes utilizados
+
+Los agentes deben usarse según el área del sistema que se esté trabajando:
+
+| Agente                       | Uso                                                                      |
+| ---------------------------- | ------------------------------------------------------------------------ |
+| Backend Controller Agent     | Revisar y generar controladores REST, rutas, DTOs y respuestas HTTP.     |
+| Backend Service Agent        | Revisar y generar lógica de negocio del backend.                         |
+| Backend Repository Agent     | Revisar y generar acceso a datos mediante repositorios.                  |
+| Database / Prisma Agent      | Revisar modelos Prisma, relaciones, enums, migraciones y seed data.      |
+| Testing Agent                | Generar, revisar y corregir pruebas unitarias e integración.             |
+| Frontend UI Agent            | Revisar y generar pantallas y componentes visuales.                      |
+| Frontend State / Query Agent | Revisar estado local, consumo de API y uso de TanStack Query.            |
+| Frontend API Contract Agent  | Validar que el frontend consuma correctamente los endpoints del backend. |
+| High Cohesion Reviewer       | Revisar que cada módulo tenga una responsabilidad clara.                 |
+| Low Coupling Reviewer        | Revisar que las dependencias entre módulos sean mínimas.                 |
+| SOLID Reviewer               | Revisar la aplicación de principios SOLID.                               |
+| Architecture Validator       | Validar que la implementación respete la arquitectura documentada.       |
+
+### Skills utilizadas
+
+Las skills deben aplicarse como contexto antes de generar o modificar código:
+
+| Skill                        | Uso                                                                    |
+| ---------------------------- | ---------------------------------------------------------------------- |
+| Coding Standards             | Mantener convenciones de nombres, estructura y legibilidad.            |
+| Architecture Guidelines      | Mantener coherencia con la arquitectura general del sistema.           |
+| Backend Layered Architecture | Respetar la separación Controller → Service → Repository → Prisma.     |
+| Backend Security             | Validar autenticación local, guards, roles y rutas protegidas.         |
+| Frontend UI                  | Mantener consistencia visual y estructural en las pantallas.           |
+| Frontend State Query         | Guiar el manejo de estado, llamadas HTTP y sincronización con backend. |
+| Frontend API Contracts       | Validar rutas, payloads y respuestas entre frontend y backend.         |
+| Frontend Security            | Validar protección de rutas y manejo de sesión local.                  |
+
+### Comandos contextuales utilizados
+
+Los comandos deben usarse para orquestar agentes y skills según la tarea:
+
+| Comando                   | Uso                                                                    |
+| ------------------------- | ---------------------------------------------------------------------- |
+| Generate Backend Endpoint | Crear o modificar endpoints backend.                                   |
+| Generate Frontend Screen  | Crear o modificar pantallas frontend.                                  |
+| Generate Database Model   | Crear o modificar modelos, enums, relaciones o seed data.              |
+| Run Unit Tests            | Ejecutar y revisar pruebas automatizadas.                              |
+| Validate Architecture     | Validar que los cambios respeten la arquitectura definida.             |
+| Review SOLID Principles   | Revisar aplicación de principios SOLID.                                |
+
+
 ## 3.13 Diseño de la Base de Datos
 
  ### Diseño de la Base de Datos (DBML)
