@@ -1,10 +1,11 @@
-import { ArrowLeft, BarChart3, DollarSign, TrendingUp, UsersRound } from 'lucide-react';
+import { ArrowLeft, BarChart3, DollarSign, UsersRound } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { MetricCard } from '@/components/ui/MetricCard';
 import { RiskBadge } from '@/components/ui/RiskBadge';
 import { StatusMessage } from '@/components/ui/StatusMessage';
-import { RevenueTrendChart, RoiProjectionChart, useInvestmentDetail } from '@/features/investments';
+import { RevenueTrendChart, useInvestmentDetail } from '@/features/investments';
+import { INVESTMENT_DURATION_MONTHS } from '@/features/simulation';
 import { getUserFriendlyErrorMessage } from '@/utils/errorMessages';
 import { formatCurrency, formatPercent } from '@/utils/formatters';
 
@@ -49,6 +50,7 @@ export function InvestmentDetailsPage() {
     ? opportunity.financialMetrics.reduce((total, metric) => total + metric.operatingMargin, 0) / opportunity.financialMetrics.length
     : 0;
   const latestCustomerCount = lastMetric?.customerCount ?? 0;
+  const availableCapital = Math.max(opportunity.targetAmount - opportunity.currentAmount, 0);
 
   return (
     <div className="space-y-6">
@@ -69,8 +71,7 @@ export function InvestmentDetailsPage() {
           </div>
         </div>
 
-        <div className="grid gap-5 p-6 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard title="ROI estimado" value={formatPercent(opportunity.estimatedReturn)} description="Retorno usado para simulación" icon={<TrendingUp className="h-5 w-5" aria-hidden="true" />} />
+        <div className="grid gap-5 p-6 md:grid-cols-3">
           <MetricCard title="Ingresos recientes" value={formatCurrency(lastMetric?.revenue ?? 0)} description="Último mes reportado" icon={<DollarSign className="h-5 w-5" aria-hidden="true" />} />
           <MetricCard title="Crecimiento" value={formatPercent(revenueGrowth)} description="Comparado contra primer mes" icon={<BarChart3 className="h-5 w-5" aria-hidden="true" />} />
           <MetricCard title="Clientes" value={String(latestCustomerCount)} description="Clientes del último mes" icon={<UsersRound className="h-5 w-5" aria-hidden="true" />} />
@@ -93,7 +94,30 @@ export function InvestmentDetailsPage() {
         </section>
       </div>
 
-      <RoiProjectionChart investmentAmount={opportunity.minAmount} estimatedReturn={opportunity.estimatedReturn} />
+      <section className="jica-card p-5">
+        <h2 className="text-lg font-bold text-slate-950">Condiciones de la oportunidad</h2>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-xl bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-700">ROI estimado</p>
+            <p className="mt-2 text-2xl font-black text-emerald-700">{formatPercent(opportunity.estimatedReturn)}</p>
+          </div>
+          <div className="rounded-xl bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-700">Duración estimada</p>
+            <p className="mt-2 text-2xl font-black text-slate-950">{INVESTMENT_DURATION_MONTHS} meses</p>
+          </div>
+          <div className="rounded-xl bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-700">Inversión mínima</p>
+            <p className="mt-2 text-2xl font-black text-slate-950">{formatCurrency(opportunity.minAmount)}</p>
+          </div>
+          <div className="rounded-xl bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-700">Capital disponible</p>
+            <p className="mt-2 text-2xl font-black text-slate-950">{formatCurrency(availableCapital)}</p>
+          </div>
+        </div>
+        <p className="mt-4 text-sm text-slate-500">
+          El ROI es una estimación para el periodo completo y no garantiza rendimientos futuros.
+        </p>
+      </section>
     </div>
   );
 }

@@ -1,0 +1,1 @@
+export const INVESTMENT_DURATION_MONTHS = 12;

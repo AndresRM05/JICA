@@ -49,38 +49,95 @@ async function main() {
     include: { investor: true }
   });
 
+  const seededBusinessNames = [
+    'Café Alma',
+    'Verde Sabor',
+    'Panadería La Masa',
+    'Taco Barrio',
+    'Nieve Verde',
+    'Soda El Buen Punto',
+    'Tapas 27',
+    'Forno Lento',
+  ];
+
+  await prisma.investment.deleteMany({
+    where: { opportunity: { businessName: { in: seededBusinessNames } } },
+  });
+
+  await prisma.investmentIntent.deleteMany({
+    where: { opportunity: { businessName: { in: seededBusinessNames } } },
+  });
+
+  await prisma.investmentSimulation.deleteMany({
+    where: { opportunity: { businessName: { in: seededBusinessNames } } },
+  });
+
+  await prisma.businessFinancialMetric.deleteMany({
+    where: { opportunity: { businessName: { in: seededBusinessNames } } },
+  });
+
+  await prisma.investmentOpportunity.deleteMany({
+    where: { businessName: { in: seededBusinessNames } },
+  });
+
   const opportunity1 = await prisma.investmentOpportunity.upsert({
     where: { id: '00000000-0000-0000-0000-000000000001' },
-    update: {},
+    update: {
+      targetAmount: new Prisma.Decimal('28000'),
+      currentAmount: new Prisma.Decimal('9200'),
+      minAmount: new Prisma.Decimal('1000'),
+      estimatedReturn: new Prisma.Decimal('10'),
+      metrics: {
+        deleteMany: {},
+        create: [
+          {
+            month: '2026-01',
+            revenue: new Prisma.Decimal('18500'),
+            grossMargin: new Prisma.Decimal('61'),
+            operatingMargin: new Prisma.Decimal('13'),
+            customerCount: 980,
+            averageTicket: new Prisma.Decimal('18.90')
+          },
+          {
+            month: '2026-02',
+            revenue: new Prisma.Decimal('19800'),
+            grossMargin: new Prisma.Decimal('62'),
+            operatingMargin: new Prisma.Decimal('14'),
+            customerCount: 1040,
+            averageTicket: new Prisma.Decimal('19.10')
+          }
+        ]
+      }
+    },
     create: {
       title: 'Café de Especialidad - Ampliación',
       description: 'Financiamiento local para abrir segunda sucursal de cafetería de especialidad.',
       businessName: 'Café Alma',
       category: 'Gastronomía',
       location: 'Distrito Central',
-      targetAmount: new Prisma.Decimal('45000'),
-      currentAmount: new Prisma.Decimal('12000'),
-      minAmount: new Prisma.Decimal('2500'),
+      targetAmount: new Prisma.Decimal('28000'),
+      currentAmount: new Prisma.Decimal('9200'),
+      minAmount: new Prisma.Decimal('1000'),
       riskLevel: RiskLevel.medium,
-      estimatedReturn: new Prisma.Decimal('18'),
+      estimatedReturn: new Prisma.Decimal('10'),
       status: OpportunityStatus.available,
       metrics: {
         create: [
           {
             month: '2026-01',
-            revenue: new Prisma.Decimal('32000'),
-            grossMargin: new Prisma.Decimal('0.62'),
-            operatingMargin: new Prisma.Decimal('18'),
-            customerCount: 420,
-            averageTicket: new Prisma.Decimal('18.50')
+            revenue: new Prisma.Decimal('18500'),
+            grossMargin: new Prisma.Decimal('61'),
+            operatingMargin: new Prisma.Decimal('13'),
+            customerCount: 980,
+            averageTicket: new Prisma.Decimal('18.90')
           },
           {
             month: '2026-02',
-            revenue: new Prisma.Decimal('34000'),
-            grossMargin: new Prisma.Decimal('0.64'),
-            operatingMargin: new Prisma.Decimal('0.19'),
-            customerCount: 450,
-            averageTicket: new Prisma.Decimal('19.00')
+            revenue: new Prisma.Decimal('19800'),
+            grossMargin: new Prisma.Decimal('62'),
+            operatingMargin: new Prisma.Decimal('14'),
+            customerCount: 1040,
+            averageTicket: new Prisma.Decimal('19.10')
           }
         ]
       }
@@ -89,36 +146,62 @@ async function main() {
 
   const opportunity2 = await prisma.investmentOpportunity.upsert({
     where: { id: '00000000-0000-0000-0000-000000000002' },
-    update: {},
+    update: {
+      targetAmount: new Prisma.Decimal('24000'),
+      currentAmount: new Prisma.Decimal('7600'),
+      minAmount: new Prisma.Decimal('750'),
+      estimatedReturn: new Prisma.Decimal('9'),
+      metrics: {
+        deleteMany: {},
+        create: [
+          {
+            month: '2026-01',
+            revenue: new Prisma.Decimal('16200'),
+            grossMargin: new Prisma.Decimal('58'),
+            operatingMargin: new Prisma.Decimal('11'),
+            customerCount: 720,
+            averageTicket: new Prisma.Decimal('22.50')
+          },
+          {
+            month: '2026-02',
+            revenue: new Prisma.Decimal('17000'),
+            grossMargin: new Prisma.Decimal('59'),
+            operatingMargin: new Prisma.Decimal('12'),
+            customerCount: 760,
+            averageTicket: new Prisma.Decimal('22.40')
+          }
+        ]
+      }
+    },
     create: {
       title: 'Restaurante Vegano - Renovación de Cocina',
       description: 'Capital para modernizar la cocina y mejorar la experiencia gastronómica.',
       businessName: 'Verde Sabor',
       category: 'Gastronomía',
       location: 'Barrio Norte',
-      targetAmount: new Prisma.Decimal('38000'),
-      currentAmount: new Prisma.Decimal('8000'),
-      minAmount: new Prisma.Decimal('2000'),
+      targetAmount: new Prisma.Decimal('24000'),
+      currentAmount: new Prisma.Decimal('7600'),
+      minAmount: new Prisma.Decimal('750'),
       riskLevel: RiskLevel.low,
-      estimatedReturn: new Prisma.Decimal('15'),
+      estimatedReturn: new Prisma.Decimal('9'),
       status: OpportunityStatus.available,
       metrics: {
         create: [
           {
             month: '2026-01',
-            revenue: new Prisma.Decimal('28000'),
-            grossMargin: new Prisma.Decimal('0.58'),
-            operatingMargin: new Prisma.Decimal('16'),
-            customerCount: 340,
-            averageTicket: new Prisma.Decimal('20.75')
+            revenue: new Prisma.Decimal('16200'),
+            grossMargin: new Prisma.Decimal('58'),
+            operatingMargin: new Prisma.Decimal('11'),
+            customerCount: 720,
+            averageTicket: new Prisma.Decimal('22.50')
           },
           {
             month: '2026-02',
-            revenue: new Prisma.Decimal('29500'),
-            grossMargin: new Prisma.Decimal('0.60'),
-            operatingMargin: new Prisma.Decimal('17'),
-            customerCount: 360,
-            averageTicket: new Prisma.Decimal('21.00')
+            revenue: new Prisma.Decimal('17000'),
+            grossMargin: new Prisma.Decimal('59'),
+            operatingMargin: new Prisma.Decimal('12'),
+            customerCount: 760,
+            averageTicket: new Prisma.Decimal('22.40')
           }
         ]
       }
@@ -127,36 +210,62 @@ async function main() {
 
   const opportunity3 = await prisma.investmentOpportunity.upsert({
     where: { id: '00000000-0000-0000-0000-000000000003' },
-    update: {},
+    update: {
+      targetAmount: new Prisma.Decimal('18000'),
+      currentAmount: new Prisma.Decimal('6100'),
+      minAmount: new Prisma.Decimal('500'),
+      estimatedReturn: new Prisma.Decimal('10'),
+      metrics: {
+        deleteMany: {},
+        create: [
+          {
+            month: '2026-01',
+            revenue: new Prisma.Decimal('14200'),
+            grossMargin: new Prisma.Decimal('52'),
+            operatingMargin: new Prisma.Decimal('10'),
+            customerCount: 1050,
+            averageTicket: new Prisma.Decimal('13.52')
+          },
+          {
+            month: '2026-02',
+            revenue: new Prisma.Decimal('15100'),
+            grossMargin: new Prisma.Decimal('53'),
+            operatingMargin: new Prisma.Decimal('11'),
+            customerCount: 1115,
+            averageTicket: new Prisma.Decimal('13.55')
+          }
+        ]
+      }
+    },
     create: {
       title: 'Panadería Tradicional - Expansión de Hornos',
       description: 'Inversión para renovar hornos y ampliar producción de panadería artesanal.',
       businessName: 'Panadería La Masa',
       category: 'Gastronomía',
       location: 'Centro Histórico',
-      targetAmount: new Prisma.Decimal('27000'),
-      currentAmount: new Prisma.Decimal('6500'),
-      minAmount: new Prisma.Decimal('1500'),
+      targetAmount: new Prisma.Decimal('18000'),
+      currentAmount: new Prisma.Decimal('6100'),
+      minAmount: new Prisma.Decimal('500'),
       riskLevel: RiskLevel.medium,
-      estimatedReturn: new Prisma.Decimal('16'),
+      estimatedReturn: new Prisma.Decimal('10'),
       status: OpportunityStatus.available,
       metrics: {
         create: [
           {
             month: '2026-01',
-            revenue: new Prisma.Decimal('23000'),
-            grossMargin: new Prisma.Decimal('0.55'),
-            operatingMargin: new Prisma.Decimal('14'),
-            customerCount: 290,
-            averageTicket: new Prisma.Decimal('14.25')
+            revenue: new Prisma.Decimal('14200'),
+            grossMargin: new Prisma.Decimal('52'),
+            operatingMargin: new Prisma.Decimal('10'),
+            customerCount: 1050,
+            averageTicket: new Prisma.Decimal('13.52')
           },
           {
             month: '2026-02',
-            revenue: new Prisma.Decimal('24500'),
-            grossMargin: new Prisma.Decimal('0.57'),
-            operatingMargin: new Prisma.Decimal('15'),
-            customerCount: 315,
-            averageTicket: new Prisma.Decimal('15.00')
+            revenue: new Prisma.Decimal('15100'),
+            grossMargin: new Prisma.Decimal('53'),
+            operatingMargin: new Prisma.Decimal('11'),
+            customerCount: 1115,
+            averageTicket: new Prisma.Decimal('13.55')
           }
         ]
       }
@@ -165,7 +274,33 @@ async function main() {
 
   await prisma.investmentOpportunity.upsert({
     where: { id: await getOpportunitySeedId('00000000-0000-0000-0000-000000000004', 'Taco Barrio') },
-    update: {},
+    update: {
+      targetAmount: new Prisma.Decimal('22000'),
+      currentAmount: new Prisma.Decimal('6800'),
+      minAmount: new Prisma.Decimal('750'),
+      estimatedReturn: new Prisma.Decimal('10'),
+      metrics: {
+        deleteMany: {},
+        create: [
+          {
+            month: '2026-01',
+            revenue: new Prisma.Decimal('17600'),
+            grossMargin: new Prisma.Decimal('55'),
+            operatingMargin: new Prisma.Decimal('12'),
+            customerCount: 1480,
+            averageTicket: new Prisma.Decimal('11.90')
+          },
+          {
+            month: '2026-02',
+            revenue: new Prisma.Decimal('18800'),
+            grossMargin: new Prisma.Decimal('56'),
+            operatingMargin: new Prisma.Decimal('13'),
+            customerCount: 1570,
+            averageTicket: new Prisma.Decimal('12.00')
+          }
+        ]
+      }
+    },
     create: {
       id: '00000000-0000-0000-0000-000000000004',
       title: 'Taqueria Urbana - Food Truck',
@@ -173,29 +308,29 @@ async function main() {
       businessName: 'Taco Barrio',
       category: 'Gastronomia',
       location: 'Sabana Este',
-      targetAmount: new Prisma.Decimal('32000'),
-      currentAmount: new Prisma.Decimal('9000'),
-      minAmount: new Prisma.Decimal('1800'),
+      targetAmount: new Prisma.Decimal('22000'),
+      currentAmount: new Prisma.Decimal('6800'),
+      minAmount: new Prisma.Decimal('750'),
       riskLevel: RiskLevel.medium,
-      estimatedReturn: new Prisma.Decimal('17'),
+      estimatedReturn: new Prisma.Decimal('10'),
       status: OpportunityStatus.available,
       metrics: {
         create: [
           {
             month: '2026-01',
-            revenue: new Prisma.Decimal('26000'),
-            grossMargin: new Prisma.Decimal('0.59'),
-            operatingMargin: new Prisma.Decimal('16'),
-            customerCount: 510,
-            averageTicket: new Prisma.Decimal('12.75')
+            revenue: new Prisma.Decimal('17600'),
+            grossMargin: new Prisma.Decimal('55'),
+            operatingMargin: new Prisma.Decimal('12'),
+            customerCount: 1480,
+            averageTicket: new Prisma.Decimal('11.90')
           },
           {
             month: '2026-02',
-            revenue: new Prisma.Decimal('27800'),
-            grossMargin: new Prisma.Decimal('0.61'),
-            operatingMargin: new Prisma.Decimal('17'),
-            customerCount: 545,
-            averageTicket: new Prisma.Decimal('13.10')
+            revenue: new Prisma.Decimal('18800'),
+            grossMargin: new Prisma.Decimal('56'),
+            operatingMargin: new Prisma.Decimal('13'),
+            customerCount: 1570,
+            averageTicket: new Prisma.Decimal('12.00')
           }
         ]
       }
@@ -204,7 +339,33 @@ async function main() {
 
   await prisma.investmentOpportunity.upsert({
     where: { id: await getOpportunitySeedId('00000000-0000-0000-0000-000000000005', 'Nieve Verde') },
-    update: {},
+    update: {
+      targetAmount: new Prisma.Decimal('16000'),
+      currentAmount: new Prisma.Decimal('5400'),
+      minAmount: new Prisma.Decimal('500'),
+      estimatedReturn: new Prisma.Decimal('8'),
+      metrics: {
+        deleteMany: {},
+        create: [
+          {
+            month: '2026-01',
+            revenue: new Prisma.Decimal('12800'),
+            grossMargin: new Prisma.Decimal('64'),
+            operatingMargin: new Prisma.Decimal('14'),
+            customerCount: 1120,
+            averageTicket: new Prisma.Decimal('11.43')
+          },
+          {
+            month: '2026-02',
+            revenue: new Prisma.Decimal('13600'),
+            grossMargin: new Prisma.Decimal('65'),
+            operatingMargin: new Prisma.Decimal('15'),
+            customerCount: 1180,
+            averageTicket: new Prisma.Decimal('11.53')
+          }
+        ]
+      }
+    },
     create: {
       id: '00000000-0000-0000-0000-000000000005',
       title: 'Heladeria Artesanal - Camara Fria',
@@ -212,29 +373,29 @@ async function main() {
       businessName: 'Nieve Verde',
       category: 'Gastronomia',
       location: 'Escazu',
-      targetAmount: new Prisma.Decimal('24000'),
-      currentAmount: new Prisma.Decimal('7200'),
-      minAmount: new Prisma.Decimal('1200'),
+      targetAmount: new Prisma.Decimal('16000'),
+      currentAmount: new Prisma.Decimal('5400'),
+      minAmount: new Prisma.Decimal('500'),
       riskLevel: RiskLevel.low,
-      estimatedReturn: new Prisma.Decimal('14'),
+      estimatedReturn: new Prisma.Decimal('8'),
       status: OpportunityStatus.available,
       metrics: {
         create: [
           {
             month: '2026-01',
-            revenue: new Prisma.Decimal('21000'),
-            grossMargin: new Prisma.Decimal('0.66'),
-            operatingMargin: new Prisma.Decimal('0.20'),
-            customerCount: 380,
-            averageTicket: new Prisma.Decimal('11.50')
+            revenue: new Prisma.Decimal('12800'),
+            grossMargin: new Prisma.Decimal('64'),
+            operatingMargin: new Prisma.Decimal('14'),
+            customerCount: 1120,
+            averageTicket: new Prisma.Decimal('11.43')
           },
           {
             month: '2026-02',
-            revenue: new Prisma.Decimal('22600'),
-            grossMargin: new Prisma.Decimal('0.67'),
-            operatingMargin: new Prisma.Decimal('0.21'),
-            customerCount: 405,
-            averageTicket: new Prisma.Decimal('11.80')
+            revenue: new Prisma.Decimal('13600'),
+            grossMargin: new Prisma.Decimal('65'),
+            operatingMargin: new Prisma.Decimal('15'),
+            customerCount: 1180,
+            averageTicket: new Prisma.Decimal('11.53')
           }
         ]
       }
@@ -243,7 +404,33 @@ async function main() {
 
   await prisma.investmentOpportunity.upsert({
     where: { id: await getOpportunitySeedId('00000000-0000-0000-0000-000000000006', 'Soda El Buen Punto') },
-    update: {},
+    update: {
+      targetAmount: new Prisma.Decimal('19000'),
+      currentAmount: new Prisma.Decimal('4900'),
+      minAmount: new Prisma.Decimal('500'),
+      estimatedReturn: new Prisma.Decimal('9'),
+      metrics: {
+        deleteMany: {},
+        create: [
+          {
+            month: '2026-01',
+            revenue: new Prisma.Decimal('15800'),
+            grossMargin: new Prisma.Decimal('49'),
+            operatingMargin: new Prisma.Decimal('8'),
+            customerCount: 1760,
+            averageTicket: new Prisma.Decimal('8.98')
+          },
+          {
+            month: '2026-02',
+            revenue: new Prisma.Decimal('16600'),
+            grossMargin: new Prisma.Decimal('50'),
+            operatingMargin: new Prisma.Decimal('9'),
+            customerCount: 1840,
+            averageTicket: new Prisma.Decimal('9.02')
+          }
+        ]
+      }
+    },
     create: {
       id: '00000000-0000-0000-0000-000000000006',
       title: 'Soda Familiar - Remodelacion de Salon',
@@ -251,29 +438,29 @@ async function main() {
       businessName: 'Soda El Buen Punto',
       category: 'Gastronomia',
       location: 'Heredia Centro',
-      targetAmount: new Prisma.Decimal('29000'),
-      currentAmount: new Prisma.Decimal('5600'),
-      minAmount: new Prisma.Decimal('1500'),
+      targetAmount: new Prisma.Decimal('19000'),
+      currentAmount: new Prisma.Decimal('4900'),
+      minAmount: new Prisma.Decimal('500'),
       riskLevel: RiskLevel.medium,
-      estimatedReturn: new Prisma.Decimal('16'),
+      estimatedReturn: new Prisma.Decimal('9'),
       status: OpportunityStatus.available,
       metrics: {
         create: [
           {
             month: '2026-01',
-            revenue: new Prisma.Decimal('25500'),
-            grossMargin: new Prisma.Decimal('0.54'),
-            operatingMargin: new Prisma.Decimal('0.13'),
-            customerCount: 620,
-            averageTicket: new Prisma.Decimal('9.90')
+            revenue: new Prisma.Decimal('15800'),
+            grossMargin: new Prisma.Decimal('49'),
+            operatingMargin: new Prisma.Decimal('8'),
+            customerCount: 1760,
+            averageTicket: new Prisma.Decimal('8.98')
           },
           {
             month: '2026-02',
-            revenue: new Prisma.Decimal('26800'),
-            grossMargin: new Prisma.Decimal('0.55'),
-            operatingMargin: new Prisma.Decimal('14'),
-            customerCount: 650,
-            averageTicket: new Prisma.Decimal('10.20')
+            revenue: new Prisma.Decimal('16600'),
+            grossMargin: new Prisma.Decimal('50'),
+            operatingMargin: new Prisma.Decimal('9'),
+            customerCount: 1840,
+            averageTicket: new Prisma.Decimal('9.02')
           }
         ]
       }
@@ -282,7 +469,33 @@ async function main() {
 
   await prisma.investmentOpportunity.upsert({
     where: { id: await getOpportunitySeedId('00000000-0000-0000-0000-000000000007', 'Tapas 27') },
-    update: {},
+    update: {
+      targetAmount: new Prisma.Decimal('32000'),
+      currentAmount: new Prisma.Decimal('8700'),
+      minAmount: new Prisma.Decimal('1000'),
+      estimatedReturn: new Prisma.Decimal('12'),
+      metrics: {
+        deleteMany: {},
+        create: [
+          {
+            month: '2026-01',
+            revenue: new Prisma.Decimal('24500'),
+            grossMargin: new Prisma.Decimal('60'),
+            operatingMargin: new Prisma.Decimal('13'),
+            customerCount: 880,
+            averageTicket: new Prisma.Decimal('27.84')
+          },
+          {
+            month: '2026-02',
+            revenue: new Prisma.Decimal('26300'),
+            grossMargin: new Prisma.Decimal('61'),
+            operatingMargin: new Prisma.Decimal('14'),
+            customerCount: 940,
+            averageTicket: new Prisma.Decimal('27.98')
+          }
+        ]
+      }
+    },
     create: {
       id: '00000000-0000-0000-0000-000000000007',
       title: 'Bar de Tapas - Terraza y Licencia',
@@ -290,29 +503,29 @@ async function main() {
       businessName: 'Tapas 27',
       category: 'Gastronomia',
       location: 'Barrio Escalante',
-      targetAmount: new Prisma.Decimal('52000'),
-      currentAmount: new Prisma.Decimal('15000'),
-      minAmount: new Prisma.Decimal('3000'),
+      targetAmount: new Prisma.Decimal('32000'),
+      currentAmount: new Prisma.Decimal('8700'),
+      minAmount: new Prisma.Decimal('1000'),
       riskLevel: RiskLevel.high,
-      estimatedReturn: new Prisma.Decimal('22'),
+      estimatedReturn: new Prisma.Decimal('12'),
       status: OpportunityStatus.available,
       metrics: {
         create: [
           {
             month: '2026-01',
-            revenue: new Prisma.Decimal('41000'),
-            grossMargin: new Prisma.Decimal('0.63'),
-            operatingMargin: new Prisma.Decimal('18'),
-            customerCount: 470,
-            averageTicket: new Prisma.Decimal('28.50')
+            revenue: new Prisma.Decimal('24500'),
+            grossMargin: new Prisma.Decimal('60'),
+            operatingMargin: new Prisma.Decimal('13'),
+            customerCount: 880,
+            averageTicket: new Prisma.Decimal('27.84')
           },
           {
             month: '2026-02',
-            revenue: new Prisma.Decimal('43800'),
-            grossMargin: new Prisma.Decimal('0.64'),
-            operatingMargin: new Prisma.Decimal('0.19'),
-            customerCount: 505,
-            averageTicket: new Prisma.Decimal('29.25')
+            revenue: new Prisma.Decimal('26300'),
+            grossMargin: new Prisma.Decimal('61'),
+            operatingMargin: new Prisma.Decimal('14'),
+            customerCount: 940,
+            averageTicket: new Prisma.Decimal('27.98')
           }
         ]
       }
@@ -321,7 +534,33 @@ async function main() {
 
   await prisma.investmentOpportunity.upsert({
     where: { id: await getOpportunitySeedId('00000000-0000-0000-0000-000000000008', 'Forno Lento') },
-    update: {},
+    update: {
+      targetAmount: new Prisma.Decimal('26000'),
+      currentAmount: new Prisma.Decimal('8100'),
+      minAmount: new Prisma.Decimal('750'),
+      estimatedReturn: new Prisma.Decimal('9'),
+      metrics: {
+        deleteMany: {},
+        create: [
+          {
+            month: '2026-01',
+            revenue: new Prisma.Decimal('19100'),
+            grossMargin: new Prisma.Decimal('56'),
+            operatingMargin: new Prisma.Decimal('11'),
+            customerCount: 860,
+            averageTicket: new Prisma.Decimal('22.21')
+          },
+          {
+            month: '2026-02',
+            revenue: new Prisma.Decimal('20400'),
+            grossMargin: new Prisma.Decimal('57'),
+            operatingMargin: new Prisma.Decimal('12'),
+            customerCount: 910,
+            averageTicket: new Prisma.Decimal('22.42')
+          }
+        ]
+      }
+    },
     create: {
       id: '00000000-0000-0000-0000-000000000008',
       title: 'Pizzeria de Masa Madre - Horno de Piedra',
@@ -329,29 +568,29 @@ async function main() {
       businessName: 'Forno Lento',
       category: 'Gastronomia',
       location: 'Curridabat',
-      targetAmount: new Prisma.Decimal('41000'),
-      currentAmount: new Prisma.Decimal('11000'),
-      minAmount: new Prisma.Decimal('2200'),
+      targetAmount: new Prisma.Decimal('26000'),
+      currentAmount: new Prisma.Decimal('8100'),
+      minAmount: new Prisma.Decimal('750'),
       riskLevel: RiskLevel.low,
-      estimatedReturn: new Prisma.Decimal('15'),
+      estimatedReturn: new Prisma.Decimal('9'),
       status: OpportunityStatus.available,
       metrics: {
         create: [
           {
             month: '2026-01',
-            revenue: new Prisma.Decimal('33500'),
-            grossMargin: new Prisma.Decimal('0.57'),
-            operatingMargin: new Prisma.Decimal('16'),
-            customerCount: 430,
-            averageTicket: new Prisma.Decimal('22.50')
+            revenue: new Prisma.Decimal('19100'),
+            grossMargin: new Prisma.Decimal('56'),
+            operatingMargin: new Prisma.Decimal('11'),
+            customerCount: 860,
+            averageTicket: new Prisma.Decimal('22.21')
           },
           {
             month: '2026-02',
-            revenue: new Prisma.Decimal('35200'),
-            grossMargin: new Prisma.Decimal('0.58'),
-            operatingMargin: new Prisma.Decimal('17'),
-            customerCount: 455,
-            averageTicket: new Prisma.Decimal('23.10')
+            revenue: new Prisma.Decimal('20400'),
+            grossMargin: new Prisma.Decimal('57'),
+            operatingMargin: new Prisma.Decimal('12'),
+            customerCount: 910,
+            averageTicket: new Prisma.Decimal('22.42')
           }
         ]
       }
@@ -359,20 +598,38 @@ async function main() {
   });
 
   const opportunityReturnRates = [
-    { businessName: 'CafÃ© Alma', estimatedReturn: '18' },
-    { businessName: 'Verde Sabor', estimatedReturn: '15' },
-    { businessName: 'PanaderÃ­a La Masa', estimatedReturn: '16' },
-    { businessName: 'Taco Barrio', estimatedReturn: '17' },
-    { businessName: 'Nieve Verde', estimatedReturn: '14' },
-    { businessName: 'Soda El Buen Punto', estimatedReturn: '16' },
-    { businessName: 'Tapas 27', estimatedReturn: '22' },
-    { businessName: 'Forno Lento', estimatedReturn: '15' },
+    { businessName: 'CafÃ© Alma', estimatedReturn: '10' },
+    { businessName: 'Verde Sabor', estimatedReturn: '9' },
+    { businessName: 'PanaderÃ­a La Masa', estimatedReturn: '10' },
+    { businessName: 'Taco Barrio', estimatedReturn: '10' },
+    { businessName: 'Nieve Verde', estimatedReturn: '8' },
+    { businessName: 'Soda El Buen Punto', estimatedReturn: '9' },
+    { businessName: 'Tapas 27', estimatedReturn: '12' },
+    { businessName: 'Forno Lento', estimatedReturn: '9' },
   ];
 
   for (const opportunityReturnRate of opportunityReturnRates) {
     await prisma.investmentOpportunity.updateMany({
       where: { businessName: opportunityReturnRate.businessName },
       data: { estimatedReturn: new Prisma.Decimal(opportunityReturnRate.estimatedReturn) },
+    });
+  }
+
+  const pitchReturnRates = [
+    { businessName: 'CafÃ© Alma', estimatedReturn: '10' },
+    { businessName: 'Verde Sabor', estimatedReturn: '9' },
+    { businessName: 'PanaderÃ­a La Masa', estimatedReturn: '10' },
+    { businessName: 'Taco Barrio', estimatedReturn: '10' },
+    { businessName: 'Nieve Verde', estimatedReturn: '8' },
+    { businessName: 'Soda El Buen Punto', estimatedReturn: '9' },
+    { businessName: 'Tapas 27', estimatedReturn: '12' },
+    { businessName: 'Forno Lento', estimatedReturn: '9' },
+  ];
+
+  for (const pitchReturnRate of pitchReturnRates) {
+    await prisma.investmentOpportunity.updateMany({
+      where: { businessName: pitchReturnRate.businessName },
+      data: { estimatedReturn: new Prisma.Decimal(pitchReturnRate.estimatedReturn) },
     });
   }
 
@@ -394,7 +651,7 @@ async function main() {
       investorId: investorUser1.investor!.id,
       opportunityId: opportunity1.id,
       amount: new Prisma.Decimal('3000'),
-      estimatedReturn: new Prisma.Decimal('18'),
+      estimatedReturn: new Prisma.Decimal('10'),
       riskLevel: RiskLevel.medium
     },
     create: {
@@ -402,7 +659,7 @@ async function main() {
       investorId: investorUser1.investor!.id,
       opportunityId: opportunity1.id,
       amount: new Prisma.Decimal('3000'),
-      estimatedReturn: new Prisma.Decimal('18'),
+      estimatedReturn: new Prisma.Decimal('10'),
       riskLevel: RiskLevel.medium
     }
   });
@@ -417,7 +674,7 @@ async function main() {
     update: {
       simulationId: simulation.id,
       amount: new Prisma.Decimal('3000'),
-      expectedReturn: new Prisma.Decimal('3540'),
+      expectedReturn: new Prisma.Decimal('3300'),
       status: InvestmentIntentStatus.confirmed,
       confirmedAt: new Date()
     },
@@ -426,7 +683,7 @@ async function main() {
       opportunityId: opportunity1.id,
       simulationId: simulation.id,
       amount: new Prisma.Decimal('3000'),
-      expectedReturn: new Prisma.Decimal('3540'),
+      expectedReturn: new Prisma.Decimal('3300'),
       status: InvestmentIntentStatus.confirmed,
       confirmedAt: new Date()
     }

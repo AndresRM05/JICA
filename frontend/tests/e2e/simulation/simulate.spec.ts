@@ -18,7 +18,10 @@ test('investor can review details, simulate and confirm an investment intent', a
   await expect(page).toHaveURL(/\/simulations\/sim-costa-verde\/confirmation$/);
   await expect(page.getByText(/revise y confirme su intención/i)).toBeVisible();
 
-  await page.getByRole('button', { name: /confirmar inversión/i }).click();
+  await page.getByRole('button', { name: /confirmar intención de inversión/i }).click();
 
-  await expect(page.getByText(/inversión registrada correctamente/i)).toBeVisible();
+  await expect(page.getByText(/intención de inversión registrada/i)).toBeVisible();
+  await expect(page.getByText(/Costa Verde Café se pondrá en contacto contigo/i)).toBeVisible();
+  await expect(page.getByText(/INT-8F31A2C4/i)).toBeVisible();
+  await expect(page.getByText(/no representa todavía una transferencia de dinero/i)).toBeVisible();
 });
